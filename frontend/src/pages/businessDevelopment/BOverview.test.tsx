@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import React from 'react';
+// import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BOverview } from './BOverview';
@@ -104,11 +104,11 @@ describe('BOverview', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useOutletContext as vi.Mock).mockReturnValue({
+    (useOutletContext as import('vitest').Mock).mockReturnValue({
       opportunity: mockOpportunity,
       histories: mockHistories,
     });
-    (HistoryWidget as vi.Mock).mockImplementation(({ title, histories }) => (
+    (HistoryWidget as import('vitest').Mock).mockImplementation(({ title, histories }) => (
       <div data-testid="mock-history-widget">
         <span data-testid="history-widget-title">{title}</span>
         <ul data-testid="history-widget-list">
@@ -185,7 +185,7 @@ describe('BOverview', () => {
       capitalValue: undefined,
       likelyStartDate: undefined,
     };
-    (useOutletContext as vi.Mock).mockReturnValue({
+    (useOutletContext as import('vitest').Mock).mockReturnValue({
       opportunity: opportunityWithUndefined,
       histories: [],
     });
@@ -201,7 +201,7 @@ describe('BOverview', () => {
       capitalValue: 500000,
       currency: 'INR',
     };
-    (useOutletContext as vi.Mock).mockReturnValue({
+    (useOutletContext as import('vitest').Mock).mockReturnValue({
       opportunity: opportunityINR,
       histories: [],
     });
@@ -215,7 +215,7 @@ describe('BOverview', () => {
       ...mockOpportunity,
       likelyStartDate: new Date('2024-03-10T00:00:00Z'),
     };
-    (useOutletContext as vi.Mock).mockReturnValue({
+    (useOutletContext as import('vitest').Mock).mockReturnValue({
       opportunity: opportunityDateObj,
       histories: [],
     });

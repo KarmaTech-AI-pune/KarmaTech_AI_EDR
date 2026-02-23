@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
-import React from 'react';
+// import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ProjectForms from './ProjectForms';
@@ -50,7 +50,7 @@ vi.mock('../../components/forms/FormWrapper', () => ({
   FormWrapper: vi.fn(({ children }) => <div data-testid="form-wrapper">{children}</div>)
 }));
 
-const mockUseParams = useParams as vi.Mock;
+const mockUseParams = useParams as import('vitest').Mock;
 
 describe('ProjectForms Component', () => {
   afterEach(() => {

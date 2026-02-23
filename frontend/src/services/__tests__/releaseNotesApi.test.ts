@@ -37,7 +37,7 @@ describe('releaseNotesApi', () => {
 
   describe('getReleaseNotes', () => {
     it('should throw error when API fails after retries', async () => {
-      mockAxios.get.mockRejectedValue(new Error('Network Error'));
+      (mockAxios.get as import('vitest').Mock).mockRejectedValue(new Error('Network Error'));
 
       const promise = releaseNotesApi.getReleaseNotes('1.0.38');
       promise.catch(() => {}); // Prevent unhandled rejection warning
@@ -51,7 +51,7 @@ describe('releaseNotesApi', () => {
     }, 20000);
 
     it('should fetch release notes', async () => {
-        mockAxios.get.mockResolvedValue({ data: mockReleaseNotesData });
+        (mockAxios.get as import('vitest').Mock).mockResolvedValue({ data: mockReleaseNotesData });
         const result = await releaseNotesApi.getReleaseNotes('1.0.38');
         expect(result.version).toBe('1.0.38');
     });

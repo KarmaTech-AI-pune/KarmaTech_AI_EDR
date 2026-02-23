@@ -1,7 +1,7 @@
-import React from 'react';
+// import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { NotificationCenter } from './NotificationCenter';
-import { vi, describe, it, expect } from 'vitest';
+import {  describe, it, expect } from 'vitest';
 
 describe('NotificationCenter Component', () => {
   it('renders the component with title', () => {

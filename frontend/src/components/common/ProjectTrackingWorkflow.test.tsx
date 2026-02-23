@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
@@ -12,7 +12,7 @@ import { TaskType } from '../../features/wbs/types/wbs'; // Fixed import path
 
 // Mock dialog components
 vi.mock('../dialogbox/ProjectReviewWorkflow/ReviewBox', () => ({
-  default: ({ open, onClose, onSubmit, entityId, entityType, formType }: any) =>
+  default: ({ open, onClose, onSubmit}: any) =>
     open ? (
       <div data-testid="review-box-dialog">
         <button onClick={onClose} data-testid="review-box-close-button">Close</button>
@@ -27,7 +27,7 @@ vi.mock('../dialogbox/ProjectReviewWorkflow/ReviewBox', () => ({
 }));
 
 vi.mock('../dialogbox/ProjectReviewWorkflow/SendApprovalBox', () => ({
-  default: ({ open, onClose, onSubmit, status, projectId, entityId, entityType, formType }: any) =>
+  default: ({ open, onClose, onSubmit}: any) =>
     open ? (
       <div data-testid="send-approval-box-dialog">
         <button onClick={onClose} data-testid="send-approval-box-close-button">Close</button>

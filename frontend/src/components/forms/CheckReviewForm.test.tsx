@@ -1,9 +1,9 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import CheckReviewForm from './CheckReviewForm';
-import { CheckReviewDialog } from './CheckReviewcomponents/CheckReviewDialog';
+import { } from './CheckReviewcomponents/CheckReviewDialog';
 import {
   createCheckReview,
   getCheckReviewsByProject,

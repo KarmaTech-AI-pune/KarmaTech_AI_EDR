@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
@@ -108,7 +108,7 @@ const mockWorkflowEntry = {
     mockGetUsersByRole.mockResolvedValue(mockRegionalDirectors);
     mockGetOpportunityById.mockResolvedValue(mockOpportunityData as any);
     mockGetUserById.mockResolvedValue(mockDirectorUserData);
-    mockSendToApproval.mockResolvedValue(undefined);
+    mockSendToApproval.mockResolvedValue(undefined as unknown as any);
     mockUpdateWorkflow.mockResolvedValue(mockWorkflowEntry); // Mock with a WorkflowEntry
     mockLogCustomEvent.mockResolvedValue(mockOpportunityHistory);
     defaultProps.onSubmit.mockImplementation(vi.fn());

@@ -51,7 +51,7 @@ const mockProject: Project = {
   opportunityId: 123,
   opportunityTrackingId: 456,
   feeType: 'Fixed', // Added missing property
-};
+} as unknown as Project;
 
 describe('FormWrapper', () => {
   afterEach(() => {

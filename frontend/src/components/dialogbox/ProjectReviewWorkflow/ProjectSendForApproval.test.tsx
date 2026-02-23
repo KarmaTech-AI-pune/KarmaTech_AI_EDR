@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
@@ -73,7 +73,7 @@ describe('ProjectReviewWorkflow/ProjectSendForApproval', () => {
     expect(screen.getByText('Regional Manager/Director')).toBeInTheDocument();
     await waitFor(() => {
       // The text is split across elements, so we need to use a more flexible matcher
-      expect(screen.getByText((content, element) => {
+      expect(screen.getByText((_content, element) => {
         return element?.textContent === `Send to ${mockRegionalManager.name} for approval?`;
       })).toBeInTheDocument();
     });
@@ -154,7 +154,7 @@ describe('ProjectReviewWorkflow/ProjectSendForApproval', () => {
   });
 
   it('should show error if currentUser is missing', async () => {
-    render(<SendForApproval {...defaultProps} currentUser={undefined} />);
+    render(<SendForApproval {...defaultProps} currentUser={undefined as unknown as string} />);
     // The component should return null and not render anything
     await waitFor(() => {
       expect(screen.queryByText('Regional Manager/Director')).not.toBeInTheDocument();

@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React from 'react';
+// import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import Signup from './Signup';
 import { authApi } from '../services/authApi';

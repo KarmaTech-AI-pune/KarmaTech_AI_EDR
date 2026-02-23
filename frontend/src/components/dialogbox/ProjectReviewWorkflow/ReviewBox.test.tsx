@@ -1,7 +1,7 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, waitFor} from '@testing-library/react';
+// import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
 import ReviewBox from './ReviewBox';
 import { projectManagementAppContext } from '../../../App';
@@ -44,7 +44,7 @@ const mockProject: Project = {
   endDate: '2023-12-31T00:00:00Z', // Added missing property
   opportunityId: 123, // Added missing property
   opportunityTrackingId: 456, // Added missing property
-} as Project;
+} as unknown as Project;
 
 const mockCurrentUser: AuthUser = {
   id: 'user1',

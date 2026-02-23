@@ -1,4 +1,4 @@
-import { vi, describe, it } from 'vitest';
+import {  describe, it } from 'vitest';
 // import { GoNoGoDecision } from './goNoGoDecisionModel';
 
 describe('GoNoGoDecision Model', () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor} from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import WorkBreakdownStructureForm from '../../features/wbs/pages/WorkBreakdownStructureForm';
 import { useProject } from '../../context/ProjectContext';
@@ -21,7 +21,7 @@ vi.mock('../../features/wbs/context/WBSContext', async () => {
   };
 });
 
-const mockUseProject = useProject as unknown as vi.Mock;
+const mockUseProject = useProject as unknown as import('vitest').Mock;
 const mockGetProjectWBS = vi.mocked(WBSStructureAPI.getProjectWBS);
 const mockSetProjectWBS = vi.mocked(WBSStructureAPI.setProjectWBS);
 const mockUseWBSDataContext = vi.mocked(WBSContext.useWBSDataContext);

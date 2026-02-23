@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
@@ -31,7 +31,7 @@ describe('FormsOverview', () => {
   });
 
   it('should render without GanttChart if projectId is null', () => {
-    mockUseProject.mockReturnValue({ projectId: null, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: null, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     render(<FormsOverview onFormSelect={vi.fn()} />);
 
     expect(screen.queryByTestId('gantt-chart')).not.toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('FormsOverview', () => {
 
   it('should render GanttChart if projectId is present', () => {
     const mockProjectId = 'proj123';
-    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     render(<FormsOverview onFormSelect={vi.fn()} />);
 
     expect(screen.getByTestId('gantt-chart')).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe('FormsOverview', () => {
 
   it('should pass onFormSelect prop without using it directly in rendering', () => {
     const mockOnFormSelect = vi.fn();
-    mockUseProject.mockReturnValue({ projectId: null, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: null, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     render(<FormsOverview onFormSelect={mockOnFormSelect} />);
 
     // The onFormSelect prop is not directly rendered by FormsOverview,

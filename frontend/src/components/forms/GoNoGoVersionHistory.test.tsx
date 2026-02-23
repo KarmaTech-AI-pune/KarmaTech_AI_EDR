@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
@@ -118,8 +118,6 @@ describe('GoNoGoVersionHistory', () => {
       />
     );
 
-    // Use a more specific query for the chip label to avoid matching 'Version X'
-    const chips = screen.getAllByRole('button').filter(el => el.classList.contains('MuiChip-root'));
     // If chips are not buttons in this version/environment, adjust.
     // Let's just check the text inside chips.
     

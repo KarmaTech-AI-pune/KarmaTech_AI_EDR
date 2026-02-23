@@ -1,6 +1,6 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
 import SendApprovalBox from './SendApprovalBox';
@@ -39,7 +39,7 @@ const mockContext = {
     endDate: '2023-12-31T00:00:00Z',
     opportunityId: 123,
     opportunityTrackingId: 456,
-  } as Project,
+  } as unknown as Project,
   currentUser: {
     id: 'user1',
     name: 'Test User',

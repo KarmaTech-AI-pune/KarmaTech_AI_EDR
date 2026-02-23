@@ -1,9 +1,9 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import InputRegisterForm from './InputRegisterForm';
-import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDialog';
+// import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDialog';
 import { deleteInputRegister, getInputRegisterByProject } from '../../api/inputRegisterApi';
 import { useProject } from '../../context/ProjectContext';
 import { InputRegisterRow } from '../../models';
@@ -81,7 +81,7 @@ describe('InputRegisterForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     mockGetInputRegisterByProject.mockResolvedValue(mockInputRows);
     mockDeleteInputRegister.mockResolvedValue(true);
   });
@@ -104,7 +104,7 @@ describe('InputRegisterForm', () => {
   });
 
   it('should display a warning if no project is selected', () => {
-    mockUseProject.mockReturnValue({ projectId: undefined, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: undefined as unknown as string, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     render(<InputRegisterForm />);
     expect(screen.getByText('Please select a project to view the input register.')).toBeInTheDocument();
     expect(mockGetInputRegisterByProject).not.toHaveBeenCalled();

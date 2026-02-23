@@ -42,7 +42,7 @@ describe('useRoles', () => {
     vi.clearAllMocks();
     localStorageMock.clear();
     // Default successful mock response for API
-    (rolesApi.getAllRoles as vi.Mock).mockResolvedValue(mockRoles);
+    (rolesApi.getAllRoles as import('vitest').Mock).mockResolvedValue(mockRoles);
   });
 
   it('should return initial loading state', () => {
@@ -68,7 +68,7 @@ describe('useRoles', () => {
 
   it('should handle error during roles fetch', async () => {
     const errorMessage = 'Network error';
-    (rolesApi.getAllRoles as vi.Mock).mockRejectedValue(new Error(errorMessage));
+    (rolesApi.getAllRoles as import('vitest').Mock).mockRejectedValue(new Error(errorMessage));
 
     const { result } = renderHook(() => useRoles());
 
@@ -88,7 +88,7 @@ describe('useRoles', () => {
     // Clear mocks and set a new response for refetch
     vi.clearAllMocks();
     const newRoles: RoleDefinition[] = [{ id: '3', name: 'Editor', permissions: [] }];
-    (rolesApi.getAllRoles as vi.Mock).mockResolvedValue(newRoles);
+    (rolesApi.getAllRoles as import('vitest').Mock).mockResolvedValue(newRoles);
 
     await result.current.refetch();
 

@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
@@ -97,7 +97,7 @@ describe('ChangeControlForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     mockGetChangeControlsByProjectId.mockResolvedValue(mockChangeControls);
     mockCreateChangeControl.mockImplementation(async (projectId, data) => ({
       ...data,

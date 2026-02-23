@@ -1,18 +1,17 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import JobStartForm from './JobStartForm';
-import JobstartTime from './jobstartFormComponent/JobstartTime';
-import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses';
-import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal';
+// import JobstartTime from './jobstartFormComponent/JobstartTime';
+// import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses';
+// import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal';
 import JobstartSummary from './jobstartFormComponent/JobstartSummary';
-import JobStartFormHeader from './jobstartFormComponent/JobStartFormHeader';
-import LoadingButton from '../common/LoadingButton';
+// import JobStartFormHeader from './jobstartFormComponent/JobStartFormHeader';
+// import LoadingButton from '../common/LoadingButton';
 import { getWBSResourceData, submitJobStartForm, updateJobStartForm, getJobStartFormByProjectId } from '../../services/jobStartFormApi';
 import { projectApi } from '../../services/projectApi';
 import { useProject } from '../../context/ProjectContext';
-import { WBSResource } from '../../types/jobStartFormTypes';
 import { Project } from '../../models/projectModel';
 import { SimpleJobStartFormData } from '../../services/jobStartFormApi'; // Import SimpleJobStartFormData
 
@@ -93,10 +92,7 @@ const mockGetJobStartFormByProjectId = vi.mocked(getJobStartFormByProjectId);
 const mockProjectApiGetById = vi.mocked(projectApi.getById);
 const mockUseProject = vi.mocked(useProject);
 
-const mockWBSResources: WBSResource[] = [
-  { id: '1', taskType: 0, description: 'Task A', rate: 10, units: 10, budgetedCost: 100, remarks: '', employeeName: 'Emp A', name: 'Emp A' },
-  { id: '2', taskType: 1, description: 'ODC B', rate: 5, units: 20, budgetedCost: 100, remarks: '', employeeName: null, name: 'ODC B' },
-];
+
 
 const mockWBSApiResponse = {
   resourceAllocations: [
@@ -108,6 +104,7 @@ const mockWBSApiResponse = {
 const mockProjectData: Project = {
   id: '123',
   name: 'Test Project',
+  programId: 1,
   estimatedProjectFee: 5000,
   projectManagerId: 'pm1',
   seniorProjectManagerId: 'spm1',
@@ -163,8 +160,8 @@ describe('JobStartForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn() });
-    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     mockGetWBSResourceData.mockResolvedValue(mockWBSApiResponse);
     mockProjectApiGetById.mockResolvedValue(mockProjectData);
     mockProjectApiGetById.mockResolvedValue(mockProjectData);
@@ -196,7 +193,7 @@ describe('JobStartForm', () => {
   });
 
   it('should display a warning if no project is selected', () => {
-    mockUseProject.mockReturnValue({ projectId: undefined, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: null, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     render(<JobStartForm />);
     expect(screen.getByText('No project selected')).toBeInTheDocument();
     expect(mockGetWBSResourceData).not.toHaveBeenCalled();

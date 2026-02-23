@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
-import React from 'react';
+// import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ProjectOverview from './ProjectOverview';
@@ -13,7 +13,7 @@ vi.mock('./ProjectDetails', async () => ({
   useProjectDetailsContext: vi.fn(),
 }));
 
-const mockUseProjectDetailsContext = useProjectDetailsContext as vi.Mock;
+const mockUseProjectDetailsContext = useProjectDetailsContext as import('vitest').Mock;
 
 describe('ProjectOverview Component', () => {
   afterEach(() => {
@@ -48,7 +48,7 @@ describe('ProjectOverview Component', () => {
     letterOfAcceptance: true, // Added required property
     details: 'Project details here', // Added missing optional property
     opportunityTrackingId: 123, // Added missing optional property
-  };
+  } as unknown as Project;
 
   const mockManagerNames = {
     pm1: 'Project Manager One',

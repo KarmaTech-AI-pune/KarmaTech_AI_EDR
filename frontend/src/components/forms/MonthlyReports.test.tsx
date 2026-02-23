@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
@@ -193,7 +193,7 @@ describe('MonthlyReports', () => {
   });
 
   it('should display a warning if no projectId is available', async () => {
-    mockUseProject.mockReturnValue({ projectId: undefined, setProjectId: vi.fn(), programId: undefined, setProgramId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: null, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     render(<MonthlyReports />);
 
     await waitFor(() => {

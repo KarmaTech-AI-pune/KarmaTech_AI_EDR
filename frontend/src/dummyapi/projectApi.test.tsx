@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { projectApi } from './projectApi'
 import * as dummyProjects from './database/dummyProjects'
@@ -85,7 +85,7 @@ describe('projectApi', () => {
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
         feeType: ''
-      }
+      } as unknown as Omit<Project, 'id'>
 
       const result = await projectApi.create(newProject)
       
@@ -173,7 +173,7 @@ describe('projectApi', () => {
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
         feeType: ''
-      })
+      } as unknown as Project)
       
       expect(result).toBeNull()
     })
@@ -246,7 +246,7 @@ describe('projectApi', () => {
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
         feeType: '',
-      }
+      } as unknown as Omit<Project, 'id'>
 
       await expect(projectApi.create(completeProject)).resolves.not.toThrow()
     })

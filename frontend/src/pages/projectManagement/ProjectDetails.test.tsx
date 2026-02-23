@@ -1,12 +1,12 @@
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
-import React from 'react';
+// import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ProjectDetails, { useProjectDetailsContext, getProjectTitle } from './ProjectDetails';
 import { useProject } from '../../context/ProjectContext';
 import { projectApi } from '../../services/projectApi';
 import { getUserById } from '../../services/userApi';
-import { Outlet, useOutletContext, MemoryRouter } from 'react-router-dom';
+import {  useOutletContext, MemoryRouter } from 'react-router-dom';
 import { Project } from '../../models';
 import { ProjectStatus } from '../../models/types';
 
@@ -52,11 +52,10 @@ describe('ProjectDetails Component', () => {
     office: 'Headquarters',
     typeOfJob: 'Dev',
     letterOfAcceptance: true,
-    createdAt: '2023-01-01',
     updatedAt: '2023-01-01',
     details: 'A test project description',
     opportunityTrackingId: 1,
-  };
+  } as unknown as Project;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -160,7 +159,7 @@ describe('ProjectDetails Component', () => {
   });
 
   test('getProjectTitle should return project name if available', () => {
-    const projectWithName = { name: 'Project A', id: '1', projectNo: 'P1', typeOfJob: 'Dev', sector: 'IT', priority: 'High', clientName: 'C', typeOfClient: 'P', region: 'R', office: 'O', projectManagerId: 'pm', seniorProjectManagerId: 'spm', regionalManagerId: 'rm', estimatedProjectCost: 1, estimatedProjectFee: 1, currency: 'USD', feeType: 'F', startDate: 'S', endDate: 'E', status: ProjectStatus.InProgress, letterOfAcceptance: true, createdAt: 'C', updatedAt: 'U' } as Project;
+    const projectWithName = { name: 'Project A', id: '1', projectNo: 'P1', typeOfJob: 'Dev', sector: 'IT', priority: 'High', clientName: 'C', typeOfClient: 'P', region: 'R', office: 'O', projectManagerId: 'pm', seniorProjectManagerId: 'spm', regionalManagerId: 'rm', estimatedProjectCost: 1, estimatedProjectFee: 1, currency: 'USD', feeType: 'F', startDate: 'S', endDate: 'E', status: ProjectStatus.InProgress, letterOfAcceptance: true, createdAt: 'C', updatedAt: 'U' } as unknown as Project;
     expect(getProjectTitle(projectWithName)).toBe('Project A');
   });
 

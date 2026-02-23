@@ -60,8 +60,8 @@ describe('usePMWorkflow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default successful mock responses
-    (pmWorkflowApi.getWorkflowHistory as vi.Mock).mockResolvedValue(mockWorkflowHistory);
-    (pmWorkflowApi.canViewEntity as vi.Mock).mockResolvedValue(true);
+    (pmWorkflowApi.getWorkflowHistory as import('vitest').Mock).mockResolvedValue(mockWorkflowHistory);
+    (pmWorkflowApi.canViewEntity as import('vitest').Mock).mockResolvedValue(true);
   });
 
   it('should return initial loading state', () => {
@@ -93,8 +93,8 @@ describe('usePMWorkflow', () => {
 
   it('should handle error during data fetch', async () => {
     const errorMessage = 'Failed to fetch data';
-    (pmWorkflowApi.getWorkflowHistory as vi.Mock).mockRejectedValue(new Error(errorMessage));
-    (pmWorkflowApi.canViewEntity as vi.Mock).mockResolvedValue(false); // Still mock canViewEntity
+    (pmWorkflowApi.getWorkflowHistory as import('vitest').Mock).mockRejectedValue(new Error(errorMessage));
+    (pmWorkflowApi.canViewEntity as import('vitest').Mock).mockResolvedValue(false); // Still mock canViewEntity
 
     const { result } = renderHook(() => usePMWorkflow({ entityId: mockEntityId, entityType: mockEntityType }));
 
@@ -116,11 +116,11 @@ describe('usePMWorkflow', () => {
 
     // Clear mocks to check for re-fetch
     vi.clearAllMocks();
-    (pmWorkflowApi.getWorkflowHistory as vi.Mock).mockResolvedValue({
+    (pmWorkflowApi.getWorkflowHistory as import('vitest').Mock).mockResolvedValue({
       ...mockWorkflowHistory,
       currentStatus: 'Approved',
     });
-    (pmWorkflowApi.canViewEntity as vi.Mock).mockResolvedValue(false);
+    (pmWorkflowApi.canViewEntity as import('vitest').Mock).mockResolvedValue(false);
 
     await result.current.refreshWorkflow();
 
@@ -149,7 +149,7 @@ describe('usePMWorkflow', () => {
   });
 
   it('should handle canViewEntity returning false', async () => {
-    (pmWorkflowApi.canViewEntity as vi.Mock).mockResolvedValue(false);
+    (pmWorkflowApi.canViewEntity as import('vitest').Mock).mockResolvedValue(false);
 
     const { result } = renderHook(() => usePMWorkflow({ entityId: mockEntityId, entityType: mockEntityType }));
 

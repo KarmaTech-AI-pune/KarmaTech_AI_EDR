@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import React from 'react';
+// import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BForms } from './BForms';
@@ -103,15 +103,15 @@ describe('BForms', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useNavigate as vi.Mock).mockReturnValue(mockNavigate);
-    (useBusinessDevelopment as vi.Mock).mockReturnValue({
+    (useNavigate as import('vitest').Mock).mockReturnValue(mockNavigate);
+    (useBusinessDevelopment as import('vitest').Mock).mockReturnValue({
       goNoGoDecisionStatus: 'NO-GO',
       goNoGoVersionNumber: 1,
     });
   });
 
   it('renders all form cards and titles', () => {
-    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
+    (useOutletContext as import('vitest').Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
     render(<BForms />);
 
     expect(screen.getByText('Forms Overview')).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe('BForms', () => {
   });
 
   it('Opportunity Tracking button is always enabled and navigates correctly', () => {
-    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityPending });
+    (useOutletContext as import('vitest').Mock).mockReturnValue({ opportunity: mockOpportunityPending });
     render(<BForms />);
 
     const opportunityButton = screen.getAllByRole('button', { name: /View Form/i })[0];
@@ -131,7 +131,7 @@ describe('BForms', () => {
   });
 
   it('Go/No-Go Decision button is disabled if opportunity is not approved', () => {
-    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityPending });
+    (useOutletContext as import('vitest').Mock).mockReturnValue({ opportunity: mockOpportunityPending });
     render(<BForms />);
 
     const goNoGoButton = screen.getAllByRole('button', { name: /View Form/i })[1]; // Assuming it's the second button
@@ -140,7 +140,7 @@ describe('BForms', () => {
   });
 
   it('Go/No-Go Decision button is enabled if opportunity is approved and navigates correctly', () => {
-    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
+    (useOutletContext as import('vitest').Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
     render(<BForms />);
 
     const goNoGoButton = screen.getAllByRole('button', { name: /View Form/i })[1]; // Second "View Form" button
@@ -150,8 +150,8 @@ describe('BForms', () => {
   });
 
   it('Bid Preparation button is disabled if Go/No-Go status is not "GO" or version is not 3', () => {
-    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
-    (useBusinessDevelopment as vi.Mock).mockReturnValue({
+    (useOutletContext as import('vitest').Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
+    (useBusinessDevelopment as import('vitest').Mock).mockReturnValue({
       goNoGoDecisionStatus: 'NO-GO', // Not GO
       goNoGoVersionNumber: 1, // Not 3
     });
@@ -162,8 +162,8 @@ describe('BForms', () => {
   });
 
   it('Bid Preparation button is enabled if Go/No-Go status is "GO" and version is 3 and navigates correctly', () => {
-    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
-    (useBusinessDevelopment as vi.Mock).mockReturnValue({
+    (useOutletContext as import('vitest').Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
+    (useBusinessDevelopment as import('vitest').Mock).mockReturnValue({
       goNoGoDecisionStatus: 'GO',
       goNoGoVersionNumber: 3,
     });
@@ -183,7 +183,7 @@ describe('BForms', () => {
         { id: 2, opportunityId: 1, statusId: 6, status: 'Approved', action: 'Approved', assignedToId: 'user1', date: '2023-01-02T11:00:00Z', description: 'Opportunity approved' }, // Approved status in array
       ],
     };
-    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityArrayHistory });
+    (useOutletContext as import('vitest').Mock).mockReturnValue({ opportunity: mockOpportunityArrayHistory });
     render(<BForms />);
 
     const goNoGoButton = screen.getAllByRole('button', { name: /View Form/i })[1];
@@ -204,7 +204,7 @@ describe('BForms', () => {
         description: 'Opportunity approved',
       }, // Approved status as single object
     };
-    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunitySingleHistory });
+    (useOutletContext as import('vitest').Mock).mockReturnValue({ opportunity: mockOpportunitySingleHistory });
     render(<BForms />);
 
     const goNoGoButton = screen.getAllByRole('button', { name: /View Form/i })[1];

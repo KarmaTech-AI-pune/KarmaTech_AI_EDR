@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import {  describe, it, expect } from 'vitest';
 import { normalizeOpportunityTracking, prepareOpportunityTrackingForSubmission } from './opportunityTrackingModel';
 
 describe('OpportunityTracking Model', () => {

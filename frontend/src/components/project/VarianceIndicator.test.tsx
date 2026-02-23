@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 /**
  * VarianceIndicator Component Tests
  * 
@@ -7,7 +7,7 @@ import React from 'react';
  */
 
 import { render, screen } from '@testing-library/react';
-import { vi, describe, it, expect } from 'vitest';
+import {  describe, it, expect } from 'vitest';
 import { VarianceIndicator, CompactVarianceIndicator, LargeVarianceIndicator } from './VarianceIndicator';
 
 describe('VarianceIndicator Component', () => {

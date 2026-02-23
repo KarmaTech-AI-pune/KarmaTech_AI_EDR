@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+// import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import CorrespondenceForm from './CorrespondenceForm';
-import CorrespondenceDialog from './Correspondancecomponents/CorrespondenceDialog';
+// import CorrespondenceDialog from './Correspondancecomponents/CorrespondenceDialog';
 import {
   getInwardRows,
   getOutwardRows,
@@ -14,7 +14,7 @@ import {
   OutwardRow
 } from '../../services/correspondenceApi';
 import { useProject } from '../../context/ProjectContext';
-import { projectManagementAppContext } from '../../App';
+import { } from '../../App';
 import axios from 'axios';
 
 // Mock external dependencies
@@ -105,7 +105,7 @@ const mockInwardRows: InwardRow[] = [
     projectId: 123,
     incomingLetterNo: 'ILN-001',
     letterDate: '2023-01-01T00:00:00Z',
-    njsInwardNo: 'NJS-001',
+    inwardNo: 'NJS-001',
     receiptDate: '2023-01-01T00:00:00Z',
     from: 'Sender A',
     subject: 'Inward Subject 1',
@@ -152,7 +152,7 @@ describe('CorrespondenceForm', () => {
     vi.clearAllMocks();
     localStorageMock.clear();
     localStorageMock.setItem('token', 'mock-token'); // Ensure token is present for most tests
-    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     mockGetInwardRows.mockResolvedValue(mockInwardRows);
     mockGetOutwardRows.mockResolvedValue(mockOutwardRows);
     mockDeleteInwardRow.mockResolvedValue(undefined);
@@ -191,7 +191,7 @@ describe('CorrespondenceForm', () => {
   });
 
   it('should display a warning if no project is selected', () => {
-    mockUseProject.mockReturnValue({ projectId: undefined, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: undefined as unknown as string, setProjectId: vi.fn(), programId: null, setProgramId: vi.fn() });
     render(<CorrespondenceForm />);
     expect(screen.getByText('Please select a project to view the correspondence register.')).toBeInTheDocument();
     expect(mockGetInwardRows).not.toHaveBeenCalled();

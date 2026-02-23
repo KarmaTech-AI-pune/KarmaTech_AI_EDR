@@ -2,8 +2,8 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useNavigate } from 'react-router-dom';
 import { useAppNavigation } from './useAppNavigation';
-import { projectManagementAppContext } from '../App';
-import { useProject } from '../context/ProjectContext';
+import { } from '../App';
+import { } from '../context/ProjectContext';
 import { Project, OpportunityTracking } from '../models';
 import { ProjectStatus } from '../models/types';
 
@@ -45,7 +45,7 @@ describe('useAppNavigation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useNavigate as vi.Mock).mockReturnValue(mockNavigate);
+    (useNavigate as import('vitest').Mock).mockReturnValue(mockNavigate);
   });
 
   it('should navigate to home', () => {
@@ -93,7 +93,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
     vi.clearAllMocks();
   });
 
-    const mockProject: Project = { id: '123', name: 'Test Project', description: '', status: ProjectStatus.ACTIVE, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' };
+    const mockProject: Project = { id: '123', name: 'Test Project', description: '', status: ProjectStatus.InProgress, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' } as unknown as Project;
 
     it('should navigate to business development details with project ID if project is provided', () => {
       const { result } = renderHook(() => useAppNavigation());
@@ -119,7 +119,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
     vi.clearAllMocks();
   });
 
-    const mockProject: Project = { id: '456', name: 'Another Project', description: '', status: ProjectStatus.COMPLETED, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' };
+    const mockProject: Project = { id: '456', name: 'Another Project', description: '', status: ProjectStatus.Completed, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' } as unknown as Project;
 
     it('should navigate to project details with project ID if project is provided', () => {
       const { result } = renderHook(() => useAppNavigation());
@@ -147,7 +147,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
     vi.clearAllMocks();
   });
 
-    const mockProject: OpportunityTracking = { id: 789, name: 'GoNoGo Opp', description: '', status: ProjectStatus.PENDING, type: '' };
+    const mockProject: OpportunityTracking = { id: 789, name: 'GoNoGo Opp', description: '', status: ProjectStatus.InProgress, type: '' } as unknown as OpportunityTracking;
 
     it('should navigate to GoNoGo form with project ID if project is provided', () => {
       const { result } = renderHook(() => useAppNavigation());
@@ -173,7 +173,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
     vi.clearAllMocks();
   });
 
-    const mockProject: OpportunityTracking = { id: 101, name: 'Bid Prep Opp', description: '', status: ProjectStatus.IN_PROGRESS, type: '' };
+    const mockProject: OpportunityTracking = { id: 101, name: 'Bid Prep Opp', description: '', status: ProjectStatus.InProgress, type: '' } as unknown as OpportunityTracking;
 
     it('should navigate to Bid Preparation with project ID if project is provided', () => {
       const { result } = renderHook(() => useAppNavigation());
@@ -199,7 +199,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
     vi.clearAllMocks();
   });
 
-    const mockProject: Project = { id: '202', name: 'Project Resources', description: '', status: ProjectStatus.ACTIVE, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' };
+    const mockProject: Project = { id: '202', name: 'Project Resources', description: '', status: ProjectStatus.InProgress, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' } as unknown as Project;
 
     it('should navigate to project resources with project ID if project is provided', () => {
       const { result } = renderHook(() => useAppNavigation());

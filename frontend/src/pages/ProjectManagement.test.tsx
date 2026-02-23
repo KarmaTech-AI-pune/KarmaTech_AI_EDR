@@ -5,8 +5,8 @@ import '@testing-library/jest-dom';
 import { ProjectManagement } from './ProjectManagement';
 import { authApi } from '../services/authApi';
 import { projectApi } from '../services/projectApi';
-import { PermissionType, User, Role, Project } from '../models';
-import { UserWithRole, ProjectFormData, ProjectStatus } from '../types/index'; // Import ProjectStatus from types/index
+import { PermissionType,   Project } from '../models';
+import { UserWithRole,  ProjectStatus } from '../types/index'; // Import ProjectStatus from types/index
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType } from '../types';
 
@@ -157,7 +157,7 @@ const mockProjects: Project[] = [
         feeType: 'Fixed', startDate: '2023-01-01', endDate: '2023-06-30', currency: 'USD', priority: 'High',
         regionalManagerId: 'rm-1', letterOfAcceptance: true, opportunityId: 1, createdAt: '2023-01-01T00:00:00Z',
         updatedAt: '2023-01-01T00:00:00Z', status: ProjectStatus.InProgress, opportunityTrackingId: 1,
-    },
+    } as unknown as Project,
     {
         id: 'p2', name: 'Project Beta', details: 'Description Beta', clientName: 'Client B', projectManagerId: 'pm-2',
         office: 'Office B', projectNo: 'PB002', typeOfJob: 'Development', seniorProjectManagerId: 'spm-2', sector: 'Finance',
@@ -165,7 +165,7 @@ const mockProjects: Project[] = [
         feeType: 'T&M', startDate: '2023-02-01', endDate: '2023-07-31', currency: 'USD', priority: 'Medium',
         regionalManagerId: 'rm-2', letterOfAcceptance: true, opportunityId: 2, createdAt: '2023-02-01T00:00:00Z',
         updatedAt: '2023-02-01T00:00:00Z', status: ProjectStatus.Completed, opportunityTrackingId: 2,
-    },
+    } as unknown as Project,
     {
         id: 'p3', name: 'Project Gamma', details: 'Description Gamma', clientName: 'Client C', projectManagerId: 'pm-1',
         office: 'Office C', projectNo: 'PG003', typeOfJob: 'Support', seniorProjectManagerId: 'pm-1', sector: 'Healthcare',
@@ -173,7 +173,7 @@ const mockProjects: Project[] = [
         feeType: 'Fixed', startDate: '2023-03-01', endDate: '2023-08-31', currency: 'USD', priority: 'Low',
         regionalManagerId: 'rm-1', letterOfAcceptance: false, opportunityId: 3, createdAt: '2023-03-01T00:00:00Z',
         updatedAt: '2023-03-01T00:00:00Z', status: ProjectStatus.DecisionPending, opportunityTrackingId: 3,
-    },
+    } as unknown as Project,
 ];
 
 const renderProjectManagement = (user: UserWithRole | null = mockAdminUser) => {
@@ -194,11 +194,11 @@ describe('ProjectManagement', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        (authApi.getCurrentUser as vi.Mock).mockResolvedValue(mockAdminUser);
-        (projectApi.getAll as vi.Mock).mockResolvedValue(mockProjects);
-        (projectApi.getByUserId as vi.Mock).mockResolvedValue(mockProjects.filter(p => p.projectManagerId === mockPMUser.id || p.seniorProjectManagerId === mockPMUser.id));
-        (projectApi.createProject as vi.Mock).mockResolvedValue({ success: true });
-        (projectApi.delete as vi.Mock).mockResolvedValue({ success: true });
+        (authApi.getCurrentUser as import('vitest').Mock).mockResolvedValue(mockAdminUser);
+        (projectApi.getAll as import('vitest').Mock).mockResolvedValue(mockProjects);
+        (projectApi.getByUserId as import('vitest').Mock).mockResolvedValue(mockProjects.filter(p => p.projectManagerId === mockPMUser.id || p.seniorProjectManagerId === mockPMUser.id));
+        (projectApi.createProject as import('vitest').Mock).mockResolvedValue({ success: true });
+        (projectApi.delete as import('vitest').Mock).mockResolvedValue({ success: true });
     });
 
     test('renders Project Management title and search input', async () => {
@@ -225,7 +225,7 @@ describe('ProjectManagement', () => {
             roleDetails: { ...mockPMUser.roleDetails!, permissions: [PermissionType.VIEW_PROJECT] },
             roles: [{ id: 'r2', name: 'Project Manager', permissions: [PermissionType.VIEW_PROJECT] }],
         };
-        (authApi.getCurrentUser as vi.Mock).mockResolvedValue(userWithoutCreate);
+        (authApi.getCurrentUser as import('vitest').Mock).mockResolvedValue(userWithoutCreate);
         renderProjectManagement(userWithoutCreate);
         await waitFor(() => {
             expect(screen.queryByRole('button', { name: /initialize project/i })).not.toBeInTheDocument();
@@ -233,7 +233,7 @@ describe('ProjectManagement', () => {
     });
 
     test('displays error if user is not logged in', async () => {
-        (authApi.getCurrentUser as vi.Mock).mockResolvedValue(null);
+        (authApi.getCurrentUser as import('vitest').Mock).mockResolvedValue(null);
         renderProjectManagement(null);
         await waitFor(() => {
             expect(screen.getByText(/please log in to access project management/i)).toBeInTheDocument();
@@ -246,7 +246,7 @@ describe('ProjectManagement', () => {
             roleDetails: { ...mockPMUser.roleDetails!, permissions: [PermissionType.CREATE_PROJECT] },
             roles: [{ id: 'r2', name: 'Project Manager', permissions: [PermissionType.CREATE_PROJECT] }],
         };
-        (authApi.getCurrentUser as vi.Mock).mockResolvedValue(userWithoutView);
+        (authApi.getCurrentUser as import('vitest').Mock).mockResolvedValue(userWithoutView);
         renderProjectManagement(userWithoutView);
         await waitFor(() => {
             expect(screen.getByText(/you do not have permission to view projects/i)).toBeInTheDocument();
@@ -263,7 +263,7 @@ describe('ProjectManagement', () => {
     });
 
     test('fetches projects by user ID for Project Manager', async () => {
-        (authApi.getCurrentUser as vi.Mock).mockResolvedValue(mockPMUser);
+        (authApi.getCurrentUser as import('vitest').Mock).mockResolvedValue(mockPMUser);
         renderProjectManagement(mockPMUser);
         await waitFor(() => {
             expect(authApi.getCurrentUser).toHaveBeenCalled();
@@ -317,7 +317,7 @@ describe('ProjectManagement', () => {
     });
 
     test('handles search term filtering', async () => {
-        (projectApi.getAll as vi.Mock).mockResolvedValue(mockProjects);
+        (projectApi.getAll as import('vitest').Mock).mockResolvedValue(mockProjects);
         renderProjectManagement(mockAdminUser);
 
         await waitFor(() => {
@@ -376,8 +376,8 @@ describe('ProjectManagement', () => {
             updatedAt: '2023-01-01T00:00:00Z',
             status: ProjectStatus.InProgress,
             opportunityTrackingId: i + 1,
-        }));
-        (projectApi.getAll as vi.Mock).mockResolvedValue(largeProjectList);
+        } as unknown as Project));
+        (projectApi.getAll as import('vitest').Mock).mockResolvedValue(largeProjectList);
         renderProjectManagement(mockAdminUser);
 
         await waitFor(() => {
@@ -398,7 +398,7 @@ describe('ProjectManagement', () => {
     });
 
     test('displays error message for project creation failure', async () => {
-        (projectApi.createProject as vi.Mock).mockRejectedValue(new Error('Failed to create'));
+        (projectApi.createProject as import('vitest').Mock).mockRejectedValue(new Error('Failed to create'));
         renderProjectManagement(mockAdminUser);
 
         await waitFor(() => {
@@ -410,7 +410,7 @@ describe('ProjectManagement', () => {
     });
 
     test('displays error message for project deletion failure', async () => {
-        (projectApi.delete as vi.Mock).mockRejectedValue(new Error('Failed to delete'));
+        (projectApi.delete as import('vitest').Mock).mockRejectedValue(new Error('Failed to delete'));
         // The mock for ProjectManagementProjectList already includes a delete button for testing
         renderProjectManagement(mockAdminUser);
         await waitFor(() => {

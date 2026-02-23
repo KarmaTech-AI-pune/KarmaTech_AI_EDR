@@ -24,7 +24,8 @@ vi.mock('axios', () => ({
       request: { use: vi.fn() },
       response: { use: vi.fn() }
     }
-  }
+  },
+  isAxiosError: vi.fn((payload: any) => payload && payload.isAxiosError === true),
 }))
 
 // Mock localStorage

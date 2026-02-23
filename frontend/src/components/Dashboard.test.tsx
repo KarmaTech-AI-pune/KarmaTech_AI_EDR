@@ -1,9 +1,9 @@
-import React from 'react';
+// import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { projectManagementAppContext } from '../App'
 import { PermissionType } from '../models'
-import { UserWithRole } from '../types'
+import { UserWithRole, projectManagementAppContextType } from '../types'
 import Dashboard from './Dashboard'
 
 // Mock the dashboard service to avoid API calls

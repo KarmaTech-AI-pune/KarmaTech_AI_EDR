@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, describe, it, expect, beforeEach, test, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach,  afterEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import ProgramManagement from './ProgramManagement';
 import { usePrograms } from '../../hooks/usePrograms';

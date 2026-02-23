@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
@@ -123,7 +123,7 @@ describe('ProjectReviewWorkflow/ProjectDecideReview', () => {
   });
 
   it('should show error if projectId is missing', async () => {
-    render(<DecideReview {...defaultProps} projectId={undefined} />);
+    render(<DecideReview {...defaultProps} projectId={undefined as unknown as number} />);
     const decisionSelect = screen.getByRole('combobox');
     fireEvent.mouseDown(decisionSelect);
     fireEvent.click(screen.getByText('Approve'));
@@ -136,7 +136,7 @@ describe('ProjectReviewWorkflow/ProjectDecideReview', () => {
   });
 
   it('should show error if currentUser is missing', async () => {
-    render(<DecideReview {...defaultProps} currentUser={undefined} />);
+    render(<DecideReview {...defaultProps} currentUser={undefined as unknown as string} />);
     const decisionSelect = screen.getByRole('combobox');
     fireEvent.mouseDown(decisionSelect);
     fireEvent.click(screen.getByText('Approve'));

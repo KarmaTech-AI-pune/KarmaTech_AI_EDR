@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Navigate } from 'react-router-dom';
+// import React from 'react';
+import { BrowserRouter} from 'react-router-dom';
 import { LoginScreen } from './LoginScreen';
 import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
@@ -59,7 +59,7 @@ const mockRefreshSubscription = vi.fn();
 const mockNavigateToHome = vi.fn(); // Restore mockNavigateToHome
 
 const renderLoginScreen = (isAuthenticated: boolean = false) => {
-    (useAppNavigation as vi.Mock).mockReturnValue({
+    (useAppNavigation as import('vitest').Mock).mockReturnValue({
         navigateToHome: mockNavigateToHome,
     });
 
@@ -120,8 +120,8 @@ describe('LoginScreen', () => {
     vi.clearAllMocks();
   });
 
-    let localStorageSetItemSpy: vi.SpyInstance;
-    let localStorageGetItemSpy: vi.SpyInstance;
+    let localStorageSetItemSpy: any;
+    let localStorageGetItemSpy: any;
 
     beforeEach(() => {
         vi.clearAllMocks(); // Use vi.clearAllMocks
@@ -147,8 +147,8 @@ describe('LoginScreen', () => {
             writable: true
         });
 
-        localStorageSetItemSpy = window.localStorage.setItem as unknown as vi.SpyInstance;
-        localStorageGetItemSpy = window.localStorage.getItem as unknown as vi.SpyInstance;
+        localStorageSetItemSpy = window.localStorage.setItem as any;
+        localStorageGetItemSpy = window.localStorage.getItem as any;
     });
 
     test('renders login form elements', () => {
@@ -182,7 +182,7 @@ describe('LoginScreen', () => {
             createdAt: '2023-01-01T00:00:00Z',
             roles: [],
         };
-        (authApi.login as vi.Mock).mockResolvedValue({
+        (authApi.login as import('vitest').Mock).mockResolvedValue({
             success: true,
             token: 'mock-token',
             user: mockUser,
@@ -207,7 +207,7 @@ describe('LoginScreen', () => {
     });
 
     test('displays error message on failed login (invalid credentials)', async () => {
-        (authApi.login as vi.Mock).mockResolvedValue({
+        (authApi.login as import('vitest').Mock).mockResolvedValue({
             success: false,
             message: 'Invalid credentials',
         });
@@ -227,7 +227,7 @@ describe('LoginScreen', () => {
     });
 
     test('displays generic error message on API error', async () => {
-        (authApi.login as vi.Mock).mockRejectedValue(new Error('Network error'));
+        (authApi.login as import('vitest').Mock).mockRejectedValue(new Error('Network error'));
 
         renderLoginScreen();
 
@@ -252,7 +252,7 @@ describe('LoginScreen', () => {
             createdAt: '2023-01-01T00:00:00Z',
             roles: [],
         };
-        (authApi.login as vi.Mock).mockResolvedValue({
+        (authApi.login as import('vitest').Mock).mockResolvedValue({
             success: true,
             token: 'mock-token',
             user: mockUser,

@@ -1,7 +1,7 @@
-import React from 'react';
+// import React from 'react';
 import { render, screen } from '@testing-library/react';
 import LoadingSpinner from './LoadingSpinner';
-import { vi, describe, it, expect } from 'vitest';
+import {  describe, it, expect } from 'vitest';
 
 describe('LoadingSpinner Component', () => {
   it('renders when loading is true', () => {

@@ -1,11 +1,11 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import MonthlyReportDialog from './MonthlyReportDialog';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 // Import the actual modules to be mocked
 import { exportToExcel } from '../../services/excelExportService';
-import { useProject, ProjectContext } from '../../context/ProjectContext'; // Corrected import for ProjectContext
+import { useProject} from '../../context/ProjectContext'; // Corrected import for ProjectContext
 import { MonthlyProgressAPI, MonthlyReport } from '../../services/monthlyProgressApi';
 import { getMonthName } from '../../utils/dateUtils';
 
@@ -37,7 +37,7 @@ const mockGetMonthName = vi.mocked(getMonthName);
 // Mock data
 // Providing a more complete mock for MonthlyReport to satisfy the type requirements.
 // Corrected properties based on TypeScript errors.
-const mockReportData: MonthlyReport = {
+const mockReportData = {
   year: 2023,
   month: '07', // July
   financialAndContractDetails: {
@@ -81,13 +81,13 @@ const mockReportData: MonthlyReport = {
   },
 
   currentMonthActions: [],
-  nextMonthActions: [],
+  lastMonthActions: [],
   risks: [],
   issues: [],
   keyDecisions: [],
   changeRequests: [],
   // Add any other required properties for MonthlyReport
-};
+} as unknown as MonthlyReport;
 
 const mockBlob = new Blob(['excel content'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 const mockUrl = 'blob:http://localhost/mock-url';

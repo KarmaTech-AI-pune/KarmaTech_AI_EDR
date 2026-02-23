@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import React from 'react';
+// import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import EstimatedExpenses from './EstimatedExpenses';
@@ -9,7 +9,7 @@ import { WBSResource } from '../../../types/jobStartFormTypes';
 // Mocking TableTemplate component
 vi.mock('./TableTemplate', () => ({
   __esModule: true,
-  default: vi.fn(({ title, resources, totalLabel, customRows, onDataChange }) => (
+  default: vi.fn(({ title, resources,  customRows, onDataChange }) => (
     <div data-testid="mock-table-template">
       <h3>{title}</h3>
       <div>

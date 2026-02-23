@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useUsers } from './useUsers';
@@ -26,14 +26,14 @@ describe('useUsers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default successful mock responses
-    (usersApi.getAllUsers as vi.Mock).mockResolvedValue(mockUsers);
-    (usersApi.createUser as vi.Mock).mockImplementation((user: Omit<AuthUser, 'id'>) =>
+    (usersApi.getAllUsers as import('vitest').Mock).mockResolvedValue(mockUsers);
+    (usersApi.createUser as import('vitest').Mock).mockImplementation((user: Omit<AuthUser, 'id'>) =>
       Promise.resolve({ ...user, id: '3' })
     );
-    (usersApi.updateUser as vi.Mock).mockImplementation((id: string, user: Partial<AuthUser>) =>
+    (usersApi.updateUser as import('vitest').Mock).mockImplementation((id: string, user: Partial<AuthUser>) =>
       Promise.resolve({ ...mockUsers.find(u => u.id === id), ...user })
     );
-    (usersApi.deleteUser as vi.Mock).mockResolvedValue(undefined);
+    (usersApi.deleteUser as import('vitest').Mock).mockResolvedValue(undefined);
   });
 
   it('should return initial loading state', () => {
@@ -58,7 +58,7 @@ describe('useUsers', () => {
 
   it('should handle error during fetchUsers', async () => {
     const errorMessage = 'Failed to fetch users';
-    (usersApi.getAllUsers as vi.Mock).mockRejectedValue(new Error(errorMessage));
+    (usersApi.getAllUsers as import('vitest').Mock).mockRejectedValue(new Error(errorMessage));
 
     const { result } = renderHook(() => useUsers());
 
@@ -91,7 +91,7 @@ describe('useUsers', () => {
 
   it('should handle error during createUser', async () => {
     const errorMessage = 'Failed to create user';
-    (usersApi.createUser as vi.Mock).mockRejectedValue(new Error(errorMessage));
+    (usersApi.createUser as import('vitest').Mock).mockRejectedValue(new Error(errorMessage));
 
     const { result } = renderHook(() => useUsers());
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -138,7 +138,7 @@ describe('useUsers', () => {
 
   it('should handle error during updateUser', async () => {
     const errorMessage = 'Failed to update user';
-    (usersApi.updateUser as vi.Mock).mockRejectedValue(new Error(errorMessage));
+    (usersApi.updateUser as import('vitest').Mock).mockRejectedValue(new Error(errorMessage));
 
     const { result } = renderHook(() => useUsers());
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -181,7 +181,7 @@ describe('useUsers', () => {
 
   it('should handle error during deleteUser', async () => {
     const errorMessage = 'Failed to delete user';
-    (usersApi.deleteUser as vi.Mock).mockRejectedValue(new Error(errorMessage));
+    (usersApi.deleteUser as import('vitest').Mock).mockRejectedValue(new Error(errorMessage));
 
     const { result } = renderHook(() => useUsers());
     await waitFor(() => expect(result.current.loading).toBe(false));

@@ -1,6 +1,6 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import TenantUsersManagement from './TenantUsersManagement';
@@ -172,8 +172,6 @@ describe('TenantUsersManagement', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
-    // Get all comboboxes in the dialog - first one should be "Select User"
-    const dialog = screen.getByRole('dialog');
     const comboboxes = screen.getAllByRole('combobox');
     // In add mode: [0] = Select User, [1] = Role, [2] = Status
     const userSelect = comboboxes[0];
@@ -269,8 +267,6 @@ describe('TenantUsersManagement', () => {
     
     // Check that Role and Status selects are present with correct values
     // Look for the comboboxes within the dialog and check their displayed values
-    const dialog = screen.getByRole('dialog');
-    const comboboxes = screen.getAllByRole('combobox');
     
     // The dialog should show Admin and Active as the current values
     // These appear as text within the select components

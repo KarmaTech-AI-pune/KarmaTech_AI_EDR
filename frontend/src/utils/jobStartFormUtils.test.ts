@@ -63,7 +63,7 @@ describe('jobStartFormUtils', () => {
 
     it('should return 0 if no matching type', () => {
       const noConsultants: EmployeeAllocation[] = [
-        { id: '1', name: 'Emp1', totalCost: 100, is_consultant: false, role: '', units: 0, rate: 0 },
+        { id: '1', name: 'Emp1', totalCost: 100, is_consultant: false, remarks: '', allocations: [], totalHours: 0 },
       ];
       expect(calculateTotalCost(noConsultants, true)).toBe(0);
     });

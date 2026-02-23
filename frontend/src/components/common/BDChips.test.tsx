@@ -1,6 +1,6 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { act } from '@testing-library/react';
+import { } from '@testing-library/react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BDChips } from './BDChips';
@@ -10,7 +10,7 @@ import { WorkflowEntry } from '../../models/workflowEntryModel';
 // Mock the API call using vi.mock
 vi.mock('../../dummyapi/opportunityWorkflowApi');
 
-const mockGetWorkflowByOpportunityId = opportunityWorkflowApi.getWorkflowByOpportunityId as vi.Mock;
+const mockGetWorkflowByOpportunityId = opportunityWorkflowApi.getWorkflowByOpportunityId as import('vitest').Mock;
 
 describe('BDChips', () => {
   let consoleErrorSpy: any;

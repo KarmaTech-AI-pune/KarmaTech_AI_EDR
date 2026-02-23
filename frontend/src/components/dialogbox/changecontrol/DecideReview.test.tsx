@@ -36,7 +36,7 @@ const mockProjectData = {
 const mockChangeControlData: ChangeControl = {
   id: 101,
   projectId: 1,
-  srNo: 'CC-001',
+  srNo: 1,
   dateLogged: '2023-01-01T10:00:00Z',
   originator: 'Test Originator',
   description: 'Test Change Control Description',
@@ -51,6 +51,9 @@ const mockChangeControlData: ChangeControl = {
   approvalDate: null,
   approvedBy: null,
   rejectionReason: null,
+  changeOrderStatus: 'Pending',
+  clientApprovalStatus: 'Pending',
+  claimSituation: 'None',
   // Add other required properties for ChangeControl if any
 } as ChangeControl; // Cast to ChangeControl
 

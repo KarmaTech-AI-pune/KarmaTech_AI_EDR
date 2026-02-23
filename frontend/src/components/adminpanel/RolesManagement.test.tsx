@@ -1,7 +1,7 @@
-import React from 'react';
+// import React from 'react';
 import '@testing-library/jest-dom';
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor} from '@testing-library/react';
 import RolesManagement from './RolesManagement';
 import type { RoleWithPermissionsDto } from '../../services/rolesApi';
 
@@ -411,7 +411,7 @@ describe('RolesManagement', () => {
     };
     mockGetAllRolesWithPermissions.mockResolvedValueOnce([roleWithVariousPermissions]);
     
-    const { rerender } = render(<RolesManagement />);
+    const { } = render(<RolesManagement />);
     
     // Wait for the role to be loaded
     await waitFor(() => {

@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
@@ -174,7 +174,7 @@ describe('ProjectReviewWorkflow/ProjectSendForReview', () => {
   });
 
   it('should show error if projectId is missing from props and context', async () => {
-    const propsWithoutProjectId = { ...defaultProps, projectId: undefined };
+    const propsWithoutProjectId = { ...defaultProps, projectId: undefined as unknown as number };
     const contextWithoutProjectId = { selectedProject: { id: undefined, seniorProjectManagerId: 'spm123' } };
 
     render(
@@ -193,7 +193,7 @@ describe('ProjectReviewWorkflow/ProjectSendForReview', () => {
   it('should show error if currentUser is missing', async () => {
     render(
       <projectManagementAppContext.Provider value={mockContext as any}>
-        <SendForReview {...defaultProps} currentUser={undefined} />
+        <SendForReview {...defaultProps} currentUser={undefined as unknown as string} />
       </projectManagementAppContext.Provider>
     );
     // The component should return null and not render anything

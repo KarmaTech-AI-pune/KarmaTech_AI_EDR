@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
@@ -11,10 +11,9 @@ import {
   deleteProjectClosure,
 } from '../../services/projectClosureApi';
 import { useProject } from '../../context/ProjectContext';
-import ProjectClosureWorkflow from '../common/ProjectClosureWorkflow';
+// import ProjectClosureWorkflow from '../common/ProjectClosureWorkflow';
 import { ProjectClosureRow, WorkflowHistory } from '../../models';
 import { PMWorkflowStatus } from '../../models/pmWorkflowModel';
-import axios from 'axios';
 
 // Mock external dependencies
 vi.mock('../../services/projectClosureApi', () => ({
@@ -38,10 +37,7 @@ vi.mock('../common/ProjectClosureWorkflow', () => ({
   )),
 }));
 
-vi.mock('axios', () => ({
-  default: vi.fn(),
-  isAxiosError: vi.fn((payload) => (payload as any).isAxiosError),
-}));
+
 
 // Type assertions for mocked functions
 const mockCreateProjectClosure = vi.mocked(createProjectClosure);
@@ -50,7 +46,6 @@ const mockGetProjectClosureById = vi.mocked(getProjectClosureById);
 const mockGetAllProjectClosuresByProjectId = vi.mocked(getAllProjectClosuresByProjectId);
 const mockDeleteProjectClosure = vi.mocked(deleteProjectClosure);
 const mockUseProject = vi.mocked(useProject);
-const mockAxios = vi.mocked(axios);
 
 const mockProjectClosureData: ProjectClosureRow = {
   projectId: '123',
@@ -136,7 +131,7 @@ const mockProjectClosureData: ProjectClosureRow = {
   lessonsLearned: '["Lesson 1", "Lesson 2"]',
   planningIssues: 'None',
   planningLessons: 'None',
-  workflowHistory: { id: 1, changeControlId: 1, actionDate: new Date(), comments: 'Initial', statusId: PMWorkflowStatus.Initial, action: 'Initial', actionBy: 'User', assignedToId: 'User' } as WorkflowHistory,
+  workflowHistory: { id: 1, changeControlId: 1, actionDate: new Date(), comments: 'Initial', statusId: PMWorkflowStatus.Initial, action: 'Initial', actionBy: 'User', assignedToId: 'User', projectClosureId: 1 } as WorkflowHistory,
 };
 
 const mockProjectClosureWithMetadata = {
