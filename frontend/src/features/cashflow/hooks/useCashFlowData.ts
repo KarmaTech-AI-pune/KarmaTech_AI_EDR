@@ -144,12 +144,41 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
     [projectId]
   );
 
+  // Add payment milestone
+  const addPaymentMilestone = useCallback(
+    async (milestone: Omit<PaymentMilestone, 'id'>) => {
+      if (!projectId) {
+        throw new Error('Project ID is required');
+      }
+
+      try {
+        console.log('useCashFlowData: Adding payment milestone:', milestone);
+        
+        // Call API to add milestone
+        const newMilestone = await PaymentScheduleAPI.addPaymentMilestone(projectId, milestone);
+        console.log('useCashFlowData: Milestone added successfully:', newMilestone);
+        
+        // Refresh data to get updated list
+        await fetchData();
+        
+        return newMilestone;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to add payment milestone';
+        console.error('useCashFlowData: Error adding milestone:', err);
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [projectId, fetchData]
+  );
+
   return {
     data,
     loading,
     error,
     fetchData,
     updateData,
+    addPaymentMilestone,
     setData,
     setError,
   };

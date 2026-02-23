@@ -54,6 +54,7 @@ export const CashFlowProvider: React.FC<CashFlowProviderProps> = ({ children }) 
     error,
     fetchData,
     updateData,
+    addPaymentMilestone,
     setData,
     setError,
   } = useCashFlowData({ projectId: projectId || '' });
@@ -145,6 +146,7 @@ export const CashFlowProvider: React.FC<CashFlowProviderProps> = ({ children }) 
     toggleProjections,
     refreshData,
     updateRow,
+    addPaymentMilestone,
   };
 
   const uiContextValue: CashFlowUIContextType = {

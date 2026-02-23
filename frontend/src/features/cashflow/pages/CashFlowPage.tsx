@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Container, Box, Snackbar, Alert } from '@mui/material';
-import { CashFlowProvider, useCashFlowUIContext, useCashFlowDataContext } from '../context/CashFlowContext';
+import { CashFlowProvider, useCashFlowUIContext, useCashFlowDataContext, useCashFlowActionsContext } from '../context/CashFlowContext';
 import { CashFlowHeader } from '../components/CashFlowHeader';
 import { MonthlyBudgetTable } from '../components/MonthlyBudgetTable';
 import { PaymentScheduleTable } from '../components/PaymentScheduleTable';
@@ -35,18 +35,31 @@ const CashFlowSnackbar: React.FC = () => {
 // Main Content Component
 const CashFlowContent: React.FC = () => {
   const { viewMode, data } = useCashFlowDataContext();
+  const { addPaymentMilestone } = useCashFlowActionsContext();
   const { setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen } = useCashFlowUIContext();
 
-  const handleAddMilestone = (milestone: any) => {
-    // TODO: Implement API call to add milestone
-    console.log('Adding milestone:', milestone);
-    
-    // Show success message
-    setSnackbarMessage('Payment schedule added successfully');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
-    
-    // TODO: Refresh data after adding
+  const handleAddMilestone = async (milestone: any) => {
+    try {
+      console.log('CashFlowPage: Adding milestone:', milestone);
+      
+      // Call the hook's addPaymentMilestone method
+      await addPaymentMilestone(milestone);
+      
+      // Show success message
+      setSnackbarMessage('Payment schedule added successfully');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      
+      console.log('CashFlowPage: Milestone added and data refreshed');
+    } catch (error) {
+      console.error('CashFlowPage: Error adding milestone:', error);
+      
+      // Show error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add payment schedule';
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
   };
 
   return (

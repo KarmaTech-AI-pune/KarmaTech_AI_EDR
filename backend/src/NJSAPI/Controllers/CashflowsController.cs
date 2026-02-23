@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NJS.Application.CQRS.Cashflow;
 using NJS.Application.CQRS.Cashflow.Queries;
+using NJS.Application.CQRS.Cashflow.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authorization;
 
 namespace NJSAPI.Controllers
 {
@@ -152,6 +152,40 @@ namespace NJSAPI.Controllers
             {
                 _logger.LogError(ex, "An error occurred while retrieving payment milestones for project {projectId}.", projectId);
                 return StatusCode(500, new { message = $"An error occurred while retrieving payment milestones for project {projectId}.", error = ex.Message });
+            }
+        }
+
+        [HttpPost("payment-milestones")]
+        public async Task<ActionResult> CreatePaymentMilestone(int projectId, [FromBody] CreatePaymentMilestoneCommand command)
+        {
+            try
+            {
+                // Set the projectId from route parameter
+                command.ProjectId = projectId;
+                
+                var result = await _mediator.Send(command);
+                
+                // Transform to frontend expected format (camelCase)
+                var response = new
+                {
+                    id = result.Id,
+                    description = result.Description,
+                    percentage = result.Percentage,
+                    amountINR = result.AmountINR,
+                    dueDate = result.DueDate,
+                    status = result.Status
+                };
+                
+                return CreatedAtAction(
+                    nameof(GetPaymentMilestones), 
+                    new { projectId = projectId }, 
+                    response
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while creating payment milestone for project {projectId}.", projectId);
+                return StatusCode(500, new { message = $"An error occurred while creating payment milestone for project {projectId}.", error = ex.Message });
             }
         }
     }

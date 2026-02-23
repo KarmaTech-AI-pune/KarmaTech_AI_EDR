@@ -206,6 +206,7 @@ export interface CashFlowActionsContextType {
   updateRow: (index: number, updatedRow: CashFlowRow) => Promise<void>;
   deleteRow?: (index: number) => Promise<void>;
   addRow?: (row: CashFlowRow) => Promise<void>;
+  addPaymentMilestone: (milestone: Omit<PaymentMilestone, 'id'>) => Promise<PaymentMilestone>;
 }
 
 export interface CashFlowUIContextType {
