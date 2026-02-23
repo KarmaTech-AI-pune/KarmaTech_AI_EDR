@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using NJS.Application.DTOs;
+using NJS.Application.Dtos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NJS.Application.CQRS.Cashflow;
@@ -96,28 +96,63 @@ namespace NJSAPI.Controllers
         }
 
 
-        [HttpGet("cumulative")]
-        public async Task<ActionResult<List<CumulativeCashflowDto>>> GetCumulativeCashflows(int projectId)
-        {
-            var query = new GetCumulativeCashflowsQuery(projectId);
-            var result = await _mediator.Send(query);
-            return Ok(result);
-        }
+        // [HttpGet("cumulative")]
+        // public async Task<ActionResult<List<CumulativeCashflowDto>>> GetCumulativeCashflows(int projectId)
+        // {
+        //     var query = new GetCumulativeCashflowsQuery(projectId);
+        //     var result = await _mediator.Send(query);
+        //     return Ok(result);
+        // }
 
-        [HttpGet("financial-summary")]
-        public async Task<ActionResult<FinancialSummaryDto>> GetFinancialSummary(int projectId)
-        {
-            var query = new GetFinancialSummaryQuery(projectId);
-            var result = await _mediator.Send(query);
-            return Ok(result);
-        }
+        // [HttpGet("financial-summary")]
+        // public async Task<ActionResult<FinancialSummaryDto>> GetFinancialSummary(int projectId)
+        // {
+        //     var query = new GetFinancialSummaryQuery(projectId);
+        //     var result = await _mediator.Send(query);
+        //     return Ok(result);
+        // }
 
         [HttpGet("payment-milestones")]
-        public async Task<ActionResult<List<PaymentMilestoneDto>>> GetPaymentMilestones(int projectId)
+        public async Task<ActionResult> GetPaymentMilestones(int projectId)
         {
-            var query = new GetPaymentMilestonesQuery(projectId);
-            var result = await _mediator.Send(query);
-            return Ok(result);
+            try
+            {
+                var query = new GetPaymentMilestonesQuery(projectId);
+                var result = await _mediator.Send(query);
+                
+                // Calculate totals
+                decimal totalPercentage = 0;
+                decimal totalAmountINR = 0;
+                
+                foreach (var milestone in result)
+                {
+                    totalPercentage += milestone.Percentage;
+                    totalAmountINR += milestone.AmountINR;
+                }
+                
+                // Transform to frontend expected format (camelCase)
+                var response = new
+                {
+                    milestones = result.Select(m => new
+                    {
+                        id = m.Id,
+                        description = m.Description,
+                        percentage = m.Percentage,
+                        amountINR = m.AmountINR,
+                        dueDate = m.DueDate,
+                        status = m.Status
+                    }).ToList(),
+                    totalPercentage = totalPercentage,
+                    totalAmountINR = totalAmountINR
+                };
+                
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving payment milestones for project {projectId}.", projectId);
+                return StatusCode(500, new { message = $"An error occurred while retrieving payment milestones for project {projectId}.", error = ex.Message });
+            }
         }
     }
 }

@@ -93,25 +93,22 @@ namespace NJS.Application.CQRS.Cashflow.Handlers
             var revenueByMonth = new Dictionary<string, decimal>();
             foreach (var milestone in paymentMilestones)
             {
-                // Parse the DueDate string (format: "15-Mar-25")
-                if (!string.IsNullOrEmpty(milestone.DueDate) && milestone.Amount > 0)
+                // Parse the DueDate string (format: "2025-03-15")
+                if (!string.IsNullOrEmpty(milestone.DueDate) && milestone.AmountINR > 0)
                 {
                     try
                     {
-                        // Extract month-year from "15-Mar-25" format
-                        var parts = milestone.DueDate.Split('-');
-                        if (parts.Length >= 2)
-                        {
-                            string milestoneMonth = $"{parts[1]}-{parts[2]}"; // "Mar-25"
+                        // Parse ISO date format "2025-03-15"
+                        var date = DateTime.Parse(milestone.DueDate);
+                        string milestoneMonth = date.ToString("MMM-yy"); // "Mar-25"
                             
-                            if (revenueByMonth.ContainsKey(milestoneMonth))
-                            {
-                                revenueByMonth[milestoneMonth] += milestone.Amount;
-                            }
-                            else
-                            {
-                                revenueByMonth[milestoneMonth] = milestone.Amount;
-                            }
+                        if (revenueByMonth.ContainsKey(milestoneMonth))
+                        {
+                            revenueByMonth[milestoneMonth] += milestone.AmountINR;
+                        }
+                        else
+                        {
+                            revenueByMonth[milestoneMonth] = milestone.AmountINR;
                         }
                     }
                     catch

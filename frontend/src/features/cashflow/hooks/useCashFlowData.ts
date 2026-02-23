@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import { CashFlowData } from '../types';
 import { CashFlowAPI } from '../services/cashflowApi';
+import { PaymentScheduleAPI } from '../services/paymentScheduleApi';
 
 interface UseCashFlowDataProps {
   projectId: string;
@@ -90,12 +91,30 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
     setError(null);
 
     try {
-      const result = await CashFlowAPI.getProjectCashFlow(projectId);
-      console.log('useCashFlowData: Raw API data:', result);
+      // Fetch cash flow data
+      const cashflowResult = await CashFlowAPI.getProjectCashFlow(projectId);
+      console.log('useCashFlowData: Raw cashflow API data:', cashflowResult);
       
       // Transform the data to include monthlyBudget structure
-      const transformedData = transformToMonthlyBudget(result);
-      console.log('useCashFlowData: Transformed data:', transformedData);
+      const transformedData = transformToMonthlyBudget(cashflowResult);
+      console.log('useCashFlowData: Transformed cashflow data:', transformedData);
+      
+      // Fetch payment schedule data
+      try {
+        const paymentScheduleResult = await PaymentScheduleAPI.getPaymentMilestones(projectId);
+        console.log('useCashFlowData: Payment schedule data:', paymentScheduleResult);
+        
+        // Add payment schedule to the data
+        transformedData.paymentSchedule = paymentScheduleResult;
+      } catch (paymentError) {
+        console.error('useCashFlowData: Error fetching payment schedule (non-critical):', paymentError);
+        // Don't fail the entire fetch if payment schedule fails
+        transformedData.paymentSchedule = {
+          milestones: [],
+          totalPercentage: 0,
+          totalAmountINR: 0,
+        };
+      }
       
       setData(transformedData);
     } catch (err) {
