@@ -5,7 +5,7 @@
 $ErrorActionPreference = "Continue"
 $ScriptPath = $MyInvocation.MyCommand.Path
 $ProjectRoot = Split-Path $ScriptPath
-$BackendSln = Join-Path $ProjectRoot "backend\NJS_backend.sln"
+$BackendSln = Join-Path $ProjectRoot "backend\EDR_backend.sln"
 $FrontendDir = Join-Path $ProjectRoot "frontend"
 
 Write-Host "==========================================" -ForegroundColor Cyan

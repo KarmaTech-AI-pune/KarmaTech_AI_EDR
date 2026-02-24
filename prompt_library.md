@@ -1,6 +1,6 @@
-# NJS Project Management App - Prompt Library
+﻿# EDR Project Management App - Prompt Library
 
-This document contains prompt templates for common development tasks in the NJS Project Management application. Use these templates to quickly generate code with proper architecture and patterns.
+This document contains prompt templates for common development tasks in the EDR Project Management application. Use these templates to quickly generate code with proper architecture and patterns.
 
 ## Table of Contents
 1. [Backend Form Component](#backend-form-component)
@@ -17,7 +17,7 @@ This document contains prompt templates for common development tasks in the NJS 
 ### Prompt Template
 
 ```
-Create a complete backend implementation for a [FORM_NAME] form in the NJS Project Management app with the following requirements:
+Create a complete backend implementation for a [FORM_NAME] form in the EDR Project Management app with the following requirements:
 
 - Form fields: [LIST_OF_FIELDS_WITH_TYPES]
 - Business rules: [BUSINESS_RULES]
@@ -43,7 +43,7 @@ The implementation should include:
 ### Example Usage
 
 ```
-Create a complete backend implementation for a Project Risk Assessment form in the NJS Project Management app with the following requirements:
+Create a complete backend implementation for a Project Risk Assessment form in the EDR Project Management app with the following requirements:
 
 - Form fields:
   - RiskId (int, primary key)
@@ -60,7 +60,7 @@ Create a complete backend implementation for a Project Risk Assessment form in t
   - LastModifiedDate (DateTime, nullable)
 
 - Business rules:
-  - Risk Score is calculated as Probability × Impact
+  - Risk Score is calculated as Probability Ã— Impact
   - High risks (Score > 15) require a mitigation plan
   - Only Project Managers and Admins can create/edit risks
 
@@ -92,7 +92,7 @@ The implementation should include:
 ### Prompt Template
 
 ```
-Create a React form component for [FORM_NAME] in the NJS Project Management app with the following requirements:
+Create a React form component for [FORM_NAME] in the EDR Project Management app with the following requirements:
 
 - Form fields: [LIST_OF_FIELDS_WITH_TYPES]
 - UI requirements: [UI_REQUIREMENTS]
@@ -112,7 +112,7 @@ The implementation should include:
 ### Example Usage
 
 ```
-Create a React form component for Project Risk Assessment in the NJS Project Management app with the following requirements:
+Create a React form component for Project Risk Assessment in the EDR Project Management app with the following requirements:
 
 - Form fields:
   - RiskName (text field, required)
@@ -124,7 +124,7 @@ Create a React form component for Project Risk Assessment in the NJS Project Man
 
 - UI requirements:
   - Responsive layout
-  - Risk Score should be displayed dynamically as Probability × Impact
+  - Risk Score should be displayed dynamically as Probability Ã— Impact
   - Color-coded risk score (Low: green, Medium: yellow, High: red)
   - Confirmation dialog before submission
 
@@ -158,7 +158,7 @@ The implementation should include:
 ### Prompt Template
 
 ```
-Create a complete full-stack implementation for a [FORM_NAME] feature in the NJS Project Management app with the following requirements:
+Create a complete full-stack implementation for a [FORM_NAME] feature in the EDR Project Management app with the following requirements:
 
 - Form fields: [LIST_OF_FIELDS_WITH_TYPES]
 - Business rules: [BUSINESS_RULES]
@@ -186,7 +186,7 @@ The implementation should include all necessary components for a complete featur
 ### Example Usage
 
 ```
-Create a complete full-stack implementation for a Project Milestone feature in the NJS Project Management app with the following requirements:
+Create a complete full-stack implementation for a Project Milestone feature in the EDR Project Management app with the following requirements:
 
 - Form fields:
   - MilestoneId (int, primary key)
@@ -242,7 +242,7 @@ The implementation should include all necessary components for a complete featur
 ### Prompt Template
 
 ```
-Create an API endpoint for [ENDPOINT_PURPOSE] in the NJS Project Management app with the following requirements:
+Create an API endpoint for [ENDPOINT_PURPOSE] in the EDR Project Management app with the following requirements:
 
 - HTTP Method: [GET/POST/PUT/DELETE]
 - Route: [API_ROUTE]
@@ -259,7 +259,7 @@ Please implement this following our architecture patterns:
 ### Example Usage
 
 ```
-Create an API endpoint for retrieving project statistics in the NJS Project Management app with the following requirements:
+Create an API endpoint for retrieving project statistics in the EDR Project Management app with the following requirements:
 
 - HTTP Method: GET
 - Route: /api/projects/{projectId}/statistics
@@ -302,7 +302,7 @@ Please implement this following our architecture patterns:
 ### Prompt Template
 
 ```
-Create a database entity and migration for [ENTITY_NAME] in the NJS Project Management app with the following requirements:
+Create a database entity and migration for [ENTITY_NAME] in the EDR Project Management app with the following requirements:
 
 - Entity properties: [LIST_OF_PROPERTIES_WITH_TYPES]
 - Relationships: [ENTITY_RELATIONSHIPS]
@@ -319,7 +319,7 @@ Please implement this following our architecture patterns:
 ### Example Usage
 
 ```
-Create a database entity and migration for ProjectDocument in the NJS Project Management app with the following requirements:
+Create a database entity and migration for ProjectDocument in the EDR Project Management app with the following requirements:
 
 - Entity properties:
   - DocumentId (int, primary key)
@@ -367,7 +367,7 @@ Please implement this following our architecture patterns:
 ### Prompt Template
 
 ```
-Create unit tests for [COMPONENT_TO_TEST] in the NJS Project Management app with the following requirements:
+Create unit tests for [COMPONENT_TO_TEST] in the EDR Project Management app with the following requirements:
 
 - Component type: [CONTROLLER/SERVICE/REPOSITORY/COMPONENT]
 - Functionality to test: [FUNCTIONALITY_DESCRIPTION]
@@ -385,7 +385,7 @@ Please implement comprehensive tests with:
 ### Example Usage
 
 ```
-Create unit tests for the ProjectRiskController in the NJS Project Management app with the following requirements:
+Create unit tests for the ProjectRiskController in the EDR Project Management app with the following requirements:
 
 - Component type: API Controller
 - Functionality to test:
@@ -422,3 +422,4 @@ Please implement comprehensive tests with:
 - Edge case coverage
 - High code coverage
 ```
+

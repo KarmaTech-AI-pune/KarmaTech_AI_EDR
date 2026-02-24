@@ -1,0 +1,32 @@
+﻿using MediatR;
+using EDR.Application.CQRS.Projects.Queries;
+using EDR.Domain.Entities;
+using EDR.Repositories.Interfaces;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace EDR.Application.CQRS.Projects.Handlers
+{
+    public class GetProjectByIdQueryHandler : IRequestHandler<GetProjectByIdQuery, Project>
+    {
+        private readonly IProjectRepository _repository;
+
+        public GetProjectByIdQueryHandler(IProjectRepository repository)
+        {
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        }
+
+        public Task<Project> Handle(GetProjectByIdQuery request, CancellationToken cancellationToken)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            var project = _repository.GetById(request.Id);
+            if (project == null)
+                throw new ArgumentException($"Project with ID {request.Id} not found");
+
+            return Task.FromResult(project);
+        }
+    }
+}
