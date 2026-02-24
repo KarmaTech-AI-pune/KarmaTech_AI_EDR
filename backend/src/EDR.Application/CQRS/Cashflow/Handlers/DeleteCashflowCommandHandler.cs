@@ -7,7 +7,7 @@ using EDR.Application.CQRS.Cashflow.Commands;
 
 namespace EDR.Application.CQRS.Cashflow.Handlers
 {
-    public class DeleteCashflowCommandHandler : IRequestHandler<DeleteCashflowCommand, Unit>
+    public class DeleteCashflowCommandHandler : IRequestHandler<DeleteCashflowCommand>
     {
         private readonly ICashflowRepository _cashflowRepository;
 
@@ -16,18 +16,17 @@ namespace EDR.Application.CQRS.Cashflow.Handlers
             _cashflowRepository = cashflowRepository;
         }
 
-        public async Task<Unit> Handle(DeleteCashflowCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteCashflowCommand request, CancellationToken cancellationToken)
         {
             var cashflow = await _cashflowRepository.GetByIdAsync(request.Id);
 
             if (cashflow == null)
             {
-                return Unit.Value;
+                return;
             }
 
             await _cashflowRepository.RemoveAsync(cashflow);
             await _cashflowRepository.SaveChangesAsync();
-            return Unit.Value;
         }
     }
 }

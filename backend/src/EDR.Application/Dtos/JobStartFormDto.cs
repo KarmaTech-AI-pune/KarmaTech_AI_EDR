@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace EDR.Application.Dtos
@@ -17,23 +16,14 @@ namespace EDR.Application.Dtos
         public DateTime? UpdatedDate { get; set; }
 
         // Financial data fields
-        [Range(0, double.MaxValue)]
         public decimal TotalTimeCost { get; set; }
-        [Range(0, double.MaxValue)]
         public decimal TotalExpenses { get; set; }
-        [Range(0, double.MaxValue)]
         public decimal ServiceTaxPercentage { get; set; }
-        [Range(0, double.MaxValue)]
         public decimal ServiceTaxAmount { get; set; }
-        [Range(0, double.MaxValue)]
         public decimal GrandTotal { get; set; }
-        [Range(0, double.MaxValue)]
         public decimal ProjectFees { get; set; }
-        [Range(0, double.MaxValue)]
         public decimal TotalProjectFees { get; set; }
-        [Range(0, double.MaxValue)]
         public decimal Profit { get; set; }
-        [Range(0, 100)]
         public decimal ProfitPercentage { get; set; }
 
         public List<JobStartFormSelectionDto> Selections { get; set; } = new List<JobStartFormSelectionDto>();
