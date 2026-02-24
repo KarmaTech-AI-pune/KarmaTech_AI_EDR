@@ -219,6 +219,19 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
                   const monthData = months.find(m => m.month === month);
                   const value = monthData ? (monthData[row.key as keyof typeof monthData] as number) : 0;
                   const isNegative = value < 0;
+                  const isPositive = value > 0;
+                  
+                  // Special color logic for Cash Flow row
+                  let textColor = '#374151'; // default
+                  if (value === 0) {
+                    textColor = '#9ca3af'; // gray for zero
+                  } else if (row.key === 'cashFlow') {
+                    // Cash Flow row: green for positive, red for negative
+                    textColor = isPositive ? '#16a34a' : '#dc2626';
+                  } else {
+                    // Other rows: red for negative, default for positive
+                    textColor = isNegative ? '#dc2626' : '#374151';
+                  }
                   
                   return (
                     <TableCell
@@ -226,7 +239,7 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
                       align="center"
                       sx={{
                         fontSize: '0.8rem',
-                        color: isNegative ? '#dc2626' : (value === 0 ? '#9ca3af' : '#374151'),
+                        color: textColor,
                         py: 1.5,
                         px: 1.5,
                         fontFamily: 'monospace',

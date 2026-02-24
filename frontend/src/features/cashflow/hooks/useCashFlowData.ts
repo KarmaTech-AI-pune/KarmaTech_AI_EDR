@@ -120,7 +120,26 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch cash flow data';
       console.error('useCashFlowData: Error fetching cash flow data:', err);
-      setError(errorMessage);
+      console.warn('useCashFlowData: Attempting to fetch payment schedule independently...');
+      
+      // Even if cashflow fails, try to fetch payment schedule
+      try {
+        const paymentScheduleResult = await PaymentScheduleAPI.getPaymentMilestones(projectId);
+        console.log('useCashFlowData: Payment schedule fetched independently:', paymentScheduleResult);
+        
+        // Create minimal data structure with just payment schedule
+        const minimalData: CashFlowData = {
+          projectId: projectId,
+          rows: [],
+          paymentSchedule: paymentScheduleResult,
+        };
+        
+        setData(minimalData);
+        setError(null); // Clear error since we got payment schedule
+      } catch (paymentError) {
+        console.error('useCashFlowData: Failed to fetch payment schedule independently:', paymentError);
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
       console.log('useCashFlowData: Fetch completed');

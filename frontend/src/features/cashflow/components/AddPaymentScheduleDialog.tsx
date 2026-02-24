@@ -23,6 +23,7 @@ interface AddPaymentScheduleDialogProps {
   onClose: () => void;
   onAdd: (milestone: Omit<PaymentMilestone, 'id'>) => void;
   totalAmountINR: number;
+  currentTotalPercentage: number;
 }
 
 export const AddPaymentScheduleDialog: React.FC<AddPaymentScheduleDialogProps> = ({
@@ -30,11 +31,15 @@ export const AddPaymentScheduleDialog: React.FC<AddPaymentScheduleDialogProps> =
   onClose,
   onAdd,
   totalAmountINR,
+  currentTotalPercentage,
 }) => {
   const [description, setDescription] = useState('');
   const [percentage, setPercentage] = useState<number>(0);
   const [dueDate, setDueDate] = useState<string>('');
   const [errors, setErrors] = useState<{ description?: string; percentage?: string; dueDate?: string }>({});
+
+  // Calculate remaining percentage allowed
+  const remainingPercentage = Math.max(0, 100 - currentTotalPercentage);
 
   const calculateAmount = (percent: number) => {
     return (totalAmountINR * percent) / 100;
@@ -50,6 +55,12 @@ export const AddPaymentScheduleDialog: React.FC<AddPaymentScheduleDialogProps> =
 
     if (percentage <= 0 || percentage > 100) {
       newErrors.percentage = 'Percentage must be between 1 and 100';
+    }
+
+    // Check if total percentage would exceed 100%
+    const newTotalPercentage = currentTotalPercentage + percentage;
+    if (newTotalPercentage > 100) {
+      newErrors.percentage = `Total percentage cannot exceed 100%. Current total: ${currentTotalPercentage}%, Remaining: ${remainingPercentage}%`;
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -146,12 +157,15 @@ export const AddPaymentScheduleDialog: React.FC<AddPaymentScheduleDialogProps> =
             value={percentage || ''}
             onChange={(e) => handlePercentageChange(e.target.value)}
             error={!!errors.percentage}
-            helperText={errors.percentage || 'Enter percentage (1-100)'}
+            helperText={
+              errors.percentage || 
+              `Enter percentage (Max remaining: ${remainingPercentage}%)`
+            }
             fullWidth
             required
             inputProps={{
               min: 0,
-              max: 100,
+              max: remainingPercentage,
               step: 0.1,
             }}
             InputProps={{
@@ -175,6 +189,40 @@ export const AddPaymentScheduleDialog: React.FC<AddPaymentScheduleDialogProps> =
               shrink: true,
             }}
           />
+
+          {/* Current Total Percentage Info */}
+          <Box
+            sx={{
+              p: 2,
+              backgroundColor: remainingPercentage === 0 ? '#fee2e2' : '#f0f9ff',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: remainingPercentage === 0 ? '#fca5a5' : '#bfdbfe',
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Current Total:
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                {currentTotalPercentage}%
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Remaining:
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  fontWeight: 600, 
+                  color: remainingPercentage === 0 ? '#dc2626' : '#059669' 
+                }}
+              >
+                {remainingPercentage}%
+              </Typography>
+            </Box>
+          </Box>
 
           {/* Calculated Amount Display */}
           <Box
@@ -216,11 +264,16 @@ export const AddPaymentScheduleDialog: React.FC<AddPaymentScheduleDialogProps> =
         <Button
           onClick={handleSubmit}
           variant="contained"
+          disabled={remainingPercentage === 0}
           sx={{
             textTransform: 'none',
             backgroundColor: '#3b82f6',
             '&:hover': {
               backgroundColor: '#2563eb',
+            },
+            '&:disabled': {
+              backgroundColor: '#e5e7eb',
+              color: '#9ca3af',
             },
           }}
         >

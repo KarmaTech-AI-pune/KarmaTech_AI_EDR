@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using NJS.Domain.Database;
 
 namespace NJSAPI.Controllers
 {
@@ -21,11 +22,13 @@ namespace NJSAPI.Controllers
     {
         private readonly IMediator _mediator;
         private readonly ILogger<CashflowsController> _logger;
+        private readonly ProjectManagementContext _context;
 
-        public CashflowsController(IMediator mediator, ILogger<CashflowsController> logger)
+        public CashflowsController(IMediator mediator, ILogger<CashflowsController> logger, ProjectManagementContext context)
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _logger = logger;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         [HttpGet]
@@ -34,8 +37,26 @@ namespace NJSAPI.Controllers
         {
             try
             {
+                _logger.LogInformation("GetAllCashflows: Starting request for projectId={ProjectId}", projectId);
+                
                 var query = new GetAllCashflowsQuery { ProjectId = projectId };
                 var result = await _mediator.Send(query);
+                
+                // If result is null (no WBS data or error), return empty object
+                if (result == null)
+                {
+                    _logger.LogInformation("GetAllCashflows: No data available for projectId={ProjectId}, returning empty object", projectId);
+                    return Ok(new { });
+                }
+                
+                _logger.LogInformation("GetAllCashflows: Query executed successfully. Result has {CashflowCount} cashflows", result?.Cashflows?.Count ?? 0);
+                
+                // Check if summary is null
+                if (result.Summary == null)
+                {
+                    _logger.LogWarning("GetAllCashflows: Summary is null for projectId={ProjectId}. Returning empty object.", projectId);
+                    return Ok(new { });
+                }
                 
                 // Transform to frontend expected format (camelCase)
                 var response = new
@@ -62,36 +83,51 @@ namespace NJSAPI.Controllers
                         total = result.Summary.Total,
                         manpowerContingencies = new
                         {
-                            percentage = result.Summary.ManpowerContingencies.Percentage,
-                            amount = result.Summary.ManpowerContingencies.Amount
+                            percentage = result.Summary.ManpowerContingencies?.Percentage ?? 0,
+                            amount = result.Summary.ManpowerContingencies?.Amount ?? 0
                         },
                         odcContingencies = new
                         {
-                            percentage = result.Summary.OdcContingencies.Percentage,
-                            amount = result.Summary.OdcContingencies.Amount
+                            percentage = result.Summary.OdcContingencies?.Percentage ?? 0,
+                            amount = result.Summary.OdcContingencies?.Amount ?? 0
                         },
                         subTotal = result.Summary.SubTotal,
                         profit = new
                         {
-                            percentage = result.Summary.Profit.Percentage,
-                            amount = result.Summary.Profit.Amount
+                            percentage = result.Summary.Profit?.Percentage ?? 0,
+                            amount = result.Summary.Profit?.Amount ?? 0
                         },
                         totalProjectCost = result.Summary.TotalProjectCost,
                         gst = new
                         {
-                            percentage = result.Summary.GST.Percentage,
-                            amount = result.Summary.GST.Amount
+                            percentage = result.Summary.GST?.Percentage ?? 0,
+                            amount = result.Summary.GST?.Amount ?? 0
                         },
                         quotedPrice = result.Summary.QuotedPrice
                     }
                 };
                 
+                // Log response for debugging
+                _logger.LogInformation("GetAllCashflows: Response has {RowCount} rows", response.rows.Count);
+                foreach (var row in response.rows)
+                {
+                    _logger.LogInformation("Row: Period={Period}, Revenue={Revenue}, CumulativeRevenue={CumulativeRevenue}", 
+                        row.period, row.revenue, row.cumulativeRevenue);
+                }
+                
+                _logger.LogInformation("GetAllCashflows: Successfully returning response for projectId={ProjectId}", projectId);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving all cashflows for project {projectId}.", projectId);
-                return StatusCode(500, new { message = $"An error occurred while retrieving cashflows for project {projectId}.", error = ex.Message });
+                _logger.LogError(ex, "An error occurred while retrieving all cashflows for project {projectId}. Error: {ErrorMessage}, StackTrace: {StackTrace}", 
+                    projectId, ex.Message, ex.StackTrace);
+                return StatusCode(500, new { 
+                    message = $"An error occurred while retrieving cashflows for project {projectId}.", 
+                    error = ex.Message,
+                    stackTrace = ex.StackTrace,
+                    innerException = ex.InnerException?.Message
+                });
             }
         }
 
@@ -130,10 +166,32 @@ namespace NJSAPI.Controllers
                     totalAmountINR += milestone.AmountINR;
                 }
                 
-                // Get the monthly budget summary to get the QuotedPrice (Total Project Fee)
-                var cashflowQuery = new GetAllCashflowsQuery { ProjectId = projectId };
-                var cashflowResult = await _mediator.Send(cashflowQuery);
-                var totalProjectFee = cashflowResult.Summary.QuotedPrice;
+                // Get the Total Project Fee from Project.EstimatedProjectFee (primary source)
+                // Fallback to calculated QuotedPrice from cashflow summary if EstimatedProjectFee is not set
+                decimal totalProjectFee = 0;
+                try
+                {
+                    // First, try to get EstimatedProjectFee from Project entity
+                    var project = await _context.Projects.FindAsync(projectId);
+                    if (project != null && project.EstimatedProjectFee.HasValue && project.EstimatedProjectFee.Value > 0)
+                    {
+                        totalProjectFee = project.EstimatedProjectFee.Value;
+                        _logger.LogInformation("Using Project.EstimatedProjectFee: {EstimatedProjectFee} for project {projectId}", totalProjectFee, projectId);
+                    }
+                    else
+                    {
+                        // Fallback: Use calculated QuotedPrice from cashflow summary
+                        var cashflowQuery = new GetAllCashflowsQuery { ProjectId = projectId };
+                        var cashflowResult = await _mediator.Send(cashflowQuery);
+                        totalProjectFee = cashflowResult?.Summary?.QuotedPrice ?? 0;
+                        _logger.LogInformation("Using calculated QuotedPrice: {QuotedPrice} for project {projectId}", totalProjectFee, projectId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not retrieve project fee for project {projectId}. Using 0 for totalProjectFee.", projectId);
+                    // Continue with totalProjectFee = 0
+                }
                 
                 // Transform to frontend expected format (camelCase)
                 var response = new

@@ -31,6 +31,16 @@ export const PaymentScheduleTable: React.FC<PaymentScheduleTableProps> = ({
 }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Debug: Log data changes
+  React.useEffect(() => {
+    console.log('=== PaymentScheduleTable: Data prop changed ===');
+    console.log('Full data object:', JSON.stringify(data, null, 2));
+    console.log('Milestones array:', data?.milestones);
+    console.log('Milestones count:', data?.milestones?.length || 0);
+    console.log('Total percentage:', data?.totalPercentage);
+    console.log('Total amount INR:', data?.totalAmountINR);
+  }, [data]);
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -45,7 +55,12 @@ export const PaymentScheduleTable: React.FC<PaymentScheduleTableProps> = ({
   const totalAmountINR = data?.totalAmountINR || 0;
   const totalProjectFee = data?.totalProjectFee || 0;
 
+  console.log('=== PaymentScheduleTable: Rendering ===');
+  console.log('Milestones to render:', milestones.length);
+  console.log('First milestone:', milestones[0]);
+
   const handleAddMilestone = (milestone: Omit<PaymentMilestone, 'id'>) => {
+    console.log('PaymentScheduleTable: handleAddMilestone called:', milestone);
     if (onAddMilestone) {
       onAddMilestone(milestone);
     }
@@ -310,6 +325,7 @@ export const PaymentScheduleTable: React.FC<PaymentScheduleTableProps> = ({
       onClose={() => setDialogOpen(false)}
       onAdd={handleAddMilestone}
       totalAmountINR={totalProjectFee}
+      currentTotalPercentage={totalPercentage}
     />
   </>
   );
