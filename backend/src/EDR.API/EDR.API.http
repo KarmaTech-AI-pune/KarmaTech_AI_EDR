@@ -1,0 +1,7 @@
+﻿@EDR.API_HostAddress = http://localhost:5245
+
+GET {{EDR.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+

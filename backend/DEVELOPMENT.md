@@ -1,4 +1,4 @@
-# NJS Project Management Backend - Development Guide
+﻿# EDR Project Management Backend - Development Guide
 
 ## Prerequisites
 
@@ -17,8 +17,8 @@
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-org/njs-project-management.git
-cd njs-project-management/backend
+git clone https://github.com/your-org/edr-project-management.git
+cd edr-project-management/backend
 ```
 
 ### 2. Configure Database
@@ -27,14 +27,14 @@ cd njs-project-management/backend
 1. Install SQL Server
 2. Create a new database:
 ```sql
-CREATE DATABASE NJSAPIProjectManagement
+CREATE DATABASE EDR.APIProjectManagement
 ```
 
 #### Connection String Configuration
 Update `appsettings.json` or use user secrets:
 ```json
 "ConnectionStrings": {
-  "DefaultConnection": "Server=localhost,1433;Database=NJSAPIProjectManagement;User Id=sa;Password=YourPassword;TrustServerCertificate=True"
+  "DefaultConnection": "Server=localhost,1433;Database=EDR.APIProjectManagement;User Id=sa;Password=YourPassword;TrustServerCertificate=True"
 }
 ```
 
@@ -66,8 +66,8 @@ dotnet run --environment Development
 
 ### Default Admin Credentials
 - Username: admin
-- Email: admin@njs.com
-- Password: NJSAdmin@2024!
+- Email: admin@edr.com
+- Password: EDRAdmin@2024!
 
 ### Roles
 - Admin: Full system access
@@ -186,3 +186,4 @@ dotnet test
 
 ## License
 [Specify your project's license]
+

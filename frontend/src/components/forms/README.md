@@ -1,6 +1,6 @@
-# Forms Components Documentation
+﻿# Forms Components Documentation
 
-This directory contains form components used throughout the NJS Project Management Application. Each form serves a specific purpose in the project management workflow.
+This directory contains form components used throughout the EDR Project Management Application. Each form serves a specific purpose in the project management workflow.
 
 ## Form Components Overview
 
@@ -445,8 +445,8 @@ A React component that provides an interactive form for making or editing Go/No-
   - 5-7: Good (Medium)
   - 0-4: Poor (Low)
 - Total score determines final status:
-  - ≥84: GO [Green]
-  - ≥50: GO [Amber]
+  - â‰¥84: GO [Green]
+  - â‰¥50: GO [Amber]
   - <50: NO GO [Red]
 
 ### Dependencies
@@ -558,3 +558,4 @@ Uses React Context (projectManagementAppContext) for:
 5. Real-time calculations
 6. Clear status indicators
 7. Comprehensive commenting system
+

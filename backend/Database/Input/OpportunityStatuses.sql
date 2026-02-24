@@ -1,4 +1,4 @@
--- Check if OpportunityStatuses table has data
+﻿-- Check if OpportunityStatuses table has data
 IF NOT EXISTS (SELECT TOP 1 1 FROM OpportunityStatuses)
 BEGIN
     SET IDENTITY_INSERT OpportunityStatuses ON;
@@ -117,8 +117,8 @@ BEGIN
                (4,4, 'Meets all criteria on its own', 'Need of JV or some support to meet the criteria', 'Does not meet qualification criteria'),
                (5,5, 'Meets all criteria on its own', 'Need of JV or some support to meet the criteria', 'Does not meet qualification criteria'),
                (6,6, 'All competent key staff available', 'Most competent key staff available but some outsourcing required', 'Major outsourcing required'),
-               (7,7, 'NJS has inside track, and competition is manageable', 'NJS faces formidable competition, and have limited intelligence on it', 'Project appears to be wired for competition'),
-               (8,8, 'NJS qualifications are technically superior', 'Qualifications are equivalent to competition, or we may have a slight edge', 'NJS qualifications are lower to the competition'),
+               (7,7, 'EDR has inside track, and competition is manageable', 'EDR faces formidable competition, and have limited intelligence on it', 'Project appears to be wired for competition'),
+               (8,8, 'EDR qualifications are technically superior', 'Qualifications are equivalent to competition, or we may have a slight edge', 'EDR qualifications are lower to the competition'),
                (9,9, 'Project will lead to future work', 'Possible future work', 'One-time project, no future work'),
                (10,10, 'Good profit potential', 'Competitive pricing, Moderate potential profit', 'Risky and may lead to little/no profit'),
                (11,11, 'More than adequate, project will not adversely impact other projects', 'Adequate, other projects may be adversely impacted', 'Not adequate, other projects will be adversely impacted'),
@@ -130,6 +130,7 @@ ELSE
 BEGIN
     PRINT 'ScoringDescriptionSummarry data already exists, skipping insert';
 END
+
 
 
 

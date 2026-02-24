@@ -50,7 +50,7 @@ if (Test-Path $frontendPath) {
 
 # 2. Backend Tests (.NET)
 Print-Header "STARTING BACKEND TESTS (.NET)"
-$backendSolution = "backend/NJS_backend.sln"
+$backendSolution = "backend/EDR_backend.sln"
 
 if (Test-Path $backendSolution) {
     Write-Host "Running: dotnet test..." -ForegroundColor Yellow

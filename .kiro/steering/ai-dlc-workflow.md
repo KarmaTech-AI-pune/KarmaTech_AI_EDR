@@ -31,7 +31,11 @@ The AI-DLC workflow now includes **automatic GitHub operations** at key points:
    ↓
 1. User provides requirement
    ↓
+<<<<<<< HEAD
 1.5. 🚨 MANDATORY: Check existing codebase files (BEFORE creating new files)
+=======
+1.5. 🔍 MANDATORY: Check existing codebase files (BEFORE creating new files)
+>>>>>>> origin/feature/Add-postgresql
    └─ Scan Controllers: backend/src/NJSAPI/Controllers
    └─ Scan Entities: backend/src/NJS.Domain/Entities
    └─ Scan DTOs: backend/src/NJS.Application/Dtos

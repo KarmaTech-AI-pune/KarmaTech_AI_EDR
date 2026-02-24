@@ -1,4 +1,4 @@
-import { axiosInstance } from './axiosConfig';
+﻿import { axiosInstance } from './axiosConfig';
 import {
   OpportunityTracking,
   normalizeOpportunityTracking,
@@ -42,10 +42,10 @@ export interface BackendOpportunityTracking {
   contactPersonAtClient?: string;
   dateOfSubmission?: string;
   percentageChanceOfProjectHappening?: number;
-  percentageChanceOfNJSSuccess?: number;
+  percentageChanceOfEDRSuccess?: number;
   likelyCompetition?: string;
   grossRevenue: number;
-  netNJSRevenue: number;
+  netEDRRevenue: number;
   followUpComments?: string;
   notes?: string;
   probableQualifyingCriteria?: string;
@@ -141,10 +141,10 @@ export const opportunityApi = {
           ? preparedData.dateOfSubmission.toISOString().split('T')[0]
           : preparedData.dateOfSubmission,
         percentageChanceOfProjectHappening: preparedData.percentageChanceOfProjectHappening,
-        percentageChanceOfNJSSuccess: preparedData.percentageChanceOfNJSSuccess,
+        percentageChanceOfEDRSuccess: preparedData.percentageChanceOfEDRSuccess,
         likelyCompetition: preparedData.likelyCompetition,
         grossRevenue: preparedData.grossRevenue || 0,
-        netNJSRevenue: preparedData.netNJSRevenue || 0,
+        netEDRRevenue: preparedData.netEDRRevenue || 0,
         followUpComments: preparedData.followUpComments,
         notes: preparedData.notes,
         probableQualifyingCriteria: preparedData.probableQualifyingCriteria,
@@ -398,3 +398,4 @@ export const opportunityApi = {
 
 
 };
+

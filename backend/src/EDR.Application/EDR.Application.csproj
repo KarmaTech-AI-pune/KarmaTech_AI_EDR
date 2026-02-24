@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="AWSSDK.Core" Version="4.0.0.17" />
+    <PackageReference Include="AWSSDK.Route53" Version="4.0.2.3" />
+    <PackageReference Include="AWSSDK.Route53Domains" Version="4.0.0.15" />
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.0" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.0.0" />
+    <PackageReference Include="MimeKit" Version="4.11.0" />
+	<PackageReference Include="MailKit" Version="4.11.0" />
+	<PackageReference Include="Stripe.net" Version="48.3.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" /> <!-- Added for DbContext extension methods -->
+    <PackageReference Include="FluentValidation" Version="11.9.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    
+    <ProjectReference Include="..\..\EDR.Repositories\EDR.Repositories.csproj" />    
+    <ProjectReference Include="..\EDR.Domain\EDR.Domain.csproj" />
+    
+  </ItemGroup>
+
+</Project>
+

@@ -8,7 +8,7 @@ $mainSiteName   = "karmatech-ai"
 $apiSiteName    = "api.karmatech-ai"
 $tenantSiteName = "tenants.karmatech-ai"
 
-$basePath       = "D:\Disha Project\NJSProjectManagementApp"
+$basePath       = "D:\Disha Project\EDRProjectManagementApp"
 $frontendPath   = "$basePath\frontend\dist"
 $backendPath    = "$basePath\backend"
 

@@ -2,12 +2,12 @@
 # Script to populate the WBS options in the database
 
 # Get the appsettings.json path
-$appSettingsPath = Join-Path $PSScriptRoot "src\NJSAPI\appsettings.json"
+$appSettingsPath = Join-Path $PSScriptRoot "src\EDR.API\appsettings.json"
 
 # Check if the file exists
 if (-not (Test-Path $appSettingsPath)) {
     # Try Dev version if regular one doesn't exist
-    $appSettingsPath = Join-Path $PSScriptRoot "src\NJSAPI\appsettings.Dev.json"
+    $appSettingsPath = Join-Path $PSScriptRoot "src\EDR.API\appsettings.Dev.json"
     if (-not (Test-Path $appSettingsPath)) {
         Write-Host "Error: Could not find appsettings.json or appsettings.Dev.json" -ForegroundColor Red
         exit 1
@@ -36,7 +36,7 @@ if ($appSettings.ConnectionStrings.AppDbConnection) {
 }
 
 # Get database name from config file
-$database = "NJSAPIProjectManagement" # Default value
+$database = "KarmaTechAI_EDR_SAAS" # Default value
 if ($connectionString -match "Database=(.*?);") {
     $database = $matches[1]
 }
