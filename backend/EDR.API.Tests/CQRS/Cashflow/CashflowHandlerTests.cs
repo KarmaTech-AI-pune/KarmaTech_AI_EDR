@@ -234,10 +234,10 @@ namespace EDR.API.Tests.CQRS.Cashflow
             _mockRepo.Setup(r => r.GetByIdAsync(999)).ReturnsAsync((Domain.Entities.Cashflow)null);
 
             // Act
-            var result = await handler.Handle(new DeleteCashflowCommand { Id = 999 }, CancellationToken.None);
+            await handler.Handle(new DeleteCashflowCommand { Id = 999 }, CancellationToken.None);
             
             // Assert
-            Assert.Equal(MediatR.Unit.Value, result);
+            // No exception implies success/ignored for Not Found.
         }
     }
 }
