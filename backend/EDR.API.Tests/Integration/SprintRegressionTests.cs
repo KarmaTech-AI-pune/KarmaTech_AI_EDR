@@ -1,13 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
-using NJS.API.Tests.Infrastructure;
-using NJS.Application.CQRS.SprintDailyProgresses.Commands;
-using NJS.Application.CQRS.SprintTasks.Commands;
-using NJS.Application.CQRS.SprintWbsPlans.Commands;
-using NJS.Application.Dtos;
+using EDR.API.Tests.Infrastructure;
+using EDR.Application.CQRS.SprintDailyProgresses.Commands;
+using EDR.Application.CQRS.SprintTasks.Commands;
+using EDR.Application.CQRS.SprintWbsPlans.Commands;
+using EDR.Application.Dtos;
 using Xunit;
 
-namespace NJS.API.Tests.Integration
+namespace EDR.API.Tests.Integration
 {
     /// <summary>
     /// Regression tests for Sprint APIs. Tests complex cross-entity workflows,

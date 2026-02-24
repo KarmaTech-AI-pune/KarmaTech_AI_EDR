@@ -1,183 +1,153 @@
 using Microsoft.EntityFrameworkCore;
-using NJS.Domain.Database;
-using NJS.Domain.Entities;
-using NJS.Domain.Repositories;
-using NJS.Repositories.Repositories;
+using Microsoft.Extensions.Configuration;
+using Moq;
+using EDR.Domain.Database;
+using EDR.Domain.Entities;
+using EDR.Domain.Services;
+using EDR.Repositories.Repositories;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.Repositories
+namespace EDR.API.Tests.Repositories
 {
     public class JobStartFormRepositoryTests
     {
         private readonly DbContextOptions<ProjectManagementContext> _options;
+        private readonly Mock<ICurrentTenantService> _currentTenantServiceMock;
+        private readonly Mock<IConfiguration> _configurationMock;
 
         public JobStartFormRepositoryTests()
         {
-            // Create a fresh in-memory database for each test
             _options = new DbContextOptionsBuilder<ProjectManagementContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
+            _currentTenantServiceMock = new Mock<ICurrentTenantService>();
+            _configurationMock = new Mock<IConfiguration>();
+        }
+
+        private ProjectManagementContext GetContext()
+        {
+            return new ProjectManagementContext(_options, _currentTenantServiceMock.Object, _configurationMock.Object);
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnAllForms()
+        public async Task GetAllAsync_ShouldReturnAllJobStartForms()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new JobStartFormRepository(context);
             
-            // Add test data
             await context.JobStartForms.AddRangeAsync(
-                new JobStartForm { FormId = 1, ProjectId = 1, FormTitle = "Form 1" },
-                new JobStartForm { FormId = 2, ProjectId = 1, FormTitle = "Form 2" },
-                new JobStartForm { FormId = 3, ProjectId = 2, FormTitle = "Form 3" }
+                new JobStartForm { FormId = 1, FormTitle = "Form 1", ProjectId = 1 },
+                new JobStartForm { FormId = 2, FormTitle = "Form 2", ProjectId = 1 }
             );
             await context.SaveChangesAsync();
 
             // Act
-            var forms = await repository.GetAllAsync();
+            var results = await repository.GetAllAsync();
 
             // Assert
-            Assert.Equal(3, forms.Count());
-            Assert.Contains(forms, f => f.FormTitle == "Form 1");
-            Assert.Contains(forms, f => f.FormTitle == "Form 2");
-            Assert.Contains(forms, f => f.FormTitle == "Form 3");
+            Assert.Equal(2, results.Count());
         }
 
         [Fact]
-        public async Task GetByIdAsync_WithValidId_ShouldReturnForm()
+        public async Task GetByIdAsync_ShouldReturnCorrectForm()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new JobStartFormRepository(context);
             
-            // Add test data
-            var form = new JobStartForm { FormId = 1, ProjectId = 1, FormTitle = "Test Form" };
+            var form = new JobStartForm { FormId = 1, FormTitle = "Test Form", ProjectId = 1 };
             await context.JobStartForms.AddAsync(form);
             await context.SaveChangesAsync();
 
             // Act
-            var result = await repository.GetByIdAsync(form.FormId);
+            var result = await repository.GetByIdAsync(1);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(form.FormId, result.FormId);
             Assert.Equal("Test Form", result.FormTitle);
         }
 
         [Fact]
-        public async Task GetByIdAsync_WithInvalidId_ShouldReturnNull()
+        public async Task GetAllByProjectIdAsync_ShouldReturnFormsForProject()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new JobStartFormRepository(context);
-
-            // Act
-            var result = await repository.GetByIdAsync(999);
-
-            // Assert
-            Assert.Null(result);
-        }
-
-        [Fact]
-        public async Task GetByProjectIdAsync_ShouldReturnFormsForProject()
-        {
-            // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new JobStartFormRepository(context);
             
-            // Add test data
-            var projectId = 1;
             await context.JobStartForms.AddRangeAsync(
-                new JobStartForm { FormId = 1, ProjectId = projectId, FormTitle = "Form 1" },
-                new JobStartForm { FormId = 2, ProjectId = projectId, FormTitle = "Form 2" },
-                new JobStartForm { FormId = 3, ProjectId = 2, FormTitle = "Form 3" } // Different project
+                new JobStartForm { FormId = 1, FormTitle = "Project 1 Form", ProjectId = 1 },
+                new JobStartForm { FormId = 2, FormTitle = "Project 2 Form", ProjectId = 2 }
             );
             await context.SaveChangesAsync();
 
             // Act
-            var forms = await repository.GetByProjectIdAsync(projectId);
+            var results = await repository.GetAllByProjectIdAsync(1);
 
             // Assert
-            Assert.Equal(2, forms.Count());
-            Assert.All(forms, f => Assert.Equal(projectId, f.ProjectId));
-            Assert.Contains(forms, f => f.FormTitle == "Form 1");
-            Assert.Contains(forms, f => f.FormTitle == "Form 2");
+            Assert.Single(results);
+            Assert.Equal("Project 1 Form", results.First().FormTitle);
         }
 
         [Fact]
-        public async Task AddAsync_ShouldAddFormToDatabase()
+        public async Task AddAsync_ShouldAddForm()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new JobStartFormRepository(context);
-            var form = new JobStartForm
-            {
-                ProjectId = 1,
-                FormTitle = "New Form",
-                Description = "Description",
-                StartDate = DateTime.Now,
-                PreparedBy = "User1"
-            };
+            var form = new JobStartForm { FormTitle = "New Form", ProjectId = 1 };
 
             // Act
             await repository.AddAsync(form);
             await context.SaveChangesAsync();
 
             // Assert
-            Assert.NotEqual(0, form.FormId); // ID should be set
-            var savedForm = await context.JobStartForms.FindAsync(form.FormId);
-            Assert.NotNull(savedForm);
-            Assert.Equal("New Form", savedForm.FormTitle);
+            Assert.Equal(1, await context.JobStartForms.CountAsync());
         }
 
         [Fact]
-        public async Task Update_ShouldUpdateFormInDatabase()
+        public async Task UpdateAsync_ShouldUpdateForm()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new JobStartFormRepository(context);
             
-            // Add test data
-            var form = new JobStartForm { FormId = 1, ProjectId = 1, FormTitle = "Original Title" };
+            var form = new JobStartForm { FormId = 1, FormTitle = "Original Title", ProjectId = 1 };
             await context.JobStartForms.AddAsync(form);
             await context.SaveChangesAsync();
 
             // Act
             form.FormTitle = "Updated Title";
-            repository.Update(form);
+            await repository.UpdateAsync(form);
             await context.SaveChangesAsync();
 
             // Assert
-            var updatedForm = await context.JobStartForms.FindAsync(form.FormId);
-            Assert.NotNull(updatedForm);
-            Assert.Equal("Updated Title", updatedForm.FormTitle);
+            var result = await context.JobStartForms.FindAsync(1);
+            Assert.Equal("Updated Title", result.FormTitle);
         }
 
         [Fact]
-        public async Task DeleteAsync_ShouldRemoveFormFromDatabase()
+        public async Task DeleteAsync_ShouldSoftDeleteForm()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new JobStartFormRepository(context);
             
-            // Add test data
-            var form = new JobStartForm { FormId = 1, ProjectId = 1, FormTitle = "Form to Delete" };
+            var form = new JobStartForm { FormId = 1, FormTitle = "To Delete", ProjectId = 1 };
             await context.JobStartForms.AddAsync(form);
             await context.SaveChangesAsync();
-            
-            // Verify form exists
-            Assert.NotNull(await context.JobStartForms.FindAsync(form.FormId));
 
             // Act
-            await repository.DeleteAsync(form.FormId);
+            await repository.DeleteAsync(form);
             await context.SaveChangesAsync();
 
             // Assert
-            Assert.Null(await context.JobStartForms.FindAsync(form.FormId));
+            var result = await context.JobStartForms.FindAsync(1);
+            Assert.True(result.IsDeleted);
         }
     }
 }

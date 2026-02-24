@@ -1,13 +1,13 @@
 using Moq;
-using NJS.Application.Services;
-using NJS.Domain.Entities;
-using NJS.Repositories.Interfaces;
+using EDR.Application.Services;
+using EDR.Domain.Entities;
+using EDR.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.Services
+namespace EDR.API.Tests.Services
 {
     public class OpportunityHistoryServiceTests
     {
@@ -119,7 +119,7 @@ namespace NJS.API.Tests.Services
                 .ReturnsAsync(histories);
 
             // Act
-            var result = await _service.GetHistoryByOpportunityIdAsync(opportunityId);
+            var result = await _service.GetByOpportunityIdAsync(opportunityId);
 
             // Assert
             Assert.Equal(2, result.Count);

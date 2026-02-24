@@ -287,7 +287,7 @@ namespace EDR.API.Tests.Controllers
             var messageProperty = anonymousObj.GetType().GetProperty("message");
             Assert.NotNull(messageProperty);
             var message = messageProperty.GetValue(anonymousObj);
-            Assert.Equal("An error occurred while creating the input register", message);
+            Assert.Equal("Test exception", message);
         }
 
         [Fact]

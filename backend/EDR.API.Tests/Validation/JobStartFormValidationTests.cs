@@ -37,7 +37,7 @@ namespace EDR.API.Tests.Validation
             Assert.Empty(validationResults);
         }
 
-        [Fact]
+        [Fact(Skip = "User requested ProjectId and other fields to not have Required attributes")]
         public void JobStartForm_WithMissingRequiredFields_ShouldFailValidation()
         {
             // Arrange

@@ -1,58 +1,72 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Moq;
-using NJS.Application.CQRS.Handlers.BidPreparation;
-using NJS.Application.CQRS.Queries.BidPreparation;
-using NJS.Domain.Database;
-using NJS.Domain.Entities;
+using EDR.Domain.Services;
+using EDR.Application.CQRS.Handlers.BidPreparation;
+using EDR.Application.CQRS.Queries.BidPreparation;
+using EDR.Domain.Database;
+using EDR.Domain.Entities;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.CQRS.BidPreparation
+namespace EDR.API.Tests.CQRS.BidPreparation
 {
-    public class GetBidPreparationByIdQueryHandlerTests
+    public class GetBidPreparationQueryHandlerTests
     {
-        private readonly Mock<ProjectManagementContext> _contextMock;
-        private readonly GetBidPreparationByIdQueryHandler _handler;
+        private readonly DbContextOptions<ProjectManagementContext> _options;
+        private readonly Mock<ICurrentTenantService> _currentTenantServiceMock;
+        private readonly Mock<IConfiguration> _configurationMock;
 
-        public GetBidPreparationByIdQueryHandlerTests()
+        public GetBidPreparationQueryHandlerTests()
         {
-            _contextMock = new Mock<ProjectManagementContext>(new DbContextOptions<ProjectManagementContext>());
-            _handler = new GetBidPreparationByIdQueryHandler(_contextMock.Object);
+            _options = new DbContextOptionsBuilder<ProjectManagementContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+            _currentTenantServiceMock = new Mock<ICurrentTenantService>();
+            _configurationMock = new Mock<IConfiguration>();
+        }
+
+        private ProjectManagementContext GetContext()
+        {
+            return new ProjectManagementContext(_options, _currentTenantServiceMock.Object, _configurationMock.Object);
         }
 
         [Fact]
-        public async Task Handle_WithValidId_ReturnsBidPreparationDto()
+        public async Task Handle_WithValidOpportunityId_ReturnsBidPreparationDto()
         {
             // Arrange
-            var bidId = 1;
-            var bid = new Domain.Entities.BidPreparation
+            var opportunityId = 1;
+            var userId = "user1";
+            var bid = new EDR.Domain.Entities.BidPreparation
             {
-                Id = bidId,
-                ProjectId = 1,
-                Title = "Test Bid",
-                Description = "Test Description",
-                Status = "Draft",
+                Id = 1,
+                OpportunityId = opportunityId,
+                UserId = userId,
+                DocumentCategoriesJson = "{}",
+                Status = BidPreparationStatus.Draft,
                 CreatedAt = DateTime.Now,
-                CreatedBy = "user1"
+                CreatedBy = userId
             };
 
-            var mockDbSet = MockDbSet(new[] { bid });
-            _contextMock.Setup(c => c.BidPreparations).Returns(mockDbSet.Object);
+            using var context = GetContext();
+            context.BidPreparations.Add(bid);
+            context.SaveChanges();
 
-            var query = new GetBidPreparationByIdQuery(bidId);
+            var handler = new GetBidPreparationQueryHandler(context);
+
+            var query = new GetBidPreparationQuery { OpportunityId = opportunityId, UserId = userId };
 
             // Act
-            var result = await _handler.Handle(query, CancellationToken.None);
+            var result = await handler.Handle(query, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(bidId, result.Id);
-            Assert.Equal(bid.ProjectId, result.ProjectId);
-            Assert.Equal(bid.Title, result.Title);
-            Assert.Equal(bid.Description, result.Description);
+            Assert.Equal(bid.Id, result.Id);
+            Assert.Equal(opportunityId, result.OpportunityId);
+            Assert.Equal(bid.DocumentCategoriesJson, result.DocumentCategoriesJson);
             Assert.Equal(bid.Status, result.Status);
             Assert.Equal(bid.CreatedBy, result.CreatedBy);
         }
@@ -61,38 +75,19 @@ namespace NJS.API.Tests.CQRS.BidPreparation
         public async Task Handle_WithInvalidId_ReturnsNull()
         {
             // Arrange
-            var bidId = 999;
-            var bids = new Domain.Entities.BidPreparation[] { };
+            var opportunityId = 999;
+            var userId = "user1";
 
-            var mockDbSet = MockDbSet(bids);
-            _contextMock.Setup(c => c.BidPreparations).Returns(mockDbSet.Object);
+            using var context = GetContext();
+            var handler = new GetBidPreparationQueryHandler(context);
 
-            var query = new GetBidPreparationByIdQuery(bidId);
+            var query = new GetBidPreparationQuery { OpportunityId = opportunityId, UserId = userId };
 
             // Act
-            var result = await _handler.Handle(query, CancellationToken.None);
+            var result = await handler.Handle(query, CancellationToken.None);
 
             // Assert
             Assert.Null(result);
-        }
-
-        private static Mock<DbSet<T>> MockDbSet<T>(T[] entities) where T : class
-        {
-            var mockSet = new Mock<DbSet<T>>();
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(entities.AsQueryable().Provider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(entities.AsQueryable().Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(entities.AsQueryable().ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(entities.AsQueryable().GetEnumerator());
-            
-            mockSet.Setup(m => m.FindAsync(It.IsAny<object[]>()))
-                .Returns<object[]>(ids => 
-                {
-                    var id = (int)ids[0];
-                    var entity = entities.FirstOrDefault(e => ((Domain.Entities.BidPreparation)(object)e).Id == id);
-                    return ValueTask.FromResult(entity);
-                });
-
-            return mockSet;
         }
     }
 }

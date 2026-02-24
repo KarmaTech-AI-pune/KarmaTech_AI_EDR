@@ -1,12 +1,13 @@
 using Moq;
-using NJS.Application.Services;
-using NJS.Application.Services.IContract;
-using NJS.Domain.Entities;
-using NJS.Repositories.Interfaces;
+using EDR.Application.Services;
+using EDR.Application.Services.IContract;
+using EDR.Domain.Entities;
+using EDR.Repositories.Interfaces;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
-namespace NJS.API.Tests.Services
+namespace EDR.API.Tests.Services
 {
     public class ProjectManagementServiceTests
     {
@@ -42,7 +43,6 @@ namespace NJS.API.Tests.Services
             _service.AddWorkBreakdownStructure(projectId, wbs);
 
             // Assert
-            Assert.Equal(projectId, wbs.ProjectId);
             _wbsRepositoryMock.Verify(r => r.Add(wbs), Times.Once);
         }
 
@@ -96,7 +96,7 @@ namespace NJS.API.Tests.Services
         public void CreateWBS_ShouldAddWBS()
         {
             // Arrange
-            var wbs = new WorkBreakdownStructure { ProjectId = 1 };
+            var wbs = new WorkBreakdownStructure { WBSHeaderId = 1 };
 
             // Act
             var result = _service.CreateWBS(wbs);
@@ -111,7 +111,7 @@ namespace NJS.API.Tests.Services
         {
             // Arrange
             var projectId = 1;
-            var wbs = new WorkBreakdownStructure { Id = 1, ProjectId = projectId };
+            var wbs = new WorkBreakdownStructure { Id = 1, WBSHeader = new WBSHeader { ProjectId = projectId } };
 
             _wbsRepositoryMock.Setup(r => r.GetByProjectId(projectId))
                 .Returns(wbs);
@@ -121,14 +121,14 @@ namespace NJS.API.Tests.Services
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(projectId, result.ProjectId);
+            Assert.Equal(projectId, result.WBSHeader.ProjectId);
         }
 
         [Fact]
         public void UpdateWBS_ShouldCallRepositoryUpdate()
         {
             // Arrange
-            var wbs = new WorkBreakdownStructure { Id = 1, ProjectId = 1 };
+            var wbs = new WorkBreakdownStructure { Id = 1 };
 
             // Act
             _service.UpdateWBS(wbs);

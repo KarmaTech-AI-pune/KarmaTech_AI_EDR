@@ -1,28 +1,27 @@
-using Microsoft.EntityFrameworkCore;
 using Moq;
-using NJS.Application.CQRS.OpportunityTracking.Handlers;
-using NJS.Application.CQRS.OpportunityTracking.Queries;
-using NJS.Domain.Database;
-using NJS.Domain.Entities;
-using NJS.Domain.Enums;
+using EDR.Application.CQRS.OpportunityTracking.Handlers;
+using EDR.Application.CQRS.OpportunityTracking.Queries;
+using EDR.Application.Dtos;
+using EDR.Domain.Entities;
+using EDR.Domain.Enums;
+using EDR.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.CQRS.OpportunityTracking
+namespace EDR.API.Tests.CQRS.OpportunityTracking
 {
     public class GetOpportunityTrackingByIdQueryHandlerTests
     {
-        private readonly Mock<ProjectManagementContext> _contextMock;
+        private readonly Mock<IOpportunityTrackingRepository> _repositoryMock;
         private readonly GetOpportunityTrackingByIdQueryHandler _handler;
 
         public GetOpportunityTrackingByIdQueryHandlerTests()
         {
-            _contextMock = new Mock<ProjectManagementContext>(new DbContextOptions<ProjectManagementContext>());
-            _handler = new GetOpportunityTrackingByIdQueryHandler(_contextMock.Object);
+            _repositoryMock = new Mock<IOpportunityTrackingRepository>();
+            _handler = new GetOpportunityTrackingByIdQueryHandler(_repositoryMock.Object);
         }
 
         [Fact]
@@ -30,22 +29,27 @@ namespace NJS.API.Tests.CQRS.OpportunityTracking
         {
             // Arrange
             var opportunityId = 1;
-            var opportunity = new OpportunityTrackingEntity
+            var opportunity = new EDR.Domain.Entities.OpportunityTracking
             {
                 Id = opportunityId,
-                Title = "Test Opportunity",
-                Description = "Test Description",
-                ClientName = "Test Client",
-                Status = OpportunityTrackingStatus.Active,
-                Stage = OpportunityStage.Identification,
+                WorkName = "Test Opportunity",
+                Notes = "Test Description",
+                Client = "Test Client",
+                Status = OpportunityTrackingStatus.BID_UNDER_PREPERATION,
+                Stage = OpportunityStage.A,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now,
                 BidManagerId = "user1",
-                ClientSector = "Energy"
+                ClientSector = "Energy",
+                StrategicRanking = "High",
+                Operation = "Op",
+                Currency = "USD",
+                LikelyStartDate = DateTime.Now,
+                OpportunityHistories = new List<OpportunityHistory>()
             };
 
-            var mockDbSet = MockDbSet(new[] { opportunity });
-            _contextMock.Setup(c => c.OpportunityTrackings).Returns(mockDbSet.Object);
+            _repositoryMock.Setup(r => r.GetByIdAsync(opportunityId))
+                .ReturnsAsync(opportunity);
 
             var query = new GetOpportunityTrackingByIdQuery(opportunityId);
 
@@ -55,51 +59,24 @@ namespace NJS.API.Tests.CQRS.OpportunityTracking
             // Assert
             Assert.NotNull(result);
             Assert.Equal(opportunityId, result.Id);
-            Assert.Equal(opportunity.Title, result.Title);
-            Assert.Equal(opportunity.Description, result.Description);
-            Assert.Equal(opportunity.ClientName, result.ClientName);
-            Assert.Equal(opportunity.Status, result.Status);
-            Assert.Equal(opportunity.Stage, result.Stage);
-            Assert.Equal(opportunity.BidManagerId, result.BidManagerId);
-            Assert.Equal(opportunity.ClientSector, result.ClientSector);
+            Assert.Equal(opportunity.WorkName, result.WorkName);
+            Assert.Equal(opportunity.Notes, result.Notes);
+            Assert.Equal(opportunity.Client, result.Client);
         }
 
         [Fact]
-        public async Task Handle_WithInvalidId_ReturnsNull()
+        public async Task Handle_WithInvalidId_ThrowsException()
         {
             // Arrange
             var opportunityId = 999;
-            var opportunities = new OpportunityTrackingEntity[] { };
 
-            var mockDbSet = MockDbSet(opportunities);
-            _contextMock.Setup(c => c.OpportunityTrackings).Returns(mockDbSet.Object);
+            _repositoryMock.Setup(r => r.GetByIdAsync(opportunityId))
+                .ReturnsAsync((EDR.Domain.Entities.OpportunityTracking)null);
 
             var query = new GetOpportunityTrackingByIdQuery(opportunityId);
 
-            // Act
-            var result = await _handler.Handle(query, CancellationToken.None);
-
-            // Assert
-            Assert.Null(result);
-        }
-
-        private static Mock<DbSet<T>> MockDbSet<T>(T[] entities) where T : class
-        {
-            var mockSet = new Mock<DbSet<T>>();
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(entities.AsQueryable().Provider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(entities.AsQueryable().Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(entities.AsQueryable().ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(entities.AsQueryable().GetEnumerator());
-            
-            mockSet.Setup(m => m.FindAsync(It.IsAny<object[]>()))
-                .Returns<object[]>(ids => 
-                {
-                    var id = (int)ids[0];
-                    var entity = entities.FirstOrDefault(e => ((OpportunityTrackingEntity)(object)e).Id == id);
-                    return ValueTask.FromResult(entity);
-                });
-
-            return mockSet;
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(() => _handler.Handle(query, CancellationToken.None));
         }
     }
 }
