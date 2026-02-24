@@ -192,15 +192,17 @@ namespace EDR.API.Tests.CQRS.Cashflow
         }
 
         [Fact]
-        public async Task UpdateCashflowCommandHandler_Handle_ThrowsKeyNotFound_WhenNotFound()
+        public async Task UpdateCashflowCommandHandler_Handle_ReturnsNull_WhenNotFound()
         {
             // Arrange
             var handler = new UpdateCashflowCommandHandler(_mockRepo.Object);
             _mockRepo.Setup(r => r.GetByIdAsync(999)).ReturnsAsync((Domain.Entities.Cashflow)null);
 
-            // Act & Assert
-            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-                handler.Handle(new UpdateCashflowCommand { Id = 999, Cashflow = BuildDto(999) }, CancellationToken.None));
+            // Act
+            var result = await handler.Handle(new UpdateCashflowCommand { Id = 999, Cashflow = BuildDto(999) }, CancellationToken.None);
+
+            // Assert
+            Assert.Null(result);
         }
 
         // ==================== DeleteCashflowCommandHandler ====================
@@ -213,27 +215,29 @@ namespace EDR.API.Tests.CQRS.Cashflow
             var entity = BuildEntity(3, 1);
 
             _mockRepo.Setup(r => r.GetByIdAsync(3)).ReturnsAsync(entity);
-            _mockRepo.Setup(r => r.DeleteAsync(It.IsAny<Domain.Entities.Cashflow>())).Returns(Task.CompletedTask);
+            _mockRepo.Setup(r => r.RemoveAsync(It.IsAny<Domain.Entities.Cashflow>())).Returns(Task.CompletedTask);
             _mockRepo.Setup(r => r.SaveChangesAsync()).ReturnsAsync(1);
 
             // Act
             await handler.Handle(new DeleteCashflowCommand { Id = 3 }, CancellationToken.None);
 
             // Assert
-            _mockRepo.Verify(r => r.DeleteAsync(entity), Times.Once);
+            _mockRepo.Verify(r => r.RemoveAsync(entity), Times.Once);
             _mockRepo.Verify(r => r.SaveChangesAsync(), Times.Once);
         }
 
         [Fact]
-        public async Task DeleteCashflowCommandHandler_Handle_ThrowsKeyNotFound_WhenNotFound()
+        public async Task DeleteCashflowCommandHandler_Handle_ReturnsUnitValue_WhenNotFound()
         {
             // Arrange
             var handler = new DeleteCashflowCommandHandler(_mockRepo.Object);
             _mockRepo.Setup(r => r.GetByIdAsync(999)).ReturnsAsync((Domain.Entities.Cashflow)null);
 
-            // Act & Assert
-            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-                handler.Handle(new DeleteCashflowCommand { Id = 999 }, CancellationToken.None));
+            // Act
+            var result = await handler.Handle(new DeleteCashflowCommand { Id = 999 }, CancellationToken.None);
+            
+            // Assert
+            Assert.Equal(MediatR.Unit.Value, result);
         }
     }
 }

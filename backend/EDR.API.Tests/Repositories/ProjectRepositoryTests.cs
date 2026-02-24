@@ -48,8 +48,8 @@ namespace EDR.API.Tests.Repositories
             // Arrange
             _dbContext.Projects.AddRange(new List<Project>
             {
-                new Project { Id = 1, Name = "Project 1", TenantId = 1 },
-                new Project { Id = 2, Name = "Project 2", TenantId = 1 }
+                new Project { Id = 1, Name = "Project 1", TenantId = 1, ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Id = 2, Name = "Project 2", TenantId = 1, ClientName = "Client", Sector = "IT", Currency = "USD" }
             });
             await _dbContext.SaveChangesAsync();
 
@@ -64,7 +64,7 @@ namespace EDR.API.Tests.Repositories
         public async Task GetById_WithValidId_ShouldReturnProject()
         {
             // Arrange
-            var project = new Project { Id = 1, Name = "Test Project", TenantId = 1 };
+            var project = new Project { Id = 1, Name = "Test Project", TenantId = 1, ClientName = "Client", Sector = "IT", Currency = "USD" };
             _dbContext.Projects.Add(project);
             await _dbContext.SaveChangesAsync();
 
@@ -80,7 +80,7 @@ namespace EDR.API.Tests.Repositories
         public async Task Add_ShouldAddProjectAndSave()
         {
             // Arrange
-            var project = new Project { Id = 3, Name = "New Project", TenantId = 1 };
+            var project = new Project { Id = 3, Name = "New Project", TenantId = 1, ClientName = "Client", Sector = "IT", Currency = "USD" };
 
             // Act
             await _projectRepository.Add(project);
@@ -95,7 +95,7 @@ namespace EDR.API.Tests.Repositories
         public async Task Update_ShouldCallUpdateAndSave()
         {
             // Arrange
-            var project = new Project { Id = 4, Name = "Initial Project", TenantId = 1 };
+            var project = new Project { Id = 4, Name = "Initial Project", TenantId = 1, ClientName = "Client", Sector = "IT", Currency = "USD" };
             _dbContext.Projects.Add(project);
             await _dbContext.SaveChangesAsync();
 
@@ -113,7 +113,7 @@ namespace EDR.API.Tests.Repositories
         public async Task Delete_ShouldCallRemoveAndSave_WhenProjectExists()
         {
             // Arrange
-            var project = new Project { Id = 5, TenantId = 1 };
+            var project = new Project { Id = 5, TenantId = 1, Name = "P5", ClientName = "Client", Sector = "IT", Currency = "USD" };
             _dbContext.Projects.Add(project);
             await _dbContext.SaveChangesAsync();
 
@@ -132,9 +132,9 @@ namespace EDR.API.Tests.Repositories
             var programId = 10;
             _dbContext.Projects.AddRange(new List<Project>
             {
-                new Project { Id = 11, ProgramId = programId, TenantId = 1 },
-                new Project { Id = 12, ProgramId = programId, TenantId = 1 },
-                new Project { Id = 13, ProgramId = 20, TenantId = 1 }
+                new Project { Id = 11, ProgramId = programId, TenantId = 1, Name = "P11", ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Id = 12, ProgramId = programId, TenantId = 1, Name = "P12", ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Id = 13, ProgramId = 20, TenantId = 1, Name = "P13", ClientName = "Client", Sector = "IT", Currency = "USD" }
             });
             await _dbContext.SaveChangesAsync();
 
@@ -153,10 +153,10 @@ namespace EDR.API.Tests.Repositories
             var userId = "user1";
             _dbContext.Projects.AddRange(new List<Project>
             {
-                new Project { Id = 21, ProjectManagerId = userId, TenantId = 1 },
-                new Project { Id = 22, SeniorProjectManagerId = userId, TenantId = 1 },
-                new Project { Id = 23, RegionalManagerId = userId, TenantId = 1 },
-                new Project { Id = 24, ProjectManagerId = "other", TenantId = 1 }
+                new Project { Id = 21, ProjectManagerId = userId, TenantId = 1, Name = "P21", ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Id = 22, SeniorProjectManagerId = userId, TenantId = 1, Name = "P22", ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Id = 23, RegionalManagerId = userId, TenantId = 1, Name = "P23", ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Id = 24, ProjectManagerId = "other", TenantId = 1, Name = "P24", ClientName = "Client", Sector = "IT", Currency = "USD" }
             });
             await _dbContext.SaveChangesAsync();
 

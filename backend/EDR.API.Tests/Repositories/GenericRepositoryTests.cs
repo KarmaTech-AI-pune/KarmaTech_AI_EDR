@@ -43,6 +43,9 @@ namespace EDR.API.Tests.Repositories
             var project = new Project
             {
                 Name = "Test Project",
+                ClientName = "Client",
+                Sector = "IT",
+                Currency = "USD",
                 Details = "Test Description",
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now.AddMonths(3)
@@ -68,9 +71,9 @@ namespace EDR.API.Tests.Repositories
             
             // Add test data
             await context.Projects.AddRangeAsync(
-                new Project { Name = "Project 1" },
-                new Project { Name = "Project 2" },
-                new Project { Name = "Project 3" }
+                new Project { Name = "Project 1", ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Name = "Project 2", ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Name = "Project 3", ClientName = "Client", Sector = "IT", Currency = "USD" }
             );
             await context.SaveChangesAsync();
 
@@ -92,7 +95,7 @@ namespace EDR.API.Tests.Repositories
             var repository = new Repository<Project>(context);
             
             // Add test data
-            var project = new Project { Name = "Test Project" };
+            var project = new Project { Name = "Test Project", ClientName = "Client", Sector = "IT", Currency = "USD" };
             await context.Projects.AddAsync(project);
             await context.SaveChangesAsync();
 
@@ -128,9 +131,9 @@ namespace EDR.API.Tests.Repositories
             
             // Add test data
             await context.Projects.AddRangeAsync(
-                new Project { Name = "Project A" },
-                new Project { Name = "Project B" },
-                new Project { Name = "Other Project" }
+                new Project { Name = "Project A", ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Name = "Project B", ClientName = "Client", Sector = "IT", Currency = "USD" },
+                new Project { Name = "Other Project", ClientName = "Client", Sector = "IT", Currency = "USD" }
             );
             await context.SaveChangesAsync();
 
@@ -152,7 +155,7 @@ namespace EDR.API.Tests.Repositories
             var repository = new Repository<Project>(context);
             
             // Add test data
-            var project = new Project { Name = "Original Name" };
+            var project = new Project { Name = "Original Name", ClientName = "Client", Sector = "IT", Currency = "USD" };
             await context.Projects.AddAsync(project);
             await context.SaveChangesAsync();
 
@@ -175,7 +178,7 @@ namespace EDR.API.Tests.Repositories
             var repository = new Repository<Project>(context);
             
             // Add test data
-            var project = new Project { Name = "Project to Remove" };
+            var project = new Project { Name = "Project to Remove", ClientName = "Client", Sector = "IT", Currency = "USD" };
             await context.Projects.AddAsync(project);
             await context.SaveChangesAsync();
             

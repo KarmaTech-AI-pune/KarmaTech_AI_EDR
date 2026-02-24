@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -17,36 +18,30 @@ namespace EDR.API.Tests.Services
 {
     public class AuditServiceTests
     {
-        private readonly Mock<IServiceProvider> _serviceProviderMock;
         private readonly Mock<ILogger<AuditService>> _loggerMock;
+        private readonly IServiceProvider _serviceProvider;
         private readonly AuditService _auditService;
 
         public AuditServiceTests()
         {
-            _serviceProviderMock = new Mock<IServiceProvider>();
             _loggerMock = new Mock<ILogger<AuditService>>();
-            _auditService = new AuditService(_serviceProviderMock.Object, _loggerMock.Object);
+            
+            var dbName = Guid.NewGuid().ToString();
+            var services = new ServiceCollection();
+            services.AddDbContext<ProjectManagementContext>(options =>
+                options.UseInMemoryDatabase(databaseName: dbName));
+            
+            services.AddScoped<ICurrentTenantService>(sp => new Mock<ICurrentTenantService>().Object);
+            services.AddScoped<IConfiguration>(sp => new Mock<IConfiguration>().Object);
+            
+            _serviceProvider = services.BuildServiceProvider();
+            _auditService = new AuditService(_serviceProvider, _loggerMock.Object);
         }
 
         [Fact]
         public async Task LogAuditAsync_ShouldCreateNewScopeAndSaveAuditLog()
         {
             // Arrange
-            var mockScope = new Mock<IServiceScope>();
-            var mockScopeFactory = new Mock<IServiceScopeFactory>();
-            var mockContext = new Mock<ProjectManagementContext>();
-            var mockAuditLogs = new Mock<DbSet<AuditLog>>();
-
-            _serviceProviderMock.Setup(x => x.GetService(typeof(IServiceScopeFactory)))
-                .Returns(mockScopeFactory.Object);
-            mockScopeFactory.Setup(x => x.CreateScope())
-                .Returns(mockScope.Object);
-            mockScope.Setup(x => x.ServiceProvider)
-                .Returns(_serviceProviderMock.Object);
-            _serviceProviderMock.Setup(x => x.GetService(typeof(ProjectManagementContext)))
-                .Returns(mockContext.Object);
-            mockContext.Setup(x => x.AuditLogs)
-                .Returns(mockAuditLogs.Object);
 
             var auditEvent = new AuditEvent(
                 "TestEntity",
@@ -65,46 +60,34 @@ namespace EDR.API.Tests.Services
             await _auditService.LogAuditAsync(auditEvent);
 
             // Assert
-            mockScopeFactory.Verify(x => x.CreateScope(), Times.Once);
-            mockScope.Verify(x => x.Dispose(), Times.Once);
-            mockAuditLogs.Verify(x => x.Add(It.IsAny<AuditLog>()), Times.Once);
-            mockContext.Verify(x => x.SaveChangesAsync(default), Times.Once);
+            using var scope = _serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+            Assert.Single(context.AuditLogs);
+            var log = context.AuditLogs.First();
+            Assert.Equal("TestEntity", log.EntityName);
+            Assert.Equal("Created", log.Action);
+            Assert.Equal("123", log.EntityId);
         }
 
         [Fact]
         public async Task GetAuditLogsAsync_ShouldCreateNewScopeAndReturnLogs()
         {
             // Arrange
-            var mockScope = new Mock<IServiceScope>();
-            var mockScopeFactory = new Mock<IServiceScopeFactory>();
-            var mockContext = new Mock<ProjectManagementContext>();
-            var mockAuditLogs = new Mock<DbSet<AuditLog>>();
-
-            var testLogs = new List<AuditLog>
+            using (var scope = _serviceProvider.CreateScope())
             {
-                new AuditLog { Id = 1, EntityName = "TestEntity", EntityId = "123", Action = "Created" },
-                new AuditLog { Id = 2, EntityName = "TestEntity", EntityId = "123", Action = "Updated" }
-            }.AsQueryable();
-
-            _serviceProviderMock.Setup(x => x.GetService(typeof(IServiceScopeFactory)))
-                .Returns(mockScopeFactory.Object);
-            mockScopeFactory.Setup(x => x.CreateScope())
-                .Returns(mockScope.Object);
-            mockScope.Setup(x => x.ServiceProvider)
-                .Returns(_serviceProviderMock.Object);
-            _serviceProviderMock.Setup(x => x.GetService(typeof(ProjectManagementContext)))
-                .Returns(mockContext.Object);
-            mockContext.Setup(x => x.AuditLogs)
-                .Returns(mockAuditLogs.Object);
-            mockAuditLogs.Setup(x => x.Where(It.IsAny<Expression<Func<AuditLog, bool>>>()))
-                .Returns(testLogs);
+                var context = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+                context.AuditLogs.AddRange(
+                    new AuditLog { EntityName = "TestEntity", EntityId = "123", Action = "Created", ChangedBy = "UserA", NewValues = "{}", OldValues = "{}" },
+                    new AuditLog { EntityName = "TestEntity", EntityId = "123", Action = "Updated", ChangedBy = "UserA", NewValues = "{}", OldValues = "{}" },
+                    new AuditLog { EntityName = "OtherEntity", EntityId = "456", Action = "Created", ChangedBy = "UserB", NewValues = "{}", OldValues = "{}" }
+                );
+                context.SaveChanges();
+            }
 
             // Act
             var result = await _auditService.GetAuditLogsAsync("TestEntity", "123");
 
             // Assert
-            mockScopeFactory.Verify(x => x.CreateScope(), Times.Once);
-            mockScope.Verify(x => x.Dispose(), Times.Once);
             Assert.Equal(2, result.Count());
         }
 
@@ -112,21 +95,6 @@ namespace EDR.API.Tests.Services
         public async Task OnAuditEventAsync_ShouldCallLogAuditAsync()
         {
             // Arrange
-            var mockScope = new Mock<IServiceScope>();
-            var mockScopeFactory = new Mock<IServiceScopeFactory>();
-            var mockContext = new Mock<ProjectManagementContext>();
-            var mockAuditLogs = new Mock<DbSet<AuditLog>>();
-
-            _serviceProviderMock.Setup(x => x.GetService(typeof(IServiceScopeFactory)))
-                .Returns(mockScopeFactory.Object);
-            mockScopeFactory.Setup(x => x.CreateScope())
-                .Returns(mockScope.Object);
-            mockScope.Setup(x => x.ServiceProvider)
-                .Returns(_serviceProviderMock.Object);
-            _serviceProviderMock.Setup(x => x.GetService(typeof(ProjectManagementContext)))
-                .Returns(mockContext.Object);
-            mockContext.Setup(x => x.AuditLogs)
-                .Returns(mockAuditLogs.Object);
 
             var auditEvent = new AuditEvent(
                 "TestEntity",
@@ -142,8 +110,9 @@ namespace EDR.API.Tests.Services
             await _auditService.OnAuditEventAsync(auditEvent);
 
             // Assert
-            mockAuditLogs.Verify(x => x.Add(It.IsAny<AuditLog>()), Times.Once);
-            mockContext.Verify(x => x.SaveChangesAsync(default), Times.Once);
+            using var scope = _serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+            Assert.Single(context.AuditLogs);
         }
     }
 } 

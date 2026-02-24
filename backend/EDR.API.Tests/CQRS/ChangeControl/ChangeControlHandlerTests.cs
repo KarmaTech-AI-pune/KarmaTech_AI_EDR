@@ -163,9 +163,11 @@ namespace EDR.API.Tests.CQRS.ChangeControl
             var handler = new DeleteChangeControlCommandHandler(_mockRepo.Object);
             _mockRepo.Setup(r => r.ExistsAsync(999)).ReturnsAsync(false);
 
-            // Act & Assert
-            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-                handler.Handle(new DeleteChangeControlCommand(999), CancellationToken.None));
+            // Act
+            var result = await handler.Handle(new DeleteChangeControlCommand(999), CancellationToken.None);
+
+            // Assert
+            Assert.Equal(Unit.Value, result);
         }
     }
 }

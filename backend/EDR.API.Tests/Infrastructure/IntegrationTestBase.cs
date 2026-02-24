@@ -50,6 +50,9 @@ namespace EDR.API.Tests.Infrastructure
             {
                 TenantId = 1,
                 Name = "Test Project",
+                ClientName = "Test Client",
+                Sector = "IT",
+                Currency = "USD",
                 ProgramId = program.Id,
                 Status = ProjectStatus.Active,
                 CreatedAt = DateTime.UtcNow
@@ -100,6 +103,9 @@ namespace EDR.API.Tests.Infrastructure
             {
                 TenantId = 1,
                 Name = "Test Project",
+                ClientName = "Test Client",
+                Sector = "IT",
+                Currency = "USD",
                 ProgramId = program.Id,
                 Status = ProjectStatus.Active,
                 CreatedAt = DateTime.UtcNow

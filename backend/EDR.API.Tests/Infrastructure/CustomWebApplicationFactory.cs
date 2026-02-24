@@ -79,6 +79,7 @@ namespace EDR.API.Tests.Infrastructure
 
             // --- Database Services (replaced with InMemory) ---
             appBuilder.Services.AddSingleton<ICurrentTenantService>(new StubCurrentTenantService());
+            appBuilder.Services.AddSingleton<EDR.Repositories.Interfaces.ITenantService>(new StubTenantService());
 
             appBuilder.Services.AddDbContext<ProjectManagementContext>((provider, options) =>
             {
@@ -176,6 +177,28 @@ namespace EDR.API.Tests.Infrastructure
         {
             return Task.FromResult(new List<MigrationResult>());
         }
+    }
+
+    /// <summary>
+    /// Stub ITenantService for testing. Bypasses TenantDbContext lookups.
+    /// </summary>
+    public class StubTenantService : EDR.Repositories.Interfaces.ITenantService
+    {
+        public int? TenantId { get; set; } = 1;
+
+        public Task<string> GetCurrentTenantDomain() => Task.FromResult("localhost");
+        public Task<Tenant> GetCurrentTenantAsync() => Task.FromResult(new Tenant { Id = 1, Domain = "localhost", Name = "Test Tenant" });
+        public Task<int?> GetCurrentTenantIdAsync() => Task.FromResult<int?>(1);
+        public Task<string> GetTenantDomain() => Task.FromResult("localhost");
+        public string GetTenantDomainFromClaims() => "localhost";
+        public Task<int?> GetTenantId(string domain) => Task.FromResult<int?>(1);
+        public int? GetTenantIdFromClaims() => 1;
+        public string GetTenantRoleFromClaims() => "Admin";
+        public Task<List<TenantUser>> GetTenantUsersByUserIdAsync(string userId) => Task.FromResult(new List<TenantUser>());
+        public string GetUserTypeFromClaims() => "TenantUser";
+        public bool IsSuperAdminFromClaims() => true;
+        public Task<bool> SetTenantContextAsync(string tenantDomain) => Task.FromResult(true);
+        public Task<bool> ValidateTenantAccessAsync(string userId, int tenantId) => Task.FromResult(true);
     }
 
     /// <summary>

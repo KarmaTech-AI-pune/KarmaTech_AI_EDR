@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Moq;
+using EDR.Domain.Services;
 using EDR.Application.CQRS.Commands.BidPreparation;
 using EDR.Application.CQRS.Handlers.BidPreparation;
 using EDR.Domain.Database;
@@ -14,13 +16,22 @@ namespace EDR.API.Tests.CQRS.BidPreparation
 {
     public class SubmitBidPreparationCommandHandlerTests
     {
-        private readonly Mock<ProjectManagementContext> _contextMock;
-        private readonly SubmitBidPreparationCommandHandler _handler;
+        private readonly DbContextOptions<ProjectManagementContext> _options;
+        private readonly Mock<ICurrentTenantService> _currentTenantServiceMock;
+        private readonly Mock<IConfiguration> _configurationMock;
 
         public SubmitBidPreparationCommandHandlerTests()
         {
-            _contextMock = new Mock<ProjectManagementContext>(new DbContextOptions<ProjectManagementContext>());
-            _handler = new SubmitBidPreparationCommandHandler(_contextMock.Object);
+            _options = new DbContextOptionsBuilder<ProjectManagementContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+            _currentTenantServiceMock = new Mock<ICurrentTenantService>();
+            _configurationMock = new Mock<IConfiguration>();
+        }
+
+        private ProjectManagementContext GetContext()
+        {
+            return new ProjectManagementContext(_options, _currentTenantServiceMock.Object, _configurationMock.Object);
         }
 
         [Fact]
@@ -40,12 +51,11 @@ namespace EDR.API.Tests.CQRS.BidPreparation
                 CreatedBy = userId
             };
 
-            var mockDbSet = MockDbSet(new[] { bid });
-            _contextMock.Setup(c => c.BidPreparations).Returns(mockDbSet.Object);
-            _contextMock.Setup(c => c.BidVersionHistories).Returns(new Mock<DbSet<BidVersionHistory>>().Object);
+            var context = GetContext();
+            context.BidPreparations.Add(bid);
+            await context.SaveChangesAsync();
 
-            _contextMock.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
+            var handler = new SubmitBidPreparationCommandHandler(context);
 
             var command = new SubmitBidPreparationCommand 
             { 
@@ -55,12 +65,11 @@ namespace EDR.API.Tests.CQRS.BidPreparation
             };
 
             // Act
-            var result = await _handler.Handle(command, CancellationToken.None);
+            var result = await handler.Handle(command, CancellationToken.None);
 
             // Assert
             Assert.True(result);
             Assert.Equal(BidPreparationStatus.PendingApproval, bid.Status);
-            _contextMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -69,30 +78,17 @@ namespace EDR.API.Tests.CQRS.BidPreparation
             // Arrange
             var opportunityId = 999;
             var userId = "user1";
-            var bids = new EDR.Domain.Entities.BidPreparation[] { };
 
-            var mockDbSet = MockDbSet(bids);
-            _contextMock.Setup(c => c.BidPreparations).Returns(mockDbSet.Object);
+            var context = GetContext();
+            var handler = new SubmitBidPreparationCommandHandler(context);
 
             var command = new SubmitBidPreparationCommand { OpportunityId = opportunityId, UserId = userId, CreatedBy = userId };
 
             // Act
-            var result = await _handler.Handle(command, CancellationToken.None);
+            var result = await handler.Handle(command, CancellationToken.None);
 
             // Assert
             Assert.False(result);
-            _contextMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-        }
-
-        private static Mock<DbSet<T>> MockDbSet<T>(T[] entities) where T : class
-        {
-            var mockSet = new Mock<DbSet<T>>();
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(entities.AsQueryable().Provider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(entities.AsQueryable().Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(entities.AsQueryable().ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(entities.AsQueryable().GetEnumerator());
-            
-            return mockSet;
         }
     }
 }

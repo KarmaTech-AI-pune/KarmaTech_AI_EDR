@@ -397,6 +397,9 @@ namespace EDR.API.Tests.Controllers{
                 Reason = longReason
             };
 
+            _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateProjectBudgetCommand>(), default))
+                .ReturnsAsync(new ProjectBudgetUpdateResultDto { Success = false, Message = "500" });
+
             // Act
             var result = await controller.UpdateBudget(1, request);
 

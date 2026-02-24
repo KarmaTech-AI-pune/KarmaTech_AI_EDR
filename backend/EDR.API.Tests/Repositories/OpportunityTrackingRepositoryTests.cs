@@ -34,6 +34,26 @@ namespace EDR.API.Tests.Repositories
             return new ProjectManagementContext(_options, _currentTenantServiceMock.Object, _configurationMock.Object);
         }
 
+        private OpportunityTracking CreateValidOpportunity(int id, string workName, OpportunityTrackingStatus status = OpportunityTrackingStatus.BID_UNDER_PREPERATION)
+        {
+            return new OpportunityTracking
+            {
+                Id = id,
+                WorkName = workName,
+                Status = status,
+                StrategicRanking = "High",
+                Operation = "Op",
+                Client = "Client",
+                ClientSector = "Sector",
+                Currency = "USD",
+                ContractType = "Fixed Price",
+                FundingStream = "Government",
+                Stage = OpportunityStage.A,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+        }
+
         [Fact]
         public async Task GetAllAsync_ShouldReturnAllOpportunities()
         {
@@ -43,9 +63,9 @@ namespace EDR.API.Tests.Repositories
             
             // Add test data
             await context.OpportunityTrackings.AddRangeAsync(
-                new OpportunityTracking { Id = 1, WorkName = "Opportunity 1", Status = OpportunityTrackingStatus.BID_UNDER_PREPERATION, StrategicRanking = "High", Operation = "Op", Client = "Client", ClientSector = "Sector", Currency = "USD" },
-                new OpportunityTracking { Id = 2, WorkName = "Opportunity 2", Status = OpportunityTrackingStatus.BID_UNDER_PREPERATION, StrategicRanking = "High", Operation = "Op", Client = "Client", ClientSector = "Sector", Currency = "USD" },
-                new OpportunityTracking { Id = 3, WorkName = "Opportunity 3", Status = OpportunityTrackingStatus.BID_REJECTED, StrategicRanking = "High", Operation = "Op", Client = "Client", ClientSector = "Sector", Currency = "USD" }
+                CreateValidOpportunity(1, "Opportunity 1"),
+                CreateValidOpportunity(2, "Opportunity 2"),
+                CreateValidOpportunity(3, "Opportunity 3", OpportunityTrackingStatus.BID_REJECTED)
             );
             await context.SaveChangesAsync();
 
@@ -65,17 +85,7 @@ namespace EDR.API.Tests.Repositories
             var repository = new OpportunityTrackingRepository(context);
             
             // Add test data
-            var opportunity = new OpportunityTracking 
-            { 
-                Id = 1, 
-                WorkName = "Test Opportunity", 
-                Status = OpportunityTrackingStatus.BID_UNDER_PREPERATION,
-                StrategicRanking = "High",
-                Operation = "Op",
-                Client = "Client",
-                ClientSector = "Sector",
-                Currency = "USD"
-            };
+            var opportunity = CreateValidOpportunity(1, "Test Opportunity");
             await context.OpportunityTrackings.AddAsync(opportunity);
             await context.SaveChangesAsync();
 
@@ -94,20 +104,7 @@ namespace EDR.API.Tests.Repositories
             // Arrange
             using var context = GetContext();
             var repository = new OpportunityTrackingRepository(context);
-            var opportunity = new OpportunityTracking
-            {
-                WorkName = "New Opportunity",
-                Notes = "Description",
-                Client = "Client",
-                Status = OpportunityTrackingStatus.BID_UNDER_PREPERATION,
-                Stage = OpportunityStage.A,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
-                StrategicRanking = "High",
-                Operation = "Op",
-                ClientSector = "Sector",
-                Currency = "USD"
-            };
+            var opportunity = CreateValidOpportunity(0, "New Opportunity"); // ID 0 for add
 
             // Act
             await repository.AddAsync(opportunity);
@@ -126,17 +123,7 @@ namespace EDR.API.Tests.Repositories
             var repository = new OpportunityTrackingRepository(context);
             
             // Add test data
-            var opportunity = new OpportunityTracking 
-            { 
-                Id = 1, 
-                WorkName = "Original Title", 
-                Status = OpportunityTrackingStatus.BID_UNDER_PREPERATION,
-                StrategicRanking = "High",
-                Operation = "Op",
-                Client = "Client",
-                ClientSector = "Sector",
-                Currency = "USD"
-            };
+            var opportunity = CreateValidOpportunity(1, "Original Title");
             await context.OpportunityTrackings.AddAsync(opportunity);
             await context.SaveChangesAsync();
 
@@ -158,17 +145,7 @@ namespace EDR.API.Tests.Repositories
             var repository = new OpportunityTrackingRepository(context);
             
             // Add test data
-            var opportunity = new OpportunityTracking 
-            { 
-                Id = 1, 
-                WorkName = "Opportunity to Delete", 
-                Status = OpportunityTrackingStatus.BID_UNDER_PREPERATION,
-                StrategicRanking = "High",
-                Operation = "Op",
-                Client = "Client",
-                ClientSector = "Sector",
-                Currency = "USD"
-            };
+            var opportunity = CreateValidOpportunity(1, "Opportunity to Delete");
             await context.OpportunityTrackings.AddAsync(opportunity);
             await context.SaveChangesAsync();
 

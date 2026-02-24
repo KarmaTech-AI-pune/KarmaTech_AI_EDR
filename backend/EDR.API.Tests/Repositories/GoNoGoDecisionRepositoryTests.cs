@@ -26,6 +26,7 @@ namespace EDR.API.Tests.Repositories
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _currentTenantServiceMock = new Mock<ICurrentTenantService>();
+            _currentTenantServiceMock.Setup(s => s.TenantId).Returns(1);
             _configurationMock = new Mock<IConfiguration>();
         }
 
@@ -40,6 +41,7 @@ namespace EDR.API.Tests.Repositories
             {
                 Id = id,
                 ProjectId = projectId,
+                TenantId = 1,
                 BidType = bidType,
                 Sector = "IT",
                 TenderFee = 1000,

@@ -14,13 +14,18 @@ namespace EDR.API.Tests.CQRS.BidPreparation
 {
     public class UpdateBidPreparationCommandHandlerTests
     {
-        private readonly Mock<ProjectManagementContext> _contextMock;
-        private readonly UpdateBidPreparationCommandHandler _handler;
+        private DbContextOptions<ProjectManagementContext> _options;
 
         public UpdateBidPreparationCommandHandlerTests()
         {
-            _contextMock = new Mock<ProjectManagementContext>(new DbContextOptions<ProjectManagementContext>());
-            _handler = new UpdateBidPreparationCommandHandler(_contextMock.Object);
+            _options = new DbContextOptionsBuilder<ProjectManagementContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+        }
+
+        private ProjectManagementContext GetContext()
+        {
+            return new ProjectManagementContext(_options, new Mock<EDR.Domain.Services.ICurrentTenantService>().Object, new Mock<Microsoft.Extensions.Configuration.IConfiguration>().Object);
         }
 
         [Fact]
@@ -38,32 +43,16 @@ namespace EDR.API.Tests.CQRS.BidPreparation
                 CreatedBy = userId
             };
 
-            var bids = new EDR.Domain.Entities.BidPreparation[] { };
-            var mockDbSet = MockDbSet(bids);
-            _contextMock.Setup(c => c.BidPreparations).Returns(mockDbSet.Object);
-            _contextMock.Setup(c => c.OpportunityTrackings).Returns(new Mock<DbSet<EDR.Domain.Entities.OpportunityTracking>>().Object);
-
-            _contextMock.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
+            using var context = GetContext();
+            var handler = new UpdateBidPreparationCommandHandler(context);
 
             // Act
-            var result = await _handler.Handle(command, CancellationToken.None);
+            var result = await handler.Handle(command, CancellationToken.None);
 
             // Assert
             Assert.True(result);
-            _contextMock.Verify(c => c.BidPreparations.Add(It.IsAny<EDR.Domain.Entities.BidPreparation>()), Times.Once);
-            _contextMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-        private static Mock<DbSet<T>> MockDbSet<T>(T[] entities) where T : class
-        {
-            var mockSet = new Mock<DbSet<T>>();
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(entities.AsQueryable().Provider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(entities.AsQueryable().Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(entities.AsQueryable().ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(entities.AsQueryable().GetEnumerator());
-            
-            return mockSet;
+            var savedBid = await context.BidPreparations.FirstOrDefaultAsync(b => b.OpportunityId == opportunityId && b.UserId == userId);
+            Assert.NotNull(savedBid);
         }
     }
 }
