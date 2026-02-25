@@ -79,10 +79,13 @@ describe('BudgetChangeTimeline Component', () => {
       
       render(<BudgetChangeTimeline changes={changes} />);
       
-      // All changes should be displayed
-      expect(screen.getByText(/John Doe/)).toBeInTheDocument();
+      // All changes should be displayed (John Doe appears twice, Jane Smith once)
+      const johnDoeElements = screen.getAllByText(/John Doe/);
+      expect(johnDoeElements.length).toBe(2); // John Doe appears in 2 changes
       expect(screen.getByText(/Jane Smith/)).toBeInTheDocument();
-      expect(screen.getByText(/john.doe@example.com/)).toBeInTheDocument();
+      
+      const johnEmailElements = screen.getAllByText(/john.doe@example.com/);
+      expect(johnEmailElements.length).toBe(2); // John's email appears in 2 changes
       expect(screen.getByText(/jane.smith@example.com/)).toBeInTheDocument();
     });
 
@@ -233,8 +236,9 @@ describe('BudgetChangeTimeline Component', () => {
       
       render(<BudgetChangeTimeline changes={[eurChange]} />);
       
-      // EUR symbol should be present
-      expect(screen.getByText(/€/)).toBeInTheDocument();
+      // EUR symbol should be present (appears multiple times: old value, new value, variance)
+      const eurSymbols = screen.getAllByText(/€/);
+      expect(eurSymbols.length).toBeGreaterThan(0);
     });
 
     it('formats large numbers with commas', () => {

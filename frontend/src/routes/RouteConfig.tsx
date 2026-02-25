@@ -4,15 +4,15 @@ import { programManagementRoutes } from './programManagementRoutes';
 import { adminRoutes } from './adminRoutes';
 import Layout from '../components/Layout';
 import ProtectedRoute from './ProtectedRoute';
-import LoginScreen from '../pages/LoginScreen';
-import EnhancedLoginScreen from '../pages/EnhancedLoginScreen';
-import Signup from '../pages/Signup';
-import Dashboard from '../components/Dashboard';
-import NotFound from '../pages/NotFound';
-import ForgotPassword from '../pages/ForgotPassword';
-import ResetPassword from '../pages/ResetPassword';
 import { lazy } from 'react';
 
+const LoginScreen = lazy(() => import('../pages/LoginScreen'));
+const EnhancedLoginScreen = lazy(() => import('../pages/EnhancedLoginScreen'));
+const Signup = lazy(() => import('../pages/Signup'));
+const Dashboard = lazy(() => import('../components/Dashboard'));
+const NotFound = lazy(() => import('../pages/NotFound'));
+const ForgotPassword = lazy(() => import('../pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('../pages/ResetPassword'));
 const UserProfile = lazy(() => import('../pages/UserProfile'));
 
 const protectedRoutes: RouteObject[] = [

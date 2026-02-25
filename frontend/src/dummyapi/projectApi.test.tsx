@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+// import React from 'react';
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { projectApi } from './projectApi'
 import * as dummyProjects from './database/dummyProjects'
 import { Project } from '../models'
@@ -15,12 +16,20 @@ vi.mock('./database/dummyProjects', async () => {
 })
 
 describe('projectApi', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   // Reset mocks between tests
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   describe('getAll', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('returns all projects', async () => {
       const result = await projectApi.getAll()
       expect(result).toEqual(dummyProjects.projects)
@@ -29,6 +38,10 @@ describe('projectApi', () => {
   })
 
   describe('getById', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('returns the correct project for a valid ID', async () => {
       const id = '1'
       const result = await projectApi.getById(id)
@@ -44,6 +57,10 @@ describe('projectApi', () => {
   })
 
   describe('create', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('creates a new project with correct data', async () => {
       const newProject: Omit<Project, 'id'> = {
         name: 'Test Project',
@@ -68,7 +85,7 @@ describe('projectApi', () => {
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
         feeType: ''
-      }
+      } as unknown as Omit<Project, 'id'>
 
       const result = await projectApi.create(newProject)
       
@@ -98,6 +115,10 @@ describe('projectApi', () => {
   })
 
   describe('update', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('updates an existing project correctly', async () => {
       // First, get a project to update
       const projectToUpdate = { ...dummyProjects.projects[0] }
@@ -152,13 +173,17 @@ describe('projectApi', () => {
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
         feeType: ''
-      })
+      } as unknown as Project)
       
       expect(result).toBeNull()
     })
   })
 
   describe('delete', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('removes a project correctly', async () => {
       // Get the ID of the first project
       const projectId = dummyProjects.projects[0].id
@@ -183,6 +208,10 @@ describe('projectApi', () => {
   })
 
   describe('validateRequiredFields', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('throws an error when required fields are missing', async () => {
       const incompleteProject = {
         name: 'Test Project',
@@ -217,9 +246,11 @@ describe('projectApi', () => {
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
         feeType: '',
-      }
+      } as unknown as Omit<Project, 'id'>
 
       await expect(projectApi.create(completeProject)).resolves.not.toThrow()
     })
   })
 })
+
+

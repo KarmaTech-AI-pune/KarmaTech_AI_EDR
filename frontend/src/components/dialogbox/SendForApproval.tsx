@@ -41,30 +41,35 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
 
   useEffect(() => {
     const checkDirector = async() =>{
-      // Get all Regional Directors
-    const regionalDirectors = await getUsersByRole('Regional Director');
-    setApprovers(regionalDirectors);
+      try {
+        // Get all Regional Directors
+        const regionalDirectors = await getUsersByRole('Regional Director');
+        setApprovers(regionalDirectors);
 
-      if(opportunityId){
-        let res =  await opportunityApi.getById(opportunityId)
-      ;
-        if(res.approvalManagerId)
-        {
-          let directorUser = await getUserById(res.approvalManagerId)
-          if(directorUser)
+        if(opportunityId){
+          let res =  await opportunityApi.getById(opportunityId);
+          if(res.approvalManagerId)
           {
-          setDirector(directorUser.name)
-          setSelectedApprover(res.approvalManagerId)
+            let directorUser = await getUserById(res.approvalManagerId)
+            if(directorUser)
+            {
+              setDirector(directorUser.name)
+              setSelectedApprover(res.approvalManagerId)
+            }
+            else setError("404: DirectorUser not found")
           }
-          else setError("404: DirectorUser not found")
         }
+        else {
+          console.error("No ID set for opp");
+          setError("No ID set for opp");
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load data');
+        console.error('Error in checkDirector:', err);
       }
-      else console.error("No ID set for opp")
-    
-    
     }
     checkDirector();
-  }, [selectedApprover]);
+  }, [opportunityId]);
 
   const handleApproverChange = (event: SelectChangeEvent) => {
     setSelectedApprover(event.target.value);
@@ -125,6 +130,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to send for approval');
+      onClose();
     }
   };
 
@@ -175,8 +181,10 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
             </div>
           ) : (
             <>
-              <InputLabel>Regional Director</InputLabel>
+              <InputLabel id="regional-director-label">Regional Director</InputLabel>
               <Select
+                labelId="regional-director-label"
+                id="regional-director-select"
                 value={selectedApprover}
                 onChange={handleApproverChange}
                 label="Regional Director"

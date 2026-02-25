@@ -241,13 +241,13 @@ const UsersManagement = () => {
                   ))}
                 </TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleEdit(user)} color="primary" title="Edit user">
+                  <IconButton onClick={() => handleEdit(user)} color="primary" title="Edit user" aria-label="Edit">
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleResetPassword(user)} color="warning" title="Reset password">
+                  <IconButton onClick={() => handleResetPassword(user)} color="warning" title="Reset password" aria-label="Reset password">
                     <LockResetIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete(user.id)} color="error" title="Delete user">
+                  <IconButton onClick={() => handleDelete(user.id)} color="error" title="Delete user" aria-label="Delete">
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
