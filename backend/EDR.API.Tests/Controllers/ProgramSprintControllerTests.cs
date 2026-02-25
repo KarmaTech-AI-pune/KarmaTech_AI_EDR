@@ -1,13 +1,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using NJS.Application.CQRS.SprintWbsPlans.Commands;
-using NJS.Application.CQRS.SprintWbsPlans.Queries;
-using NJS.Application.Dtos;
-using NJS.Domain.Entities;
-using NJSAPI.Controllers;
+using EDR.Application.CQRS.SprintWbsPlans.Commands;
+using EDR.Application.CQRS.SprintWbsPlans.Queries;
+using EDR.Application.Dtos;
+using EDR.Domain.Entities;
+using EDR.API.Controllers;
 
-namespace NJS.API.Tests.Controllers
+namespace EDR.API.Tests.Controllers
 {
     public class ProgramSprintControllerTests
     {

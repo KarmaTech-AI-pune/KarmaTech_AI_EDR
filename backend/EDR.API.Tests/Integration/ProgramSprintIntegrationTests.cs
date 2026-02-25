@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
-using NJS.API.Tests.Infrastructure;
-using NJS.Application.CQRS.SprintWbsPlans.Commands;
+using EDR.API.Tests.Infrastructure;
+using EDR.Application.CQRS.SprintWbsPlans.Commands;
+using EDR.Application.Dtos;
 using Xunit;
 
-namespace NJS.API.Tests.Integration
+namespace EDR.API.Tests.Integration
 {
     /// <summary>
     /// Integration tests for ProgramSprintController (BulkCreate, Get, GetCurrent).

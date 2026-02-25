@@ -1,12 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using NJS.Application.CQRS.SprintDailyProgresses.Commands;
-using NJS.Application.CQRS.SprintDailyProgresses.Queries;
-using NJS.Application.Dtos;
-using NJS.API.Controllers;
+using EDR.Application.CQRS.SprintDailyProgresses.Commands;
+using EDR.Application.CQRS.SprintDailyProgresses.Queries;
+using EDR.Application.Dtos;
+using EDR.API.Controllers;
 
-namespace NJS.API.Tests.Controllers
+namespace EDR.API.Tests.Controllers
 {
     public class SprintDailyProgressControllerTests
     {

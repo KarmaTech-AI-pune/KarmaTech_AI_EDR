@@ -17,7 +17,7 @@ namespace EDR.Domain.Tests
         {
             // Set up in-memory database options
             _options = new DbContextOptionsBuilder<ProjectManagementContext>()
-                .UseInMemoryDatabase(databaseName: "TestDatabase")
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
         }
 
@@ -26,11 +26,13 @@ namespace EDR.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
+            currentTenantService.Setup(s => s.TenantId).Returns(1);
             using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             var repository = new Repository<Project>(context);
 
             var project = new Project
             {
+                TenantId = 1,
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
                 EstimatedProjectCost = 5000000,
@@ -56,13 +58,15 @@ namespace EDR.Domain.Tests
         }
 
         [Fact]
-        public async void GetAll_ShouldReturn_AllEntities()
+        public async Task GetAll_ShouldReturn_AllEntities()
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
+            currentTenantService.Setup(s => s.TenantId).Returns(1);
             using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             context.Projects.Add(new Project
             {
+                TenantId = 1,
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
                 EstimatedProjectCost = 5000000,
@@ -78,6 +82,7 @@ namespace EDR.Domain.Tests
             });
             context.Projects.Add(new Project
             {
+                TenantId = 1,
                 Name = "City Water Supply Upgrade1",
                 ClientName = "Metropolis Municipality1",
                 EstimatedProjectCost = 5000000,
@@ -104,10 +109,11 @@ namespace EDR.Domain.Tests
         }
 
         [Fact]
-        public async void GetById_ShouldReturn_Entity()
+        public async Task GetById_ShouldReturn_Entity()
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
+            currentTenantService.Setup(s => s.TenantId).Returns(1);
             using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
 
             var project = new Project
@@ -140,10 +146,11 @@ namespace EDR.Domain.Tests
         }
 
         [Fact]
-        public async void Remove_Should_DeleteEntity()
+        public async Task Remove_Should_DeleteEntity()
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
+            currentTenantService.Setup(s => s.TenantId).Returns(1);
             using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             var project = new Project
             {
@@ -180,9 +187,11 @@ namespace EDR.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
+            currentTenantService.Setup(s => s.TenantId).Returns(1);
             using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             context.Projects.Add(new Project
             {
+                TenantId = 1,
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
                 EstimatedProjectCost = 5000000,
@@ -198,6 +207,7 @@ namespace EDR.Domain.Tests
             });
             context.Projects.Add(new Project
             {
+                TenantId = 1,
                 Name = "City Water Supply Upgrade1",
                 ClientName = "Metropolis Municipality1",
                 EstimatedProjectCost = 5000000,
@@ -229,9 +239,11 @@ namespace EDR.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
+            currentTenantService.Setup(s => s.TenantId).Returns(1);
             using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             context.Projects.Add(new Project
             {
+                TenantId = 1,
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
                 EstimatedProjectCost = 5000000,
@@ -247,6 +259,7 @@ namespace EDR.Domain.Tests
             });
             context.Projects.Add(new Project
             {
+                TenantId = 1,
                 Name = "City Water Supply Upgrade1",
                 ClientName = "Metropolis Municipality1",
                 EstimatedProjectCost = 5000000,

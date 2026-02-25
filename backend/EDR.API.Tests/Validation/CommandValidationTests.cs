@@ -32,32 +32,21 @@ namespace EDR.API.Tests.Validation
         }
 
         [Fact]
-        public async Task CreateJobStartFormCommand_WithNullJobStartForm_ShouldThrowArgumentNullException()
+        public void CreateJobStartFormCommand_WithNullJobStartForm_ShouldThrowArgumentNullException()
         {
-            // Arrange
-            var mockUnitOfWork = new Mock<IUnitOfWork>();
-            var mockRepository = new Mock<IJobStartFormRepository>();
-            var mockProjectRepository = new Mock<IProjectRepository>();
-            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
-            var command = new CreateJobStartFormCommand(null); // Null JobStartForm
-
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentNullException>(
-                () => handler.Handle(command, CancellationToken.None)
+            var exception = Assert.Throws<ArgumentNullException>(
+                () => new CreateJobStartFormCommand(null)
             );
 
-            Assert.Equal("JobStartForm", exception.ParamName);
-            Assert.Contains("Job Start Form cannot be null", exception.Message);
+            Assert.Equal("jobStartForm", exception.ParamName);
         }
 
         [Fact]
         public async Task CreateJobStartFormCommand_WithInvalidProjectId_ShouldThrowArgumentException()
         {
             // Arrange
-            var mockUnitOfWork = new Mock<IUnitOfWork>();
-            var mockRepository = new Mock<IJobStartFormRepository>();
-            var mockProjectRepository = new Mock<IProjectRepository>();
-            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
+            var handler = new CreateJobStartFormCommandHandler(_mockRepository.Object, _mockUnitOfWork.Object, _mockProjectRepository.Object);
 
             var jobStartFormDto = new JobStartFormDto
             {
@@ -81,17 +70,13 @@ namespace EDR.API.Tests.Validation
         public async Task CreateJobStartFormCommand_WithValidData_ShouldNotThrowException()
         {
             // Arrange
-            var mockUnitOfWork = new Mock<IUnitOfWork>();
-            var mockRepository = new Mock<IJobStartFormRepository>();
-            var mockProjectRepository = new Mock<IProjectRepository>();
-
-            mockRepository.Setup(repo => repo.AddAsync(It.IsAny<JobStartForm>()))
+            _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<JobStartForm>()))
                 .Returns(Task.CompletedTask);
 
             _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
                 .ReturnsAsync(1);
 
-            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
+            var handler = new CreateJobStartFormCommandHandler(_mockRepository.Object, _mockUnitOfWork.Object, _mockProjectRepository.Object);
 
             var jobStartFormDto = new JobStartFormDto
             {

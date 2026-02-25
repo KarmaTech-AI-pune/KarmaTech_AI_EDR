@@ -1,34 +1,71 @@
+using EDR.Application.CQRS.Users.Handlers;
+using EDR.Application.CQRS.Users.Queries;
+using EDR.Domain.Database;
+using EDR.Domain.Entities;
+using EDR.Domain.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
-using NJS.Application.CQRS.Users.Handlers;
-using NJS.Application.CQRS.Users.Queries;
-using NJS.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.CQRS.Users
+namespace EDR.API.Tests.CQRS.Users
 {
-    public class GetUserByIdQueryHandlerTests
+    public class GetUserByIdQueryHandlerTests : IDisposable
     {
-        private readonly Mock<UserManager<User>> _userManagerMock;
-        private readonly Mock<RoleManager<Role>> _roleManagerMock;
+        private readonly ProjectManagementContext _context;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<Role> _roleManager;
         private readonly GetUserByIdQueryHandler _handler;
 
         public GetUserByIdQueryHandlerTests()
         {
-            // Mock UserManager
-            var userStoreMock = new Mock<IUserStore<User>>();
-            _userManagerMock = new Mock<UserManager<User>>(
-                userStoreMock.Object, null, null, null, null, null, null, null, null);
+            var options = new DbContextOptionsBuilder<ProjectManagementContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
 
-            // Mock RoleManager
-            var roleStoreMock = new Mock<IRoleStore<Role>>();
-            _roleManagerMock = new Mock<RoleManager<Role>>(
-                roleStoreMock.Object, null, null, null, null);
+            var tenantMock = new Mock<ICurrentTenantService>();
+            var configMock = new Mock<IConfiguration>();
 
-            _handler = new GetUserByIdQueryHandler(_userManagerMock.Object, _roleManagerMock.Object);
+            _context = new ProjectManagementContext(options, tenantMock.Object, configMock.Object);
+
+            var userStore = new UserStore<User, Role, ProjectManagementContext, string>(_context);
+            var roleStore = new RoleStore<Role, ProjectManagementContext, string>(_context);
+
+            var optionsAccessor = Options.Create(new IdentityOptions());
+            var passwordHasher = new PasswordHasher<User>();
+            var userValidators = new List<IUserValidator<User>> { new UserValidator<User>() };
+            var passwordValidators = new List<IPasswordValidator<User>> { new PasswordValidator<User>() };
+            var lookupNormalizer = new UpperInvariantLookupNormalizer();
+            var identityErrorDescriber = new IdentityErrorDescriber();
+            var loggerUserManager = new Mock<ILogger<UserManager<User>>>().Object;
+
+            _userManager = new UserManager<User>(
+                userStore, optionsAccessor, passwordHasher, userValidators, passwordValidators,
+                lookupNormalizer, identityErrorDescriber, null, loggerUserManager);
+
+            var roleValidators = new List<IRoleValidator<Role>> { new RoleValidator<Role>() };
+            var loggerRoleManager = new Mock<ILogger<RoleManager<Role>>>().Object;
+
+            _roleManager = new RoleManager<Role>(
+                roleStore, roleValidators, lookupNormalizer, identityErrorDescriber, loggerRoleManager);
+
+            _handler = new GetUserByIdQueryHandler(_userManager, _roleManager);
+        }
+
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
+            _userManager.Dispose();
+            _roleManager.Dispose();
         }
 
         [Fact]
@@ -46,15 +83,16 @@ namespace NJS.API.Tests.CQRS.Users
                 IsConsultant = true
             };
 
-            var roles = new List<string> { "Admin", "ProjectManager" };
+            await _userManager.CreateAsync(user);
 
-            _userManagerMock.Setup(m => m.FindByIdAsync(userId))
-                .ReturnsAsync(user);
+            var roles = new[] { "Admin", "ProjectManager" };
+            foreach (var roleName in roles)
+            {
+                await _roleManager.CreateAsync(new Role { Name = roleName, Description = roleName });
+                await _userManager.AddToRoleAsync(user, roleName);
+            }
 
-            _userManagerMock.Setup(m => m.GetRolesAsync(user))
-                .ReturnsAsync(roles);
-
-            var query = new GetUserByIdQuery { Id = userId };
+            var query = new GetUserByIdQuery(userId);
 
             // Act
             var result = await _handler.Handle(query, CancellationToken.None);
@@ -77,11 +115,7 @@ namespace NJS.API.Tests.CQRS.Users
         {
             // Arrange
             var userId = "nonexistent";
-
-            _userManagerMock.Setup(m => m.FindByIdAsync(userId))
-                .ReturnsAsync((User)null);
-
-            var query = new GetUserByIdQuery { Id = userId };
+            var query = new GetUserByIdQuery(userId);
 
             // Act
             var result = await _handler.Handle(query, CancellationToken.None);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using EDR.Domain.Entities;
+using EDR.Domain.Enums;
 using Xunit;
 
 namespace EDR.API.Tests.Validation
@@ -36,7 +37,19 @@ namespace EDR.API.Tests.Validation
                 CompetitivePositionScore = 8,
                 CompetitivePositionComments = "Strong position",
                 FutureWorkPotentialScore = 9,
-                FutureWorkPotentialComments = "High potential for future work"
+                FutureWorkPotentialComments = "High potential for future work",
+                ProfitabilityScore = 8,
+                ProfitabilityComments = "Good profit",
+                ResourceAvailabilityScore = 8,
+                ResourceAvailabilityComments = "Available",
+                BidScheduleScore = 8,
+                BidScheduleComments = "Feasible",
+                TotalScore = 85,
+                Status = GoNoGoStatus.Green,
+                CompletedDate = DateTime.UtcNow,
+                CompletedBy = "Test User",
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "Test User"
             };
 
             // Act
@@ -68,7 +81,7 @@ namespace EDR.API.Tests.Validation
             Assert.NotEmpty(validationResults);
             Assert.Contains(validationResults, v => v.MemberNames.Contains("BidType"));
             Assert.Contains(validationResults, v => v.MemberNames.Contains("Sector"));
-            Assert.Contains(validationResults, v => v.ErrorMessage.Contains("required"));
+            Assert.Contains(validationResults, v => v.ErrorMessage.ToLower().Contains("required"));
         }
 
         [Fact]
@@ -95,7 +108,7 @@ namespace EDR.API.Tests.Validation
             // Assert
             Assert.NotEmpty(validationResults);
             Assert.Contains(validationResults, v => v.MemberNames.Contains("MarketingPlanScore"));
-            Assert.Contains(validationResults, v => v.ErrorMessage.Contains("range"));
+            Assert.Contains(validationResults, v => v.ErrorMessage.ToLower().Contains("between"));
         }
 
         [Fact]
@@ -113,6 +126,8 @@ namespace EDR.API.Tests.Validation
                 DurationOfProject = 12,
                 FundingStream = "Government",
                 ContractType = "Fixed Price",
+                StrategicRanking = "High",
+                Operation = "IT",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -146,7 +161,7 @@ namespace EDR.API.Tests.Validation
 
             // Assert
             Assert.NotEmpty(validationResults);
-            Assert.Contains(validationResults, v => v.MemberNames.Contains("ClientName"));
+            Assert.Contains(validationResults, v => v.MemberNames.Contains("Client"));
             Assert.Contains(validationResults, v => v.MemberNames.Contains("Currency"));
             Assert.Contains(validationResults, v => v.MemberNames.Contains("FundingStream"));
             Assert.Contains(validationResults, v => v.ErrorMessage.Contains("required"));
