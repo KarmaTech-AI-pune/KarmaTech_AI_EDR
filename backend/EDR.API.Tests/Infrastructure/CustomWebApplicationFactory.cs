@@ -85,6 +85,7 @@ namespace EDR.API.Tests.Infrastructure
             {
                 options.UseInMemoryDatabase(_dbName);
                 options.EnableSensitiveDataLogging();
+                options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
             });
 
             appBuilder.Services.AddDbContext<TenantDbContext>(options =>
@@ -102,6 +103,11 @@ namespace EDR.API.Tests.Infrastructure
 
             // --- Application Services (MediatR, AutoMapper, Repositories) ---
             appBuilder.Services.AddApplicationServices();
+
+            // Override SQL-specific repositories with InMemory-compatible fakes (test project only)
+            appBuilder.Services.Replace(Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Scoped<EDR.Repositories.Interfaces.IInputRegisterRepository, FakeInputRegisterRepository>());
+            appBuilder.Services.Replace(Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Scoped<EDR.Repositories.Interfaces.ICorrespondenceInwardRepository, FakeCorrespondenceInwardRepository>());
+            appBuilder.Services.Replace(Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Scoped<EDR.Repositories.Interfaces.ICorrespondenceOutwardRepository, FakeCorrespondenceOutwardRepository>());
 
             // --- Swagger & CORS (minimal for tests) ---
             appBuilder.Services.AddEndpointsApiExplorer();

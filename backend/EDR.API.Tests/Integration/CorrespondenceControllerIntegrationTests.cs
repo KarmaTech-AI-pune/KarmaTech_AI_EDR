@@ -153,14 +153,15 @@ namespace EDR.API.Tests.Integration
             {
                 ProjectId = seed.ProjectId,
                 LetterNo = "OUT-TEST-001",
-                LetterDate = DateTime.UtcNow,
+                LetterDate = DateTime.Now.AddMinutes(-5),
                 To = "Vendor",
                 Subject = "Outward Test",
-                AttachmentDetails = "", StoragePath = "", Remarks = "", CreatedBy = ""
+                AttachmentDetails = "", ActionTaken = "", StoragePath = "", Remarks = "", Acknowledgement = "", CreatedBy = ""
             };
 
             var response = await Client.PostAsJsonAsync(BaseOutwardUrl, command);
-
+            var content = await response.Content.ReadAsStringAsync();
+            Assert.True(response.IsSuccessStatusCode, $"CreateOutward failed with {response.StatusCode}: {content}");
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         }
 
@@ -172,10 +173,10 @@ namespace EDR.API.Tests.Integration
             {
                 ProjectId = seed.ProjectId,
                 LetterNo = "OUT-TEST-GET",
-                LetterDate = DateTime.UtcNow,
+                LetterDate = DateTime.Now.AddMinutes(-5),
                 To = "Vendor",
                 Subject = "Outward Get Test",
-                AttachmentDetails = "", StoragePath = "", Remarks = "", CreatedBy = ""
+                AttachmentDetails = "", ActionTaken = "", StoragePath = "", Remarks = "", Acknowledgement = "", CreatedBy = ""
             };
             var createRes = await Client.PostAsJsonAsync(BaseOutwardUrl, command);
             var created = await DeserializeResponseAsync<CorrespondenceOutwardDto>(createRes);
@@ -201,10 +202,10 @@ namespace EDR.API.Tests.Integration
             {
                 ProjectId = seed.ProjectId,
                 LetterNo = "OUT-TEST-UPD",
-                LetterDate = DateTime.UtcNow,
+                LetterDate = DateTime.Now.AddMinutes(-5),
                 To = "Vendor",
                 Subject = "Test",
-                AttachmentDetails = "", StoragePath = "", Remarks = "", CreatedBy = ""
+                AttachmentDetails = "", ActionTaken = "", StoragePath = "", Remarks = "", Acknowledgement = "", CreatedBy = ""
             };
             var createRes = await Client.PostAsJsonAsync(BaseOutwardUrl, command);
             var created = await DeserializeResponseAsync<CorrespondenceOutwardDto>(createRes);
@@ -214,10 +215,10 @@ namespace EDR.API.Tests.Integration
                 Id = created.Id,
                 ProjectId = seed.ProjectId,
                 LetterNo = "OUT-TEST-UPD-MODIFIED",
-                LetterDate = DateTime.UtcNow,
+                LetterDate = DateTime.Now.AddMinutes(-5),
                 To = "Vendor",
                 Subject = "Test",
-                AttachmentDetails = "", StoragePath = "", Remarks = "", UpdatedBy = ""
+                AttachmentDetails = "", ActionTaken = "", StoragePath = "", Remarks = "", Acknowledgement = "", UpdatedBy = "System"
             };
 
             var response = await Client.PutAsJsonAsync($"{BaseOutwardUrl}/{created.Id}", updateCmd);
@@ -233,10 +234,10 @@ namespace EDR.API.Tests.Integration
             {
                 ProjectId = seed.ProjectId,
                 LetterNo = "OUT-TEST-DEL",
-                LetterDate = DateTime.UtcNow,
+                LetterDate = DateTime.Now.AddMinutes(-5),
                 To = "Vendor",
                 Subject = "Test",
-                AttachmentDetails = "", StoragePath = "", Remarks = "", CreatedBy = ""
+                AttachmentDetails = "", ActionTaken = "", StoragePath = "", Remarks = "", Acknowledgement = "", CreatedBy = ""
             };
             var createRes = await Client.PostAsJsonAsync(BaseOutwardUrl, command);
             var created = await DeserializeResponseAsync<CorrespondenceOutwardDto>(createRes);
