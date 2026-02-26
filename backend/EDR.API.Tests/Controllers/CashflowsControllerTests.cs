@@ -233,8 +233,8 @@ namespace EDR.API.Tests.Controllers
         public async Task DeleteCashflow_ShouldReturnNoContent_WhenSuccessful()
         {
             // Arrange
-            _mediator.Setup(m => m.Send<Unit>(It.IsAny<DeleteCashflowCommand>(), It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(Unit.Value);
+            _mediator.Setup(m => m.Send(It.IsAny<DeleteCashflowCommand>(), It.IsAny<CancellationToken>()))
+                     .Returns(Task.CompletedTask);
 
             // Act
             var result = await _controller.DeleteCashflow(1);
