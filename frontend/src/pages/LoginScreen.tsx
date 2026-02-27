@@ -21,6 +21,7 @@ import { VersionDisplay } from '../components/VersionDisplay';
 import ReleaseNotesModal from '../components/ReleaseNotesModal';
 import { releaseNotesApi } from '../services/releaseNotesApi';
 import { versionApi } from '../services/versionApi';
+import { getBrandingConfig } from '../BrandingConfig';
 
 const MANUAL_VERSION_OVERRIDE = '1.2.0'; // Set this to e.g. '1.5.0' to force a version display
 
@@ -157,7 +158,7 @@ export const LoginScreen: React.FC = () => {
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
                     <img
-                        src="/KarmaTech_logo.png"
+                        src={getBrandingConfig(window.location.pathname).logo}
                         alt="KarmaTech AI"
                         style={{
                             maxWidth: '150px',
@@ -175,7 +176,7 @@ export const LoginScreen: React.FC = () => {
                         fontWeight: 'bold',
                     }}
                 >
-                    KarmaTech-AI EDR(Enterprise Digital Runner)
+                    {getBrandingConfig(window.location.pathname).headerText}
                 </Typography>
                 <VersionDisplay
                     variant="h6"

@@ -22,6 +22,7 @@ import { authApi } from '../../services/authApi';
 import { PermissionType } from '../../models';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 import PasswordChangeDropdown from './PasswordChangeDropdown';
+import { getBrandingConfig } from '../../BrandingConfig';
 
 const navLinks = [
   {
@@ -38,28 +39,31 @@ const navLinks = [
 
 
 
-const LogoComponent = () => (
-  <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-    <Box
-      sx={{
-        height: '50px',
-        display: 'flex',
-        alignItems: 'center',
-        cursor: 'pointer',
-      }}
-    >
-      <img
-        src="/KarmaTech_logo.png"
-        alt="KarmaTech AI"
-        style={{
-          height: '100%',
-          width: 'auto',
-          objectFit: 'contain',
+const LogoComponent = () => {
+  const branding = getBrandingConfig(window.location.pathname);
+  return (
+    <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Box
+        sx={{
+          height: '50px',
+          display: 'flex',
+          alignItems: 'center',
+          cursor: 'pointer',
         }}
-      />
-    </Box>
-  </Link>
-);
+      >
+        <img
+          src={branding.logo}
+          alt="Logo"
+          style={{
+            height: '100%',
+            width: 'auto',
+            objectFit: 'contain',
+          }}
+        />
+      </Box>
+    </Link>
+  );
+};
 
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);

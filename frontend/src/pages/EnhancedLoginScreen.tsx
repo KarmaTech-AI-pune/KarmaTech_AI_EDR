@@ -24,6 +24,7 @@ import { projectManagementAppContextType, Credentials } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { Tenant } from '../models/tenantModel';
 import VersionDisplay from '../components/VersionDisplay';
+import { getBrandingConfig } from '../BrandingConfig';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -195,7 +196,7 @@ export const EnhancedLoginScreen: React.FC = () => {
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
                     <img
-                        src="/KarmaTech_logo.png"
+                        src={getBrandingConfig(window.location.pathname).logo}
                         alt="KarmaTech AI"
                         style={{
                             maxWidth: '150px',
@@ -213,7 +214,7 @@ export const EnhancedLoginScreen: React.FC = () => {
                         color: '#1976d2'
                     }}
                 >
-                    KarmaTech-AI EDR(Enterprise Digital Runner)
+                    {getBrandingConfig(window.location.pathname).headerText}
                 </Typography>
                 <Typography
                     variant="h6"
