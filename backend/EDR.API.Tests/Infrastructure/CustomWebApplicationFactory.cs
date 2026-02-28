@@ -137,6 +137,10 @@ namespace EDR.API.Tests.Infrastructure
             appBuilder.Services.AddScoped<ITenantUserMigrationStrategy, IsolatedTenantUserMigrationStrategy>();
             appBuilder.Services.AddScoped<ITenantUserMigrationStrategy, SharedTenantUserMigrationStrategy>();
             appBuilder.Services.AddScoped<ITenantUserMigrationStrategySelector, TenantUserMigrationStrategySelector>();
+            
+            // Mock tenant database services
+            appBuilder.Services.AddScoped<IDatabaseManagementService, MockDatabaseManagementService>();
+            appBuilder.Services.AddScoped<ITenantMigrationService, MockTenantMigrationService>();
 
             // Use TestServer instead of Kestrel for integration testing
             appBuilder.WebHost.UseTestServer();
@@ -234,6 +238,63 @@ namespace EDR.API.Tests.Infrastructure
             var ticket = new AuthenticationTicket(principal, "Test");
 
             return Task.FromResult(AuthenticateResult.Success(ticket));
+        }
+    }
+
+    /// <summary>
+    /// Mock database management service for integration tests.
+    /// </summary>
+    public class MockDatabaseManagementService : IDatabaseManagementService
+    {
+        public Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsync(string subdomain, bool isolated)
+        {
+            return Task.FromResult((true, $"{subdomain}_db", "Server=(localdb)\\mssqllocaldb;Database=TestDb;Trusted_Connection=True;"));
+        }
+
+        public Task<bool> DeleteTenantDatabaseAsync(string databaseName)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> DatabaseExistsAsync(string databaseName)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> BackupTenantDatabaseAsync(string databaseName, string backupPath = null)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> RestoreTenantDatabaseAsync(string databaseName, string backupFilePath)
+        {
+            return Task.FromResult(true);
+        }
+    }
+
+    /// <summary>
+    /// Mock tenant migration service for integration tests.
+    /// </summary>
+    public class MockTenantMigrationService : ITenantMigrationService
+    {
+        public Task<bool> ExecuteTenantMigrationsAsync(string connectionString, int tenantId, string sourceDatabaseName = null)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> ExecuteNonIsolatedTenantMigrationsAsync(string connectionString, int tenantId, string sourceDatabaseName = null)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> ExecuteTenantUserMigrationsAsync(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string sourceDatabaseName = null)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsync(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string sourceDatabaseName = null)
+        {
+            return Task.FromResult(true);
         }
     }
 }
