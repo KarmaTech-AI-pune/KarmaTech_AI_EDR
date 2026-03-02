@@ -8,18 +8,27 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout Main Repo
         uses: actions/checkout@v4
 
-      - name: Clone Deploy Repo
+      - name: Clone Deploy Repo (shallow)
         run: |
-          git clone https://x-access-token:${{ secrets.DEPLOY_REPO_TOKEN }}@github.com/ranadiveabhishek2001-creator/EDR_Project_Deploy_Test.git deploy
+          git clone --depth 1 --single-branch --branch Saas \
+            https://x-access-token:${{ secrets.DEPLOY_REPO_TOKEN }}@github.com/ranadiveabhishek2001-creator/EDR_Project_Deploy_Test.git deploy
 
       - name: Copy Code (Replace only, no delete)
         run: |
-          rsync -av --exclude '.git' ./ deploy/
+          rsync -av \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude '__pycache__' \
+            --exclude '.env' \
+            --exclude '*.pyc' \
+            --exclude '.venv' \
+            ./ deploy/
 
       - name: Push Changes
         run: |
