@@ -51,6 +51,20 @@ namespace EDR.API.Controllers
         }
 
         /// <summary>
+        /// Gets only Level 3 Work Breakdown Structure tasks for a project.
+        /// </summary>
+        /// <param name="projectId">The ID of the project.</param>
+        /// <returns>A list of Level 3 tasks with all related data.</returns>
+        [HttpGet("level-three")]
+        [ProducesResponseType(typeof(List<WBSTaskDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<List<WBSTaskDto>>> GetLevelThreeWBSTasks(int projectId)
+        {
+            var result = await _mediator.Send(new GetLevelThreeWbsTasksByProjectIdQuery(projectId));
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Creates or replaces the entire Work Breakdown Structure for a project.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
