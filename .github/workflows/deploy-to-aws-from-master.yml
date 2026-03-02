@@ -16,7 +16,7 @@ jobs:
 
       - name: Clone Deploy Repo (shallow)
         run: |
-          git clone --depth 1 --single-branch --branch Saas \
+          git clone --depth 1 --single-branch --branch Saas/dev \
             https://x-access-token:${{ secrets.DEPLOY_REPO_TOKEN }}@github.com/ranadiveabhishek2001-creator/EDR_Project_Deploy_Test.git deploy
 
       - name: Copy Code (Replace only, no delete)
@@ -37,4 +37,4 @@ jobs:
           git config user.email "actions@github.com"
           git add .
           git commit -m "Auto sync from master branch" || echo "No changes to commit"
-          git push origin HEAD:Saas
+          git push origin HEAD:Saas/dev
