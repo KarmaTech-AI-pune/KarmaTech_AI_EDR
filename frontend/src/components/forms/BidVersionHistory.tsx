@@ -27,44 +27,46 @@ const BidVersionHistory: React.FC<BidVersionHistoryProps> = ({ versionHistory })
         Version History
       </Typography>
       <Paper sx={{ mb: 2 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Version</TableCell>
-              <TableCell>Modified By</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Modified Date</TableCell>
-              <TableCell>Comments</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {versionHistory.map((version) => (
-              <TableRow key={version.id}>
-                <TableCell>{version.version}</TableCell>
-                <TableCell>{version.modifiedBy}</TableCell>
-
-                <TableCell>
-                  <Chip
-                    label={getStatusLabel(version.status)}
-                    color={
-                      version.status === BidPreparationStatus.Approved ? 'success' :
-                        version.status === BidPreparationStatus.Rejected ? 'error' :
-                          version.status === BidPreparationStatus.PendingApproval ? 'warning' : 'default'
-                    }
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  {version.modifiedDate ? format(new Date(version.modifiedDate), 'dd/MM/yyyy HH:mm') : ''}
-                </TableCell>
-                <TableCell>{version.comments}</TableCell>
+        {versionHistory.length > 0 ? (
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Version</TableCell>
+                <TableCell>Modified By</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Modified Date</TableCell>
+                <TableCell>Comments</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {versionHistory.length === 0 && (
+            </TableHead>
+            <TableBody>
+              {versionHistory.map((version) => (
+                <TableRow key={version.id} data-testid="history-row">
+                  <TableCell data-testid="version-cell">{version.version}</TableCell>
+                  <TableCell>{version.modifiedBy}</TableCell>
+
+                  <TableCell>
+                    <Chip
+                      data-testid="status-chip"
+                      label={getStatusLabel(version.status)}
+                      color={
+                        version.status === BidPreparationStatus.Approved ? 'success' :
+                          version.status === BidPreparationStatus.Rejected ? 'error' :
+                            version.status === BidPreparationStatus.PendingApproval ? 'warning' : 'default'
+                      }
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {version.modifiedDate ? format(new Date(version.modifiedDate), 'dd/MM/yyyy HH:mm') : ''}
+                  </TableCell>
+                  <TableCell>{version.comments}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
           <Alert severity="error" sx={{ mb: 2 }}>
-           No Data Found
+            No Data Found
           </Alert>
         )}
       </Paper>

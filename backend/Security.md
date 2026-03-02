@@ -1,4 +1,4 @@
-# NJS Project Management - Security Guidelines
+﻿# EDR Project Management - Security Guidelines
 
 ## Authentication and Authorization
 
@@ -142,5 +142,6 @@
 
 ## Emergency Contacts
 
-- Security Team: security@njs.com
-- Incident Response: incident-response@njs.com
+- Security Team: security@edr.com
+- Incident Response: incident-response@edr.com
+

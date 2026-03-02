@@ -106,7 +106,7 @@ const BillingManagement = () => {
                 Total Revenue
               </Typography>
               <Typography variant="h4">
-                ${billingData.totalRevenue.toLocaleString()}
+                ${billingData.totalRevenue.toLocaleString('en-US')}
               </Typography>
             </CardContent>
           </Card>
@@ -118,7 +118,7 @@ const BillingManagement = () => {
                 Monthly Revenue
               </Typography>
               <Typography variant="h4">
-                ${billingData.monthlyRevenue.toLocaleString()}
+                ${billingData.monthlyRevenue.toLocaleString('en-US')}
               </Typography>
             </CardContent>
           </Card>
@@ -130,7 +130,7 @@ const BillingManagement = () => {
                 Pending Payments
               </Typography>
               <Typography variant="h4">
-                ${billingData.pendingPayments.toLocaleString()}
+                ${billingData.pendingPayments.toLocaleString('en-US')}
               </Typography>
             </CardContent>
           </Card>
@@ -142,7 +142,7 @@ const BillingManagement = () => {
                 Overdue Payments
               </Typography>
               <Typography variant="h4" color="error">
-                ${billingData.overduePayments.toLocaleString()}
+                ${billingData.overduePayments.toLocaleString('en-US')}
               </Typography>
             </CardContent>
           </Card>
@@ -174,9 +174,9 @@ const BillingManagement = () => {
                     size="small"
                   />
                 </TableCell>
-                <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(invoice.dueDate).toLocaleDateString('en-US')}</TableCell>
                 <TableCell>
-                  {invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : '-'}
+                  {invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString('en-US') : '-'}
                 </TableCell>
               </TableRow>
             ))}

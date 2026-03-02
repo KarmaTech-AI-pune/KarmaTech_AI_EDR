@@ -127,6 +127,7 @@ const ProgrammeScheduleTab: React.FC = () => {
                             onClick={() => removeProgrammeScheduleRow(index)}
                             color="error"
                             size="small"
+                            aria-label="delete"
                           >
                             <DeleteIcon />
                           </IconButton>

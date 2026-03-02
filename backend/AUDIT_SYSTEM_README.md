@@ -1,4 +1,4 @@
-# Audit System Implementation
+﻿# Audit System Implementation
 
 This document describes the audit system implementation using the Observer pattern in ASP.NET Core. The system automatically tracks all database changes without modifying existing code.
 
@@ -294,8 +294,8 @@ Enable detailed logging for the audit system:
 {
   "Logging": {
     "LogLevel": {
-      "NJS.Domain.Services.AuditService": "Debug",
-      "NJS.Domain.Interceptors.AuditSaveChangesInterceptor": "Debug"
+      "EDR.Domain.Services.AuditService": "Debug",
+      "EDR.Domain.Interceptors.AuditSaveChangesInterceptor": "Debug"
     }
   }
 }

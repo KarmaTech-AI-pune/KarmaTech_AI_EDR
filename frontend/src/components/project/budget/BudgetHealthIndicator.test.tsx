@@ -1,10 +1,11 @@
+// import React from 'react';
 /**
  * BudgetHealthIndicator Component Tests
  * 
  * Tests for the BudgetHealthIndicator component
  */
 
-import { describe, it, expect } from 'vitest';
+import {  describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BudgetHealthIndicator, CompactBudgetHealthIndicator } from './BudgetHealthIndicator';
 
@@ -112,3 +113,4 @@ describe('BudgetHealthIndicator', () => {
     expect(chip).toBeInTheDocument();
   });
 });
+

@@ -25,6 +25,7 @@ export interface User {
     tenantId?: number;
     tenantDomain?: string;
     twoFactorEnabled?: boolean;
+    features?: string[]; // Array of feature names from subscription
 }
 
 export interface Role {
@@ -60,6 +61,9 @@ export interface Project {
     letterOfAcceptance: boolean;
     opportunityTrackingId: number;   
     feeType:string; 
+    fundingStream: string;
+    contractType: string;
+    programId: number;
     percentage?: number;
 }
 

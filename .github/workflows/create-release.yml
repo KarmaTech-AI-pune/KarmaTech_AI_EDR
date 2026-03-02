@@ -1,0 +1,63 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+        - prod
+        - dev
+
+jobs:
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Setup Git User
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Calculate Version & Update Files
+      id: generate
+      run: |
+
+        # We don't pass --version, so it auto-calculates based on SemVer
+        node .github/scripts/generate-release-notes.js --environment ${{ inputs.environment }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Release Branch
+      run: |
+        NEW_VERSION="${{ steps.generate.outputs.next_version }}"
+        BRANCH_NAME="release/$NEW_VERSION"
+        
+        echo "Creating release branch: $BRANCH_NAME"
+        git checkout -b "$BRANCH_NAME"
+        
+        # Commit updated version files (package.json, appsettings.json)
+        git add frontend/package.json backend/src/NJSAPI/appsettings.json
+        git commit -m "chore(release): bump version to $NEW_VERSION"
+        
+        # Push the branch
+        git push origin "$BRANCH_NAME"
+        
+        echo "✅ Release branch '$BRANCH_NAME' created successfully!"

@@ -24,7 +24,13 @@ export const usePMWorkflow = ({ entityId, entityType }: UsePMWorkflowProps): Use
     const [canView, setCanView] = useState(false);
     
     const loadWorkflowHistory = useCallback(async () => {
-        if (!entityId) return;
+        if (!entityId) {
+            setLoading(false);
+            setWorkflowHistory(null);
+            setError(null);
+            setCanView(false);
+            return;
+        }
         
         setLoading(true);
         setError(null);

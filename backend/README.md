@@ -1,27 +1,27 @@
-# NJS Project Management Backend
+﻿# EDR Project Management Backend
 
 ## Overview
 
-NJS Project Management Backend is a robust, scalable .NET Core application designed to provide comprehensive project management capabilities with a focus on security, performance, and extensibility.
+EDR Project Management Backend is a robust, scalable .NET Core application designed to provide comprehensive project management capabilities with a focus on security, performance, and extensibility.
 
 ### Key Features
 
-- 🔐 Secure Authentication
+- ðŸ” Secure Authentication
   - Role-based access control
   - JWT token authentication
   - Multi-role support
 
-- 📊 Project Management
+- ðŸ“Š Project Management
   - Comprehensive project tracking
   - Feasibility study management
   - Go/No-Go decision workflows
 
-- 🛡️ Advanced Security
+- ðŸ›¡ï¸ Advanced Security
   - Identity Core integration
   - Configurable password policies
   - Secure token management
 
-- 🚀 Modern Architecture
+- ðŸš€ Modern Architecture
   - Clean architecture
   - CQRS (Command Query Responsibility Segregation)
   - MediatR for implementing the mediator pattern
@@ -45,17 +45,17 @@ NJS Project Management Backend is a robust, scalable .NET Core application desig
 
 ```
 backend/
-├── src/
-│   ├── NJS.Application/     # Application services
-│   ├── NJS.Domain/          # Domain models and entities
-│   ├── NJS.Infrastructure/  # Cross-cutting concerns
-│   ├── NJS.Repositories/    # Data access layer
-│   └── NJSAPI/              # Web API controllers
-├── tests/                   # Unit and integration tests
-├── Configuration.md         # Detailed configuration guide
-├── Security.md              # Security guidelines
-├── DEVELOPMENT.md           # Development setup instructions
-└── CONTRIBUTING.md          # Contribution guidelines
+â”œâ”€â”€ src/
+â”‚   â”œâ”€â”€ EDR.Application/     # Application services
+â”‚   â”œâ”€â”€ EDR.Domain/          # Domain models and entities
+â”‚   â”œâ”€â”€ EDR.Infrastructure/  # Cross-cutting concerns
+â”‚   â”œâ”€â”€ EDR.Repositories/    # Data access layer
+â”‚   â””â”€â”€ EDR.API/              # Web API controllers
+â”œâ”€â”€ tests/                   # Unit and integration tests
+â”œâ”€â”€ Configuration.md         # Detailed configuration guide
+â”œâ”€â”€ Security.md              # Security guidelines
+â”œâ”€â”€ DEVELOPMENT.md           # Development setup instructions
+â””â”€â”€ CONTRIBUTING.md          # Contribution guidelines
 ```
 
 ## Quick Start
@@ -93,8 +93,8 @@ dotnet run
 
 - Default Admin Credentials
   - Username: `admin`
-  - Email: `admin@njs.com`
-  - Password: `NJSAdmin@2024!`
+  - Email: `admin@edr.com`
+  - Password: `EDRAdmin@2024!`
 
 ### Roles
 - **Admin**: Full system access
@@ -139,4 +139,5 @@ We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING
 ## Contact
 
 - Project Lead: [Your Name]
-- Email: contact@njs-project.com
+- Email: contact@edr-project.com
+

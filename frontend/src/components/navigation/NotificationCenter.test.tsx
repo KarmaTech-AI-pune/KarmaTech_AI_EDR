@@ -1,6 +1,7 @@
+// import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { NotificationCenter } from './NotificationCenter';
-import { describe, it, expect } from 'vitest';
+import {  describe, it, expect } from 'vitest';
 
 describe('NotificationCenter Component', () => {
   it('renders the component with title', () => {
@@ -67,3 +68,4 @@ describe('NotificationCenter Component', () => {
     expect(boxElement).toHaveStyle('border-radius: 8px');
   });
 });
+

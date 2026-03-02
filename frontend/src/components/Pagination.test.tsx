@@ -1,5 +1,6 @@
+// import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { vi, describe, it, expect } from 'vitest'
 import { Pagination } from './Pagination'
 
 describe('Pagination Component', () => {
@@ -75,3 +76,4 @@ describe('Pagination Component', () => {
     expect(buttons).toHaveLength(0)
   })
 })
+

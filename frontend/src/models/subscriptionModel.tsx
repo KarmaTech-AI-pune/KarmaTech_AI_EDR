@@ -1,3 +1,10 @@
+export interface Feature {
+  id: number;
+  name: string;
+  description: string;
+  isActive: boolean;
+}
+
 export interface SubscriptionPlan {
   id: number;
   name: string;
@@ -9,17 +16,12 @@ export interface SubscriptionPlan {
   maxStorageGB: number;
   isActive: boolean;
   stripePriceId?: string;
-  features: PlanFeatures;
+  features: Feature[];
   tenants?: any[]; // Tenant objects
 }
 
 export interface PlanFeatures {
-  advancedReporting: boolean;
-  customBranding: boolean;
-  apiAccess: boolean;
-  prioritySupport: boolean;
-  whiteLabel: boolean;
-  sso: boolean;
+  [key: string]: boolean;
 }
 
 export interface CreateSubscriptionPlanRequest {
@@ -31,7 +33,7 @@ export interface CreateSubscriptionPlanRequest {
   maxProjects: number;
   maxStorageGB: number;
   isActive?: boolean;
-  features: PlanFeatures;
+  featureIds: number[];
 }
 
 export interface UpdateSubscriptionPlanRequest {
@@ -44,7 +46,8 @@ export interface UpdateSubscriptionPlanRequest {
   maxProjects?: number;
   maxStorageGB?: number;
   isActive?: boolean;
-  features?: PlanFeatures;
+  featureIds?: number[];
+  stripePriceId?: string;
 }
 
 export interface SubscriptionStats {

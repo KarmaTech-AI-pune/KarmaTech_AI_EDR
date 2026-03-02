@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+﻿import React, { useState, useContext, useEffect } from 'react';
 import {
   Button,
   TextField,
@@ -61,10 +61,10 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     contactPersonAtClient: project?.contactPersonAtClient || '',
     dateOfSubmission: project?.dateOfSubmission || undefined,
     percentageChanceOfProjectHappening: project?.percentageChanceOfProjectHappening || 0,
-    percentageChanceOfNJSSuccess: project?.percentageChanceOfNJSSuccess || 0,
+    percentageChanceOfEDRSuccess: project?.percentageChanceOfEDRSuccess || 0,
     likelyCompetition: project?.likelyCompetition || '',
     grossRevenue: project?.grossRevenue || 0,
-    netNJSRevenue: project?.netNJSRevenue || 0,
+    netEDRRevenue: project?.netEDRRevenue || 0,
     followUpComments: project?.followUpComments || '',
     notes: project?.notes || '',
     probableQualifyingCriteria: project?.probableQualifyingCriteria || '',
@@ -108,10 +108,10 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     const fetchManagers = async () => {
       // Helper function to convert users to unique manager objects and sort by name
       const getUniqueManagers = (users: AuthUser[]) => {
-        const uniqueManagersMap = new Set<{ id: string; name: string }>();
+        const uniqueManagersMap = new Map<string, { id: string; name: string }>();
         users.forEach(user => {
-          if (user && user.name) {
-            uniqueManagersMap.add({ id: user.id, name: user.name })
+          if (user && user.name && !uniqueManagersMap.has(user.id)) {
+            uniqueManagersMap.set(user.id, { id: user.id, name: user.name });
           }
         });
         return Array.from(uniqueManagersMap.values());
@@ -323,9 +323,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       percentageChanceOfProjectHappening: typeof formData.percentageChanceOfProjectHappening === 'string'
         ? parseFloat(formData.percentageChanceOfProjectHappening as any) || 0
         : formData.percentageChanceOfProjectHappening,
-      percentageChanceOfNJSSuccess: typeof formData.percentageChanceOfNJSSuccess === 'string'
-        ? parseFloat(formData.percentageChanceOfNJSSuccess as any) || 0
-        : formData.percentageChanceOfNJSSuccess,
+      percentageChanceOfEDRSuccess: typeof formData.percentageChanceOfEDRSuccess === 'string'
+        ? parseFloat(formData.percentageChanceOfEDRSuccess as any) || 0
+        : formData.percentageChanceOfEDRSuccess,
     };
 
     onSubmit(submissionData as OpportunityTracking);
@@ -444,8 +444,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="stage-select">Stage</InputLabel>
+                  <InputLabel id="stage-select-label" htmlFor="stage-select">Stage</InputLabel>
                   <Select
+                    labelId="stage-select-label"
                     id="stage-select"
                     name="stage"
                     value={formData.stage || ''}
@@ -463,8 +464,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="strategic-ranking-select">Strategic Ranking</InputLabel>
+                  <InputLabel id="strategic-ranking-select-label" htmlFor="strategic-ranking-select">Strategic Ranking</InputLabel>
                   <Select
+                    labelId="strategic-ranking-select-label"
                     id="strategic-ranking-select"
                     name="strategicRanking"
                     value={formData.strategicRanking || ''}
@@ -481,8 +483,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="status-select">Status</InputLabel>
+                  <InputLabel id="status-select-label" htmlFor="status-select">Status</InputLabel>
                   <Select
+                    labelId="status-select-label"
                     id="status-select"
                     name="status"
                     value={formData.status || ''}
@@ -542,8 +545,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="currency-select">Currency</InputLabel>
+                  <InputLabel id="currency-select-label" htmlFor="currency-select">Currency</InputLabel>
                   <Select
+                    labelId="currency-select-label"
                     id="currency-select"
                     name="currency"
                     value={formData.currency || 'INR'}
@@ -584,8 +588,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="bd-manager-select">BD Manager</InputLabel>
+                  <InputLabel id="bd-manager-select-label" htmlFor="bd-manager-select">BD Manager</InputLabel>
                   <Select
+                    labelId="bd-manager-select-label"
                     id="bd-manager-select"
                     name="bidManagerId"
                     value={formData.bidManagerId || ''}
@@ -604,8 +609,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="review-manager-select">Review Manager</InputLabel>
+                  <InputLabel id="review-manager-select-label" htmlFor="review-manager-select">Review Manager</InputLabel>
                   <Select
+                    labelId="review-manager-select-label"
                     id="review-manager-select"
                     name="reviewManagerId"
                     value={formData.reviewManagerId || ''}
@@ -626,8 +632,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="approval-manager-select">Approval Manager</InputLabel>
+                  <InputLabel id="approval-manager-select-label" htmlFor="approval-manager-select">Approval Manager</InputLabel>
                   <Select
+                    labelId="approval-manager-select-label"
                     id="approval-manager-select"
                     name="approvalManagerId"
                     value={formData.approvalManagerId || ''}
@@ -718,8 +725,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="contract-type-select">Contractor Contract Type</InputLabel>
+                  <InputLabel id="contract-type-select-label" htmlFor="contract-type-select">Contractor Contract Type</InputLabel>
                   <Select
+                    labelId="contract-type-select-label"
                     id="contract-type-select"
                     name="contractType"
                     value={formData.contractType || ''}
@@ -737,8 +745,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="funding-stream-select">Funding Stream</InputLabel>
+                  <InputLabel id="funding-stream-select-label" htmlFor="funding-stream-select">Funding Stream</InputLabel>
                   <Select
+                    labelId="funding-stream-select-label"
                     id="funding-stream-select"
                     name="fundingStream"
                     value={formData.fundingStream || ''}
@@ -768,11 +777,11 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Chance of NJS Success (%)"
-                  name="percentageChanceOfNJSSuccess"
+                  label="Chance of EDR Success (%)"
+                  name="percentageChanceOfEDRSuccess"
                   type="text"
                   inputProps={{ min: 0, max: 100, step: 0.01 }}
-                  value={formData.percentageChanceOfNJSSuccess || 0}
+                  value={formData.percentageChanceOfEDRSuccess || 0}
                   onChange={handleNumberChange}
                 />
               </Grid>
@@ -846,3 +855,4 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     </Box>
   );
 };
+

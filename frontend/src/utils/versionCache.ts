@@ -35,9 +35,9 @@ const CACHE_CONFIG = {
   // Cache duration: 30 minutes in milliseconds
   CACHE_DURATION_MS: 30 * 60 * 1000,
   // SessionStorage key for version data
-  VERSION_CACHE_KEY: 'kiro_version_cache',
+  VERSION_CACHE_KEY: 'kiro_version_cache_v1.2',
   // SessionStorage key for cache statistics
-  CACHE_STATS_KEY: 'kiro_version_cache_stats',
+  CACHE_STATS_KEY: 'kiro_version_cache_stats_v1.2',
 } as const;
 
 /**
@@ -87,7 +87,7 @@ class VersionCacheManager {
    */
   private updateStats(type: 'hit' | 'miss' | 'invalidation'): void {
     this.stats.lastAccess = Date.now();
-    
+
     switch (type) {
       case 'hit':
         this.stats.hits++;
@@ -118,14 +118,14 @@ class VersionCacheManager {
   getCachedVersion(): VersionInfo | null {
     try {
       const cachedJson = sessionStorage.getItem(CACHE_CONFIG.VERSION_CACHE_KEY);
-      
+
       if (!cachedJson) {
         this.updateStats('miss');
         return null;
       }
 
       const cachedData: CachedVersionData = JSON.parse(cachedJson);
-      
+
       if (!this.isValidCache(cachedData)) {
         // Cache expired, remove it
         this.invalidateCache();
@@ -212,7 +212,7 @@ class VersionCacheManager {
   getRemainingCacheTime(): number | null {
     try {
       const cachedJson = sessionStorage.getItem(CACHE_CONFIG.VERSION_CACHE_KEY);
-      
+
       if (!cachedJson) {
         return null;
       }
@@ -220,7 +220,7 @@ class VersionCacheManager {
       const cachedData: CachedVersionData = JSON.parse(cachedJson);
       const now = Date.now();
       const remaining = cachedData.expiresAt - now;
-      
+
       return remaining > 0 ? remaining : null;
     } catch (error) {
       return null;

@@ -207,7 +207,7 @@ const ChangeControlForm: React.FC = () => {
   if (!projectId) {
     return (
       <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Alert severity="warning">Please select a project to view the change control register.</Alert>
+        <Alert data-testid="no-project-alert" severity="warning">Please select a project to view the change control register.</Alert>
       </Container>
     );
   }
@@ -252,7 +252,7 @@ const ChangeControlForm: React.FC = () => {
 
           {error && (
             <Box sx={{ mx: 3, mb: 3 }}>
-              <Alert severity="error">
+              <Alert data-testid="error-alert" severity="error">
                 {error}
                 {errorDetails && (
                   <Typography variant="body2" sx={{ mt: 1 }}>
@@ -285,16 +285,18 @@ const ChangeControlForm: React.FC = () => {
                   backgroundColor: '#fff',
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                   <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     sx={{
                       flexGrow: 1,
+                      minWidth: 0, // Allow content to shrink
                       '&:hover': {
                         backgroundColor: 'rgba(0, 0, 0, 0.04)',
                       },
                       '& .MuiAccordionSummary-content': {
                         margin: '12px 0',
+                        minWidth: 0, // Allow content to shrink
                       },
                     }}
                   >
@@ -305,21 +307,31 @@ const ChangeControlForm: React.FC = () => {
                         </Typography>
                       </Grid>
                       <Grid item xs={2}>
-                        <Typography color="text.secondary">
+                        <Typography color="text.secondary" variant="body2">
                           {row.dateLogged}
                         </Typography>
                       </Grid>
                       <Grid item xs={2}>
-                        <Typography fontWeight="medium">
+                        <Typography fontWeight="medium" variant="body2" noWrap>
                           {row.originator}
                         </Typography>
                       </Grid>
-                      <Grid item xs={5}>
-                        <Typography noWrap>
+                      <Grid item xs={4}>
+                        <Typography 
+                          variant="body2"
+                          sx={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            wordBreak: 'break-word'
+                          }}
+                        >
                           {row.description}
                         </Typography>
                       </Grid>
-                      <Grid item xs={2}>
+                      <Grid item xs={3}>
                         <ChangeControlWorkflow 
                           changeControl={row}
                           onChangeControlUpdated={loadChangeControls}
@@ -327,8 +339,14 @@ const ChangeControlForm: React.FC = () => {
                       </Grid>
                     </Grid>
                   </AccordionSummary>
-                  <Box sx={{ display: 'flex', gap: 1, pr: 2 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 1, 
+                    pr: 2,
+                    flexShrink: 0 // Prevent icons from shrinking
+                  }}>
                     <IconButton
+                      aria-label="edit"
                       size="small"
                       color="primary"
                       onClick={(e) => {
@@ -339,6 +357,7 @@ const ChangeControlForm: React.FC = () => {
                       <EditIcon fontSize="small" />
                     </IconButton>
                     <IconButton
+                      aria-label="delete"
                       size="small"
                       color="error"
                       onClick={(e) => {

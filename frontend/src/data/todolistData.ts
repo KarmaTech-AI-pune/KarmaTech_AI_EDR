@@ -116,6 +116,25 @@ export interface SprintPlanDto {
   sprintTasks?: SprintTaskDto[];
 }
 
+export interface SprintPlanInputDto {
+  SprintId?: number;
+  TenantId?: number;
+  StartDate?: string | null;
+  EndDate?: string | null;
+  SprintGoal?: string;
+  ProjectId?: number;
+  RequiredSprintEmployees: number;
+  SprintName?: string;
+  PlannedStoryPoints: number;
+  ActualStoryPoints: number;
+  Velocity: number;
+  Status: number;
+  StartedAt?: string | null;
+  CompletedAt?: string | null;
+  CreatedAt: string;
+  UpdatedAt?: string | null;
+}
+
 export interface SprintData {
   sprintPlan: SprintPlanDto;
   sprintEmployees: SprintEmployee[];
@@ -206,6 +225,11 @@ const apiService = {
 
   async updateSprintPlan(sprintPlan: Partial<SprintPlanDto>): Promise<void> {
     await axiosInstance.put('/api/sprint-tasks/single-sprint-plan', sprintPlan);
+  },
+
+  async createSprintPlan(sprintPlan: SprintPlanInputDto): Promise<number> {
+    const response = await axiosInstance.post('/api/sprint-tasks/single-sprint-plan', sprintPlan);
+    return response.data;
   },
 };
 
@@ -596,8 +620,22 @@ export const updateSprintPlanAPI = async (sprintPlan: Partial<SprintPlanDto>): P
   }
 };
 
+export const createSprintPlanAPI = async (sprintPlan: SprintPlanInputDto): Promise<number> => {
+  try {
+    return await apiService.createSprintPlan(sprintPlan);
+  } catch (error) {
+    console.error('Failed to create sprint plan:', error);
+    throw error;
+  }
+};
+
 // Keep static team members for now (you might want to fetch these from API too)
-export const teamMembers: TeamMember[] = [];
+// Keep static team members for now (you might want to fetch these from API too)
+export const teamMembers: TeamMember[] = [
+  { id: '1', name: 'User 1', avatar: 'U1' },
+  { id: '2', name: 'User 2', avatar: 'U2' },
+  { id: 'current-user', name: 'Current User', avatar: 'CU' }
+];
 
 export const fetchIssuesForSprintAPI = async (sprintId: number, projectId?: number): Promise<SprintData> => {
   try {

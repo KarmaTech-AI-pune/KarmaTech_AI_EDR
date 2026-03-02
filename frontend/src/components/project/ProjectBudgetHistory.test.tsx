@@ -1,12 +1,12 @@
+
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 /**
  * ProjectBudgetHistory Component Tests
  * 
  * Comprehensive test suite for ProjectBudgetHistory component
  * Tests: Rendering, loading states, error handling, filtering, pagination
  */
-
-import { render, screen, waitFor, within } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ProjectBudgetHistory } from './ProjectBudgetHistory';
 import { projectBudgetApi } from '../../services/projectBudgetApi';
@@ -29,6 +29,10 @@ vi.mock('./BudgetChangeTimeline', () => ({
 }));
 
 describe('ProjectBudgetHistory Component', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const mockProjectId = 123;
 
   const createMockHistory = (count: number): ProjectBudgetChangeHistory[] => {
@@ -62,6 +66,10 @@ describe('ProjectBudgetHistory Component', () => {
   });
 
   describe('Component Rendering Tests', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should render with empty history', async () => {
       vi.mocked(projectBudgetApi.getBudgetHistory).mockResolvedValue([]);
 
@@ -116,6 +124,10 @@ describe('ProjectBudgetHistory Component', () => {
   });
 
   describe('Filtering Tests (Req 3.5)', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should filter by cost changes only', async () => {
       const user = userEvent.setup();
       const mockHistory = createMockHistory(10);
@@ -129,7 +141,7 @@ describe('ProjectBudgetHistory Component', () => {
 
       // Open filter dropdown
       const filterSelect = screen.getByLabelText('Filter by Field');
-      await user.click(filterSelect);
+      fireEvent.mouseDown(filterSelect);
 
       // Select "Cost Changes Only"
       const costOption = screen.getByText('Cost Changes Only');
@@ -157,7 +169,7 @@ describe('ProjectBudgetHistory Component', () => {
 
       // Open filter dropdown
       const filterSelect = screen.getByLabelText('Filter by Field');
-      await user.click(filterSelect);
+      fireEvent.mouseDown(filterSelect);
 
       // Select "Fee Changes Only"
       const feeOption = screen.getByText('Fee Changes Only');
@@ -204,7 +216,7 @@ describe('ProjectBudgetHistory Component', () => {
 
       // Change filter
       const filterSelect = screen.getByLabelText('Filter by Field');
-      await user.click(filterSelect);
+      fireEvent.mouseDown(filterSelect);
       const costOption = screen.getByText('Cost Changes Only');
       await user.click(costOption);
 
@@ -219,6 +231,10 @@ describe('ProjectBudgetHistory Component', () => {
   });
 
   describe('Pagination Tests', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should handle pagination correctly', async () => {
       const user = userEvent.setup();
       const mockHistory = createMockHistory(10);
@@ -263,6 +279,10 @@ describe('ProjectBudgetHistory Component', () => {
   });
 
   describe('API Integration Tests', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should fetch history data on mount', async () => {
       const mockHistory = createMockHistory(3);
       vi.mocked(projectBudgetApi.getBudgetHistory).mockResolvedValue(mockHistory);
@@ -329,6 +349,10 @@ describe('ProjectBudgetHistory Component', () => {
   });
 
   describe('Edge Cases', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should handle very long project names gracefully', async () => {
       const mockHistory = createMockHistory(1);
       vi.mocked(projectBudgetApi.getBudgetHistory).mockResolvedValue(mockHistory);
@@ -367,11 +391,11 @@ describe('ProjectBudgetHistory Component', () => {
       const filterSelect = screen.getByLabelText('Filter by Field');
 
       // Rapidly change filters
-      await user.click(filterSelect);
+      fireEvent.mouseDown(filterSelect);
       await user.click(screen.getByText('Cost Changes Only'));
-      await user.click(filterSelect);
+      fireEvent.mouseDown(filterSelect);
       await user.click(screen.getByText('Fee Changes Only'));
-      await user.click(filterSelect);
+      fireEvent.mouseDown(filterSelect);
       await user.click(screen.getByText('All Changes'));
 
       // Should handle all changes without errors

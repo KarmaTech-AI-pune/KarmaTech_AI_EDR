@@ -368,7 +368,16 @@ export const useTodolistIssues = () => {
       const numericId = parseInt(subtaskId);
       if (isNaN(numericId)) return;
 
-      const response = await commentService.getCommentsBySubtaskId(numericId);
+      // Find parent task to get ID
+      const parentIssue = issues.find(i => i.subtasks.some(s => s.id === subtaskId));
+      if (!parentIssue) {
+        console.error('Parent task not found for subtask:', subtaskId);
+        return;
+      }
+      const taskId = parseInt(parentIssue.id);
+      if (isNaN(taskId)) return;
+
+      const response = await commentService.getCommentsBySubtaskId(taskId, numericId);
       const transformedComments: Comment[] = response.map(c => ({
         id: c.subtaskCommentId.toString(),
         author: teamMembers.find(m => m.name === c.createdBy) || teamMembers[0],
@@ -691,6 +700,7 @@ export const useTodolistIssues = () => {
     updateSubtaskComment,
     deleteSubtaskComment,
     fetchSubtaskComments,
-    teamMembers
+    teamMembers,
+    navigateToSprint: setSprintId // Expose setter to allow manual navigation
   };
 };

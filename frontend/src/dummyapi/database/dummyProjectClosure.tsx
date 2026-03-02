@@ -1,8 +1,8 @@
-import { ProjectClosureComment } from "../../models/projectClosureCommentModel";
+﻿import { ProjectClosureComment } from "../../models/projectClosureCommentModel";
 import { ProjectClosureRow } from "../../models/projectClosureRowModel";
 export const projectClosureLabels = {
   // Section A
-  clientFeedback: "What client feedback / performance certificate has been obtained ? – summarise",
+  clientFeedback: "What client feedback / performance certificate has been obtained ? â€“ summarise",
   successCriteria: "Was the client project success criteria achieved ?",
   clientExpectations: "How well did the project meet (or exceed) the client's expectations ?",
   otherStakeholders: "Other Stakeholders ?",
@@ -102,7 +102,7 @@ export const projectClosureLabels = {
   constructionInvolvement: "Was there effective involvement of the client/consultant/contractor as required throughout the construction period ?",
   efficiencies: "Were efficiencies made ? If so, what, and have these been briefed to others ?",
 
-  maintenanceAgreements: "Are all NJS maintenance agreements with client in place and effective ? Look for sufficient resources.",
+  maintenanceAgreements: "Are all EDR maintenance agreements with client in place and effective ? Look for sufficient resources.",
 
   asBuiltManuals: "Have 'as builts' and O&M Manuals (where required) been produced ? Look for evidence of review of as builts against initial design.",
   hsFileForwarded: "Has H&S File (where appropriate) been forwarded to client (Under cover of Document Transmittal) ?",
@@ -119,3 +119,4 @@ export const projectClosureLabels = {
 
 export const dummyProjectClosures: ProjectClosureRow[] = [];
 export const dummyProjectClosureComments: ProjectClosureComment[] = [];
+

@@ -1,4 +1,4 @@
-# WBS Options Setup Guide
+﻿# WBS Options Setup Guide
 
 This guide explains how to set up the Work Breakdown Structure (WBS) options in the database to fix the issue with empty "Work Description" dropdowns in the WBS form.
 
@@ -52,7 +52,7 @@ You should see entries for:
 Restart your backend API service to ensure it picks up the new database changes:
 
 ```powershell
-cd backend/src/NJSAPI
+cd backend/src/EDR.API
 dotnet run
 ```
 
@@ -109,3 +109,4 @@ public class WBSOption
 - Level 1 options have Level=1 and ParentValue=NULL
 - Level 2 options have Level=2 and ParentValue=NULL
 - Level 3 options have Level=3 and ParentValue=<Level2Value>
+

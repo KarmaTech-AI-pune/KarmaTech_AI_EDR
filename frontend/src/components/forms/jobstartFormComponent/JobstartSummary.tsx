@@ -29,8 +29,8 @@ interface JobstartSummaryProps {
 
 const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPercentage, onDataChange }: JobstartSummaryProps) => {
   // State for project fees and service tax
-  const [projectFees, _setProjectFees] = useState<string>(
-    (initialProjectFees || 0).toString()
+  const [projectFees, setProjectFees] = useState<string>(
+    (initialProjectFees || 0).toFixed(2)
   );
   const [serviceTax, setServiceTax] = useState({
     percentage: (initialServiceTaxPercentage || 18).toString(), // Default GST rate in India
@@ -71,6 +71,25 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
   };
 
   // Handlers for input changes
+
+  const handleProjectFeesChange = (value: string) => {
+    // Only allow numeric values (including decimal points)
+    if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
+      setProjectFees(value);
+      notifyParentOfChanges(value, serviceTax.percentage);
+    }
+  };
+
+  const handleProjectFeesBlur = () => {
+    const numValue = parseFloat(projectFees);
+    if (!isNaN(numValue)) {
+      setProjectFees(numValue.toFixed(2));
+      notifyParentOfChanges(numValue.toFixed(2), serviceTax.percentage);
+    } else {
+      setProjectFees('0.00');
+      notifyParentOfChanges('0.00', serviceTax.percentage);
+    }
+  };
 
   const handleServiceTaxChange = (value: string) => {
     // Only allow numeric values (including decimal points)
@@ -228,7 +247,26 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
               <TableRow sx={{ bgcolor: '#fafafa' }}>
                 <TableCell colSpan={4} sx={{ ...tableCellStyle, width: 'calc(100% - 256px)', fontWeight: 'bold' }}>PROJECT FEES</TableCell>
                 <TableCell align="right" sx={{...tableCellStyle, width: '240px', fontWeight: 'bold', color: '#1976d2', fontSize: '1.2em'}}>
-                  {formatToIndianNumber(parseFloat(projectFees))}
+                   <TextField
+                      size="small"
+                      type="text"
+                      value={projectFees}
+                      onChange={(e) => handleProjectFeesChange(e.target.value)}
+                      onBlur={handleProjectFeesBlur}
+                      sx={{
+                        width: '150px',
+                        ...textFieldStyle,
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: '#fff',
+                          height: '36px',
+                          '& input': {
+                            textAlign: 'right',
+                            fontWeight: 'bold',
+                            color: '#1976d2',
+                          }
+                        }
+                      }}
+                    />
                 </TableCell>
                 <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
               </TableRow>

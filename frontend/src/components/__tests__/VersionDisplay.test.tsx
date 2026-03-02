@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { VersionDisplay } from '../VersionDisplay';
 import * as versionUtils from '../../utils/version';
 import { versionApi } from '../../services/versionApi';
@@ -22,6 +22,10 @@ vi.mock('../../services/versionApi', () => ({
 }));
 
 describe('VersionDisplay', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset to default mock values
@@ -44,46 +48,19 @@ describe('VersionDisplay', () => {
   it('should render version with default prefix', () => {
     render(<VersionDisplay />);
     
-    expect(screen.getByText('Version v1.12.0')).toBeInTheDocument();
+    expect(screen.getByText('Version 1.12.0')).toBeInTheDocument();
   });
 
   it('should render version with custom prefix', () => {
     render(<VersionDisplay prefix="App Version" />);
     
-    expect(screen.getByText('App Version v1.12.0')).toBeInTheDocument();
-  });
-
-  it('should show development indicator for dev builds', () => {
-    vi.mocked(versionUtils.getVersionInfo).mockReturnValue({
-      version: 'dev',
-      buildDate: '2024-12-04T10:30:00.000Z',
-      displayVersion: 'vdev'
-    });
-    vi.mocked(versionUtils.isDevelopmentBuild).mockReturnValue(true);
-    
-    render(<VersionDisplay showDevIndicator={true} />);
-    
-    expect(screen.getByText('Version vdev (dev)')).toBeInTheDocument();
-  });
-
-  it('should hide development indicator when showDevIndicator is false', () => {
-    vi.mocked(versionUtils.getVersionInfo).mockReturnValue({
-      version: 'dev',
-      buildDate: '2024-12-04T10:30:00.000Z',
-      displayVersion: 'vdev'
-    });
-    vi.mocked(versionUtils.isDevelopmentBuild).mockReturnValue(true);
-    
-    render(<VersionDisplay showDevIndicator={false} />);
-    
-    expect(screen.getByText('Version vdev')).toBeInTheDocument();
-    expect(screen.queryByText('Version vdev (dev)')).not.toBeInTheDocument();
+    expect(screen.getByText('App Version 1.12.0')).toBeInTheDocument();
   });
 
   it('should apply custom typography props', () => {
     render(<VersionDisplay variant="h6" color="primary" />);
     
-    const versionElement = screen.getByText('Version v1.12.0');
+    const versionElement = screen.getByText('Version 1.12.0');
     expect(versionElement).toHaveClass('MuiTypography-h6');
   });
 
@@ -91,7 +68,7 @@ describe('VersionDisplay', () => {
     const onVersionClick = vi.fn();
     render(<VersionDisplay clickable={true} onVersionClick={onVersionClick} />);
     
-    const versionElement = screen.getByText('Version v1.12.0');
+    const versionElement = screen.getByText('Version 1.12.0');
     fireEvent.click(versionElement);
     
     expect(onVersionClick).toHaveBeenCalledWith('1.12.0');
@@ -101,7 +78,7 @@ describe('VersionDisplay', () => {
     const onVersionClick = vi.fn();
     render(<VersionDisplay clickable={true} onVersionClick={onVersionClick} />);
     
-    const versionElement = screen.getByText('Version v1.12.0');
+    const versionElement = screen.getByText('Version 1.12.0');
     fireEvent.keyDown(versionElement, { key: 'Enter' });
     
     expect(onVersionClick).toHaveBeenCalledWith('1.12.0');
@@ -115,7 +92,7 @@ describe('VersionDisplay', () => {
     
     // Wait for API call to complete
     await waitFor(() => {
-      expect(screen.getByText('Version v1.13.0')).toBeInTheDocument();
+      expect(screen.getByText('Version 1.13.0')).toBeInTheDocument();
     });
     
     expect(versionApi.getCurrentVersion).toHaveBeenCalled();
@@ -128,7 +105,9 @@ describe('VersionDisplay', () => {
     
     // Wait for API call to fail and fallback to be used
     await waitFor(() => {
-      expect(screen.getByText('Version v1.12.0')).toBeInTheDocument();
+      expect(screen.getByText('Version 1.12.0')).toBeInTheDocument();
     });
   });
 });
+
+

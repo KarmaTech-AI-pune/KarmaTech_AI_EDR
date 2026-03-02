@@ -230,24 +230,32 @@ const RolesManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {roles.map((role) => (
-              <TableRow key={role.id}>
-                <TableCell>{role.name}</TableCell>
-                <TableCell>{role.minRate}</TableCell>
-                <TableCell>{role.isResourceRole ? 'Yes' : 'No'}</TableCell>
-                <TableCell>
-                  {renderPermissionChips(role)}
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton onClick={() => handleEdit(role)} color="primary">
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(role)} color="error">
-                    <DeleteIcon />
-                  </IconButton>
+            {roles && roles.length > 0 ? (
+              roles.map((role) => (
+                <TableRow key={role.id}>
+                  <TableCell>{role.name}</TableCell>
+                  <TableCell>{role.minRate}</TableCell>
+                  <TableCell>{role.isResourceRole ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>
+                    {renderPermissionChips(role)}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton onClick={() => handleEdit(role)} color="primary">
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete(role)} color="error">
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  No roles found
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
