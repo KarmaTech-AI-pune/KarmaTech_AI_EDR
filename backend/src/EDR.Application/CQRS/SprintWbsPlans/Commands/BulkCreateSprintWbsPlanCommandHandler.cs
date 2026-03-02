@@ -21,31 +21,32 @@ namespace EDR.Application.CQRS.SprintWbsPlans.Commands
         {
             var ids = new List<int>();
             var entities = new List<SprintWbsPlan>();
+            var tenantId = _context.TenantId ?? 0;
 
             foreach (var item in request.Items)
             {
-                var entity = new SprintWbsPlan
+                if (item.PlannedHours <= 0)
                 {
-                    TenantId = _context.TenantId ?? 0,
-                    ProjectId = item.ProjectId,
-                    WBSTaskId = item.WBSTaskId,
-                    WBSTaskName = item.WBSTaskName,
-                    ParentWBSTaskId = item.ParentWBSTaskId,
-                    AssignedUserId = item.AssignedUserId,
-                    AssignedUserName = item.AssignedUserName,
-                    RoleId = item.RoleId,
-                    RoleName = item.RoleName,
-                    MonthYear = item.MonthYear,
-                    SprintNumber = item.SprintNumber,
-                    PlannedHours = item.PlannedHours,
-                    RemainingHours = item.RemainingHours,
-                    ProgramSequence = item.ProgramSequence,
-                    IsConsumed = item.IsConsumed,
-                    AcceptanceCriteria = item.AcceptanceCriteria,
-                    TaskDescription = item.TaskDescription,
-                    CreatedOn = DateTime.UtcNow
-                };
-                entities.Add(entity);
+                    throw new ArgumentException("PlannedHours must be greater than 0.");
+                }
+
+                if (item.SprintNumber < 0)
+                {
+                    throw new ArgumentException("SprintNumber cannot be negative.");
+                }
+
+                if (item.SprintNumber == 0)
+                {
+                    var firstHalf = item.PlannedHours / 2;
+                    var secondHalf = item.PlannedHours - firstHalf;
+
+                    entities.Add(CreateEntity(item, tenantId, 1, firstHalf, firstHalf));
+                    entities.Add(CreateEntity(item, tenantId, 2, secondHalf, secondHalf));
+                }
+                else
+                {
+                    entities.Add(CreateEntity(item, tenantId, item.SprintNumber, item.PlannedHours, item.RemainingHours));
+                }
             }
 
             _context.SprintWbsPlans.AddRange(entities);
@@ -57,6 +58,31 @@ namespace EDR.Application.CQRS.SprintWbsPlans.Commands
             }
 
             return ids;
+        }
+
+        private SprintWbsPlan CreateEntity(CreateSprintWbsPlanDto item, int tenantId, int sprintNumber, decimal plannedHours, decimal remainingHours)
+        {
+            return new SprintWbsPlan
+            {
+                TenantId = tenantId,
+                ProjectId = item.ProjectId,
+                WBSTaskId = item.WBSTaskId,
+                WBSTaskName = item.WBSTaskName,
+                ParentWBSTaskId = item.ParentWBSTaskId,
+                AssignedUserId = item.AssignedUserId,
+                AssignedUserName = item.AssignedUserName,
+                RoleId = item.RoleId,
+                RoleName = item.RoleName,
+                MonthYear = item.MonthYear,
+                SprintNumber = sprintNumber,
+                PlannedHours = plannedHours,
+                RemainingHours = remainingHours,
+                ProgramSequence = item.ProgramSequence,
+                IsConsumed = item.IsConsumed,
+                AcceptanceCriteria = item.AcceptanceCriteria,
+                TaskDescription = item.TaskDescription,
+                CreatedOn = DateTime.UtcNow
+            };
         }
     }
 }
