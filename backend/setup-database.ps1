@@ -12,7 +12,7 @@ dotnet ef database drop --context ProjectManagementContext --project src/EDR.Dom
 
 # Add new migration
 Write-Host "Adding new migration..."
-dotnet ef migrations add proper-migration --context ProjectManagementContext --project src/EDR.Domain --startup-project src/EDR.API
+dotnet ef migrations add Baseline-migration --context ProjectManagementContext --project src/EDR.Domain --startup-project src/EDR.API
 
 # Update database with verbose logging
 Write-Host "Updating database..."
