@@ -1,29 +1,29 @@
 # Multi-stage build for Multi-Tenant .NET Core API (Backend Only)
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
-# Set working directory
+# Set working directory to the repository root equivalent
 WORKDIR /src
 
-# Copy VERSION file (EDR.API.csproj reads this for assembly version)
-COPY VERSION /VERSION
+# Copy VERSION file (EDR.API.csproj reads this via ../../../VERSION)
+COPY VERSION ./VERSION
 
-# Copy all .csproj files first (for Docker layer caching of restore step)
-COPY backend/src/EDR.API/EDR.API.csproj src/EDR.API/
-COPY backend/src/EDR.Application/EDR.Application.csproj src/EDR.Application/
-COPY backend/src/EDR.Domain/EDR.Domain.csproj src/EDR.Domain/
-COPY backend/EDR.Infrastructure/EDR.Infrastructure.csproj EDR.Infrastructure/
-COPY backend/EDR.Repositories/EDR.Repositories.csproj EDR.Repositories/
+# Copy all .csproj files preserving their directory structure
+COPY backend/src/EDR.API/EDR.API.csproj backend/src/EDR.API/
+COPY backend/src/EDR.Application/EDR.Application.csproj backend/src/EDR.Application/
+COPY backend/src/EDR.Domain/EDR.Domain.csproj backend/src/EDR.Domain/
+COPY backend/EDR.Infrastructure/EDR.Infrastructure.csproj backend/EDR.Infrastructure/
+COPY backend/EDR.Repositories/EDR.Repositories.csproj backend/EDR.Repositories/
 
-# Restore from the top-level API project - this cascades to all project references
-RUN dotnet restore src/EDR.API/EDR.API.csproj
+# Restore from the top-level API project - this cascades to all dependencies
+RUN dotnet restore backend/src/EDR.API/EDR.API.csproj
 
-# Copy all source code
-COPY backend/src/ ./src/
-COPY backend/EDR.Infrastructure/ ./EDR.Infrastructure/
-COPY backend/EDR.Repositories/ ./EDR.Repositories/
+# Copy all source code preserving structure
+COPY backend/src/ backend/src/
+COPY backend/EDR.Infrastructure/ backend/EDR.Infrastructure/
+COPY backend/EDR.Repositories/ backend/EDR.Repositories/
 
-# Publish (internally builds all projects in correct dependency order)
-RUN dotnet publish src/EDR.API/EDR.API.csproj -c Release -o /app/publish
+# Publish the application (internally builds dependencies in correct order)
+RUN dotnet publish backend/src/EDR.API/EDR.API.csproj -c Release -o /app/publish
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
