@@ -55,12 +55,12 @@ export const AddPaymentScheduleDialog: React.FC<AddPaymentScheduleDialogProps> =
 
     if (percentage <= 0 || percentage > 100) {
       newErrors.percentage = 'Percentage must be between 1 and 100';
-    }
-
-    // Check if total percentage would exceed 100%
-    const newTotalPercentage = currentTotalPercentage + percentage;
-    if (newTotalPercentage > 100) {
-      newErrors.percentage = `Total percentage cannot exceed 100%. Current total: ${currentTotalPercentage}%, Remaining: ${remainingPercentage}%`;
+    } else {
+      // Only check total percentage if basic percentage validation passes
+      const newTotalPercentage = currentTotalPercentage + percentage;
+      if (newTotalPercentage > 100) {
+        newErrors.percentage = `Total percentage cannot exceed 100%. Current total: ${currentTotalPercentage}%, Remaining: ${remainingPercentage}%`;
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {

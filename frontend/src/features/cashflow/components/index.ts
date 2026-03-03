@@ -16,7 +16,6 @@ export { CashFlowTable } from './CashFlowTable';
 // New Dashboard Components
 export { MonthlyBudgetTable } from './MonthlyBudgetTable';
 export { PaymentScheduleTable } from './PaymentScheduleTable';
-export { ReportGenerationSection } from './ReportGenerationSection';
 export { AddPaymentScheduleDialog } from './AddPaymentScheduleDialog';
 
 // Legacy components (keeping for backward compatibility)
