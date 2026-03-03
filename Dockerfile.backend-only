@@ -6,6 +6,7 @@ WORKDIR /src
 
 # Copy VERSION file (EDR.API.csproj reads this via ../../../VERSION)
 COPY VERSION ./VERSION
+RUN cat ./VERSION
 
 # Copy all .csproj files preserving their directory structure
 COPY backend/src/EDR.API/EDR.API.csproj backend/src/EDR.API/
@@ -14,16 +15,19 @@ COPY backend/src/EDR.Domain/EDR.Domain.csproj backend/src/EDR.Domain/
 COPY backend/EDR.Infrastructure/EDR.Infrastructure.csproj backend/EDR.Infrastructure/
 COPY backend/EDR.Repositories/EDR.Repositories.csproj backend/EDR.Repositories/
 
-# Restore from the top-level API project - this cascades to all dependencies
-RUN dotnet restore backend/src/EDR.API/EDR.API.csproj
+# Restore with normal verbosity
+RUN dotnet restore backend/src/EDR.API/EDR.API.csproj -v n
 
 # Copy all source code preserving structure
 COPY backend/src/ backend/src/
 COPY backend/EDR.Infrastructure/ backend/EDR.Infrastructure/
 COPY backend/EDR.Repositories/ backend/EDR.Repositories/
 
-# Publish the application (internally builds dependencies in correct order)
-RUN dotnet publish backend/src/EDR.API/EDR.API.csproj -c Release -o /app/publish
+# Diagnostic: verify file structure before build
+RUN ls -R /src/backend
+
+# Publish with normal verbosity to catch exactly what's failing
+RUN dotnet publish backend/src/EDR.API/EDR.API.csproj -c Release -o /app/publish -v n
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
