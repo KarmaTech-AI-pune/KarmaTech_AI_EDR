@@ -143,7 +143,7 @@ jobs:
 
       - name: Install SWC native binding for Linux
         working-directory: ./frontend
-        run: npm install @swc/core --no-save
+        run: npm install @swc/core --no-save --legacy-peer-deps
 
       - name: Build admin application
         working-directory: ./frontend
@@ -221,7 +221,7 @@ jobs:
 
       - name: Install SWC native binding for Linux
         working-directory: ./frontend
-        run: npm install @swc/core --no-save
+        run: npm install @swc/core --no-save --legacy-peer-deps
 
       - name: Build tenant application
         working-directory: ./frontend
