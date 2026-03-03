@@ -410,24 +410,30 @@ export const useTodolistIssues = () => {
   };
 
   const addComment = async (issueId: string, commentText: string) => {
+    // Resolve the assignee of the task to use as the comment author
+    const issue = issues.find(i => i.id === issueId);
+    const assignee = issue?.assignee
+      ? { id: issue.assignee.id, name: issue.assignee.name, avatar: issue.assignee.avatar }
+      : teamMembers[0];
+
     // Optimistic Update
     const newComment: Comment = {
       id: `comment-${Date.now()}`,
-      author: teamMembers[0],
+      author: assignee,
       text: commentText,
       createdDate: new Date().toISOString().split('T')[0],
     };
 
     setIssues(prevIssues =>
-      prevIssues.map(issue => {
-        if (issue.id === issueId) {
+      prevIssues.map(i => {
+        if (i.id === issueId) {
           return {
-            ...issue,
-            comments: [...issue.comments, newComment],
+            ...i,
+            comments: [...i.comments, newComment],
             updatedDate: new Date().toISOString().split('T')[0],
           };
         }
-        return issue;
+        return i;
       })
     );
 
@@ -436,7 +442,7 @@ export const useTodolistIssues = () => {
         parseInt(issueId),
         {
           commentText,
-          createdBy: teamMembers[0].name,
+          createdBy: assignee.name,
         }
       );
     } catch (error) {
@@ -446,12 +452,22 @@ export const useTodolistIssues = () => {
   };
 
   const addSubtaskComment = async (subtaskId: string, commentText: string) => {
-    // Find the parent task ID for this subtask
+    // Find the parent task and the subtask itself
     let parentTaskId: string | null = null;
+    let subtaskAssignee = teamMembers[0]; // default fallback
+
     for (const issue of issues) {
       const subtask = issue.subtasks.find(s => s.id === subtaskId);
       if (subtask) {
         parentTaskId = issue.id;
+        // Use the subtask's assignee if set, otherwise fall back to teamMembers[0]
+        if (subtask.assignee) {
+          subtaskAssignee = {
+            id: subtask.assignee.id,
+            name: subtask.assignee.name,
+            avatar: subtask.assignee.avatar,
+          };
+        }
         break;
       }
     }
@@ -464,7 +480,7 @@ export const useTodolistIssues = () => {
     // Optimistic Update
     const newComment: Comment = {
       id: `subcomment-${Date.now()}`,
-      author: teamMembers[0],
+      author: subtaskAssignee,
       text: commentText,
       createdDate: new Date().toISOString().split('T')[0],
     };
@@ -495,7 +511,7 @@ export const useTodolistIssues = () => {
         parseInt(subtaskId),
         {
           commentText,
-          createdBy: teamMembers[0].name,
+          createdBy: subtaskAssignee.name,
         }
       );
     } catch (error) {

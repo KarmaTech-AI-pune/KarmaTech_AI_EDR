@@ -23,8 +23,8 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore backend/src/NJSAPI/NJSAPI.csproj
+      run: dotnet restore backend/EDR_backend.sln
     - name: Build
-      run: dotnet build backend/src/NJSAPI/NJSAPI.csproj --no-restore
-    - name: Test
-      run: dotnet test backend/src/NJSAPI/NJSAPI.csproj --no-build --verbosity normal
+      run: dotnet build backend/EDR_backend.sln --no-restore
+    - name: Test (Unit & Integration)
+      run: dotnet test backend/EDR_backend.sln --no-build --verbosity normal --filter "Category!=Regression"
