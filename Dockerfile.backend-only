@@ -13,8 +13,11 @@ COPY backend/src/EDR.Domain/EDR.Domain.csproj src/EDR.Domain/
 COPY backend/EDR.Infrastructure/EDR.Infrastructure.csproj EDR.Infrastructure/
 COPY backend/EDR.Repositories/EDR.Repositories.csproj EDR.Repositories/
 
-# Restore dependencies using production solution (no test projects)
-# RUN dotnet restore EDR_backend.sln
+# Restore dependencies for each project
+RUN dotnet restore src/EDR.Domain/EDR.Domain.csproj
+RUN dotnet restore src/EDR.Application/EDR.Application.csproj
+RUN dotnet restore EDR.Repositories/EDR.Repositories.csproj
+RUN dotnet restore src/EDR.API/EDR.API.csproj
 
 # Copy the rest of the source code
 COPY backend/src/ ./src/

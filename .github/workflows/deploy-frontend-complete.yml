@@ -120,7 +120,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Create admin environment file
         working-directory: ./frontend
@@ -198,7 +198,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Create tenant environment file
         working-directory: ./frontend
