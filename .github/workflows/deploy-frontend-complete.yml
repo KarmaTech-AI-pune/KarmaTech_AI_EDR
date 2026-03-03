@@ -145,6 +145,10 @@ jobs:
         working-directory: ./frontend
         run: npm install @swc/core --no-save --legacy-peer-deps
 
+      - name: Install Rollup native binary for Linux
+        working-directory: ./frontend
+        run: npm install @rollup/rollup-linux-x64-gnu --no-save --legacy-peer-deps
+
       - name: Build admin application
         working-directory: ./frontend
         run: npm run build
@@ -222,6 +226,10 @@ jobs:
       - name: Install SWC native binding for Linux
         working-directory: ./frontend
         run: npm install @swc/core --no-save --legacy-peer-deps
+
+      - name: Install Rollup native binary for Linux
+        working-directory: ./frontend
+        run: npm install @rollup/rollup-linux-x64-gnu --no-save --legacy-peer-deps
 
       - name: Build tenant application
         working-directory: ./frontend
