@@ -4,35 +4,25 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 # Set working directory
 WORKDIR /src
 
-# Copy production solution file and project files
+# Copy VERSION file (EDR.API.csproj reads this for assembly version)
 COPY VERSION /VERSION
-# COPY backend/EDR_backend.sln ./
+
+# Copy all .csproj files first (for Docker layer caching of restore step)
 COPY backend/src/EDR.API/EDR.API.csproj src/EDR.API/
 COPY backend/src/EDR.Application/EDR.Application.csproj src/EDR.Application/
 COPY backend/src/EDR.Domain/EDR.Domain.csproj src/EDR.Domain/
 COPY backend/EDR.Infrastructure/EDR.Infrastructure.csproj EDR.Infrastructure/
 COPY backend/EDR.Repositories/EDR.Repositories.csproj EDR.Repositories/
 
-# Restore dependencies for each project
-RUN dotnet restore src/EDR.Domain/EDR.Domain.csproj
-RUN dotnet restore src/EDR.Application/EDR.Application.csproj
-RUN dotnet restore EDR.Repositories/EDR.Repositories.csproj
+# Restore from the top-level API project - this cascades to all project references
 RUN dotnet restore src/EDR.API/EDR.API.csproj
 
-# Copy the rest of the source code
+# Copy all source code
 COPY backend/src/ ./src/
 COPY backend/EDR.Infrastructure/ ./EDR.Infrastructure/
 COPY backend/EDR.Repositories/ ./EDR.Repositories/
 
-# Build dependencies first
-RUN dotnet build src/EDR.Domain/EDR.Domain.csproj -c Release
-RUN dotnet build src/EDR.Application/EDR.Application.csproj -c Release
-RUN dotnet build EDR.Repositories/EDR.Repositories.csproj -c Release
-
-# Build the main application
-RUN dotnet build src/EDR.API/EDR.API.csproj -c Release -o /app/build
-
-# Publish the application
+# Publish (internally builds all projects in correct dependency order)
 RUN dotnet publish src/EDR.API/EDR.API.csproj -c Release -o /app/publish
 
 # Build runtime image
