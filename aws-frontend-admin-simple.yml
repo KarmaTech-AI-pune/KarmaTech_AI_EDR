@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Admin Frontend Infrastructure (Production) - edr-admin.prod.karmatech-ai.com'
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: 'edr-admin.prod.karmatech-ai.com'
+  
+  CertificateArn:
+    Type: String
+    Description: 'SSL Certificate ARN'
+
+Resources:
+  AdminFrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'edr-admin-frontend-prod-${AWS::AccountId}'
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, HEAD]
+            AllowedOrigins: 
+              - !Sub 'https://${DomainName}'
+            MaxAge: 3600
+
+  AdminFrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AdminFrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub 'arn:aws:s3:::${AdminFrontendBucket}/*'
+
+  AdminCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: 'NJS Admin Frontend (Production) - edr-admin.prod.karmatech-ai.com'
+        Aliases:
+          - !Ref DomainName
+        Origins:
+          - Id: S3Origin
+            DomainName: !Sub '${AdminFrontendBucket}.s3-website-${AWS::Region}.amazonaws.com'
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+        Enabled: true
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          ForwardedValues:
+            QueryString: true
+            Cookies:
+              Forward: none
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        PriceClass: PriceClass_100
+
+# Optional: Uncomment if you want Route53 DNS record creation in this stack
+# AdminDomainRecord:
+#   Type: AWS::Route53::RecordSet
+#   Properties:
+#     HostedZoneName: prod.karmatech-ai.com.
+#     Name: !Ref DomainName
+#     Type: A
+#     AliasTarget:
+#       DNSName: !GetAtt AdminCloudFrontDistribution.DomainName
+#       HostedZoneId: Z2FDTNDATAQYW2 # CloudFront Hosted Zone ID for us-east-1
+
+Outputs:
+  AdminS3BucketName:
+    Description: 'S3 Bucket Name for Admin Frontend Files'
+    Value: !Ref AdminFrontendBucket
+  AdminCloudFrontDomain:
+    Description: 'Admin CloudFront Distribution Domain Name'
+    Value: !GetAtt AdminCloudFrontDistribution.DomainName
+  AdminCloudFrontId:
+    Description: 'Admin CloudFront Distribution ID'
+    Value: !Ref AdminCloudFrontDistribution

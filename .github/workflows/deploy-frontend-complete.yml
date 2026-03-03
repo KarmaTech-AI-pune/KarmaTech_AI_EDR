@@ -1,8 +1,8 @@
-name: Deploy Frontend both admin and tenant
-# Note: This workflow only runs when there is a change in the front end file
+name: Deploy Frontend both admin and tenant (PROD)
+
 on:
   push:
-    branches: [ Saas/dev ]
+    branches: [ master ]
     paths:
       - 'frontend/**'
       - 'aws-frontend-admin-simple.yml'
@@ -12,14 +12,14 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  CERTIFICATE_ARN: arn:aws:acm:us-east-1:008971635132:certificate/20320ffc-0572-4e4e-9945-ef681c0a5937
-  AWS_ACCOUNT_ID: 008971635132
+  CERTIFICATE_ARN: arn:aws:acm:us-east-1:510600232849:certificate/6a810784-ca11-4206-b4d1-383149ceccbd
+  AWS_ACCOUNT_ID: 510600232849
 
 jobs:
   deploy-infrastructure:
     name: Deploy Frontend Infrastructure
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-frontend-admin-simple.yml \
-            --stack-name njs-admin-frontend-dev \
+            --stack-name edr-admin-frontend-prod \
             --parameter-overrides CertificateArn=${{ env.CERTIFICATE_ARN }} \
             --region ${{ env.AWS_REGION }} \
             --no-fail-on-empty-changeset
@@ -44,7 +44,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --template-file aws-frontend-tenant-simple.yml \
-            --stack-name njs-tenant-frontend-dev \
+            --stack-name edr-tenant-frontend-prod \
             --parameter-overrides CertificateArn=${{ env.CERTIFICATE_ARN }} \
             --region ${{ env.AWS_REGION }} \
             --no-fail-on-empty-changeset
@@ -53,25 +53,25 @@ jobs:
         id: stacks
         run: |
           ADMIN_BUCKET=$(aws cloudformation describe-stacks \
-            --stack-name njs-admin-frontend-dev \
+            --stack-name edr-admin-frontend-prod \
             --query 'Stacks[0].Outputs[?OutputKey==`AdminS3BucketName`].OutputValue' \
             --output text)
-          
+
           TENANT_BUCKET=$(aws cloudformation describe-stacks \
-            --stack-name njs-tenant-frontend-dev \
+            --stack-name edr-tenant-frontend-prod \
             --query 'Stacks[0].Outputs[?OutputKey==`TenantS3BucketName`].OutputValue' \
             --output text)
-          
+
           ADMIN_CF=$(aws cloudformation describe-stacks \
-            --stack-name njs-admin-frontend-dev \
+            --stack-name edr-admin-frontend-prod \
             --query 'Stacks[0].Outputs[?OutputKey==`AdminCloudFrontDomain`].OutputValue' \
             --output text)
-          
+
           TENANT_CF=$(aws cloudformation describe-stacks \
-            --stack-name njs-tenant-frontend-dev \
+            --stack-name edr-tenant-frontend-prod \
             --query 'Stacks[0].Outputs[?OutputKey==`TenantCloudFrontDomain`].OutputValue' \
             --output text)
-          
+
           echo "admin-bucket=$ADMIN_BUCKET" >> $GITHUB_OUTPUT
           echo "tenant-bucket=$TENANT_BUCKET" >> $GITHUB_OUTPUT
           echo "admin-cloudfront=$ADMIN_CF" >> $GITHUB_OUTPUT
@@ -82,8 +82,8 @@ jobs:
           echo "## 🏗️ Infrastructure Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ CloudFormation Stacks Deployed" >> $GITHUB_STEP_SUMMARY
-          echo "- Admin Stack: njs-admin-frontend" >> $GITHUB_STEP_SUMMARY
-          echo "- Tenant Stack: njs-tenant-frontend" >> $GITHUB_STEP_SUMMARY
+          echo "- Admin Stack: edr-admin-frontend-prod" >> $GITHUB_STEP_SUMMARY
+          echo "- Tenant Stack: edr-tenant-frontend-prod" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 S3 Buckets Created" >> $GITHUB_STEP_SUMMARY
           echo "- Admin: ${{ steps.stacks.outputs.admin-bucket }}" >> $GITHUB_STEP_SUMMARY
@@ -94,9 +94,9 @@ jobs:
           echo "- Tenant: ${{ steps.stacks.outputs.tenant-cloudfront }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📝 Next: Add DNS Records to GoDaddy" >> $GITHUB_STEP_SUMMARY
-          echo "- edr-admin.app → ${{ steps.stacks.outputs.admin-cloudfront }}" >> $GITHUB_STEP_SUMMARY
-          echo "- app → ${{ steps.stacks.outputs.tenant-cloudfront }}" >> $GITHUB_STEP_SUMMARY
-          echo "- *.app → ${{ steps.stacks.outputs.tenant-cloudfront }}" >> $GITHUB_STEP_SUMMARY
+          echo "- edr-admin.prod.karmatech-ai.com → ${{ steps.stacks.outputs.admin-cloudfront }}" >> $GITHUB_STEP_SUMMARY
+          echo "- prod.karmatech-ai.com → ${{ steps.stacks.outputs.tenant-cloudfront }}" >> $GITHUB_STEP_SUMMARY
+          echo "- *.prod.karmatech-ai.com → ${{ steps.stacks.outputs.tenant-cloudfront }}" >> $GITHUB_STEP_SUMMARY
 
     outputs:
       admin-bucket: ${{ steps.stacks.outputs.admin-bucket }}
@@ -106,7 +106,7 @@ jobs:
     name: Deploy Admin Application
     runs-on: ubuntu-latest
     needs: deploy-infrastructure
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -126,11 +126,24 @@ jobs:
         working-directory: ./frontend
         run: |
           cat > .env.production <<EOF
-          VITE_API_BASE_URL=https://api.app.karmatech-ai.com/
-          VITE_APP_ENV=production
-          VITE_MAIN_DOMAIN=edr-admin.app.karmatech-ai.com
+          VITE_API_BASE_URL=https://api.prod.karmatech-ai.com/
+          VITE_APP_ENV=prod
+          VITE_MAIN_DOMAIN=edr-admin.prod.karmatech-ai.com
           VITE_APP_TYPE=admin
           EOF
+
+      - name: Validate API base URL is HTTPS
+        working-directory: ./frontend
+        run: |
+          source .env.production
+          if [[ ! "$VITE_API_BASE_URL" =~ ^https:// ]]; then
+            echo "❌ VITE_API_BASE_URL must use HTTPS for production. Found: $VITE_API_BASE_URL"
+            exit 1
+          fi
+
+      - name: Install SWC native binding for Linux
+        working-directory: ./frontend
+        run: npm install @swc/core --no-save
 
       - name: Build admin application
         working-directory: ./frontend
@@ -150,10 +163,10 @@ jobs:
       - name: Invalidate admin CloudFront cache
         run: |
           ADMIN_DIST_ID=$(aws cloudfront list-distributions \
-            --query "DistributionList.Items[?Aliases.Items[0]=='edr-admin.app.karmatech-ai.com'].Id" \
+            --query "DistributionList.Items[?contains(Aliases.Items, 'edr-admin.prod.karmatech-ai.com')].Id | [0]" \
             --output text)
-          
-          if [ -n "$ADMIN_DIST_ID" ]; then
+
+          if [ -n "$ADMIN_DIST_ID" ] && [ "$ADMIN_DIST_ID" != "None" ]; then
             aws cloudfront create-invalidation \
               --distribution-id $ADMIN_DIST_ID \
               --paths "/*"
@@ -161,17 +174,17 @@ jobs:
 
       - name: Admin Deployment Summary
         run: |
-          echo "## 🚀 Admin Frontend Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Admin Frontend Deployment (PROD)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Deployed Successfully" >> $GITHUB_STEP_SUMMARY
           echo "- S3 Bucket: ${{ needs.deploy-infrastructure.outputs.admin-bucket }}" >> $GITHUB_STEP_SUMMARY
-          echo "- URL: https://edr-admin.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "- URL: https://edr-admin.prod.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
 
   deploy-tenant-app:
     name: Deploy Tenant Application
     runs-on: ubuntu-latest
     needs: deploy-infrastructure
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -191,11 +204,24 @@ jobs:
         working-directory: ./frontend
         run: |
           cat > .env.production <<EOF
-          VITE_API_BASE_URL=https://api.app.karmatech-ai.com/
-          VITE_APP_ENV=dev
-          VITE_MAIN_DOMAIN=app.karmatech-ai.com
+          VITE_API_BASE_URL=https://api.prod.karmatech-ai.com/
+          VITE_APP_ENV=prod
+          VITE_MAIN_DOMAIN=prod.karmatech-ai.com
           VITE_APP_TYPE=tenant
           EOF
+
+      - name: Validate API base URL is HTTPS
+        working-directory: ./frontend
+        run: |
+          source .env.production
+          if [[ ! "$VITE_API_BASE_URL" =~ ^https:// ]]; then
+            echo "❌ VITE_API_BASE_URL must use HTTPS for production. Found: $VITE_API_BASE_URL"
+            exit 1
+          fi
+
+      - name: Install SWC native binding for Linux
+        working-directory: ./frontend
+        run: npm install @swc/core --no-save
 
       - name: Build tenant application
         working-directory: ./frontend
@@ -215,10 +241,10 @@ jobs:
       - name: Invalidate tenant CloudFront cache
         run: |
           TENANT_DIST_ID=$(aws cloudfront list-distributions \
-            --query "DistributionList.Items[?Aliases.Items[0]=='app.karmatech-ai.com' || Aliases.Items[0]=='*.app.karmatech-ai.com'].Id" \
-            --output text | head -1)
-          
-          if [ -n "$TENANT_DIST_ID" ]; then
+            --query "DistributionList.Items[?contains(Aliases.Items, 'prod.karmatech-ai.com') || contains(Aliases.Items, '*.prod.karmatech-ai.com')].Id | [0]" \
+            --output text)
+
+          if [ -n "$TENANT_DIST_ID" ] && [ "$TENANT_DIST_ID" != "None" ]; then
             aws cloudfront create-invalidation \
               --distribution-id $TENANT_DIST_ID \
               --paths "/*"
@@ -226,9 +252,9 @@ jobs:
 
       - name: Tenant Deployment Summary
         run: |
-          echo "## 🚀 Tenant Frontend Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Tenant Frontend Deployment (PROD)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Deployed Successfully" >> $GITHUB_STEP_SUMMARY
           echo "- S3 Bucket: ${{ needs.deploy-infrastructure.outputs.tenant-bucket }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Main URL: https://app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
-          echo "- Tenant URLs: https://*.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "- Main URL: https://prod.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "- Tenant URLs: https://*.prod.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
