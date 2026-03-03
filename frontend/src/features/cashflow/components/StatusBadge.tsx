@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { CashFlowStatus, StatusBadgeProps } from '../types';
+import { StatusBadgeProps } from '../types';
 import { STATUS_CONFIG } from '../utils';
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '' }) => {

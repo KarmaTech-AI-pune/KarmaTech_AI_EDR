@@ -6,7 +6,7 @@
 import React from 'react';
 import { TableCell } from '@mui/material';
 import { TableCellProps } from '../types';
-import { formatCurrency, formatNumber, formatCurrencyWithSign, getValueColorClass, COLOR_SCHEME } from '../utils';
+import { formatNumber, formatCurrencyWithSign, getValueColorClass, COLOR_SCHEME } from '../utils';
 
 export const CashFlowTableCell: React.FC<TableCellProps> = ({
   value,

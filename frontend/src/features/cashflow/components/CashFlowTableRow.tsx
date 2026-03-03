@@ -10,7 +10,7 @@ import { CashFlowTableCell } from './CashFlowTableCell';
 import { StatusBadge } from './StatusBadge';
 import { COLOR_SCHEME } from '../utils';
 
-export const CashFlowTableRow: React.FC<TableRowProps> = ({ row, index, onRowClick }) => {
+export const CashFlowTableRow: React.FC<TableRowProps> = ({ row, onRowClick }) => {
   return (
     <TableRow
       hover

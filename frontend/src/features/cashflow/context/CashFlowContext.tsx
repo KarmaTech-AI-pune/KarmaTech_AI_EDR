@@ -8,8 +8,6 @@ import React, { createContext, useContext, ReactNode, useState, useEffect, useCa
 import {
   CashFlowData,
   CashFlowRow,
-  CashFlowTotals,
-  CashFlowMetrics,
   CashFlowDataContextType,
   CashFlowActionsContextType,
   CashFlowUIContextType,
@@ -55,8 +53,6 @@ export const CashFlowProvider: React.FC<CashFlowProviderProps> = ({ children }) 
     fetchData,
     updateData,
     addPaymentMilestone,
-    setData,
-    setError,
   } = useCashFlowData({ projectId: projectId || '' });
 
   // Fetch data on mount

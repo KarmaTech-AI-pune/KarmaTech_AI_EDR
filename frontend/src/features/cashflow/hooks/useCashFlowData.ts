@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { CashFlowData } from '../types';
+import { CashFlowData, PaymentMilestone } from '../types';
 import { CashFlowAPI } from '../services/cashflowApi';
 import { PaymentScheduleAPI } from '../services/paymentScheduleApi';
 
@@ -18,7 +18,7 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
   const [error, setError] = useState<string | null>(null);
 
   // Transform API rows to MonthlyBudgetData format
-  const transformToMonthlyBudget = (apiData: any) => {
+  const transformToMonthlyBudget = (apiData: any): CashFlowData => {
     if (!apiData.rows || apiData.rows.length === 0) {
       return {
         projectId: apiData.projectId || '',
@@ -212,7 +212,5 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
     fetchData,
     updateData,
     addPaymentMilestone,
-    setData,
-    setError,
   };
 };
