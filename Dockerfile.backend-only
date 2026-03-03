@@ -5,9 +5,11 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /src
 
-# Copy VERSION file in correct relative location
-# Because EDR.API.csproj reads ../../../VERSION
-COPY VERSION backend/VERSION
+# Copy VERSION file to the root (/src/VERSION)
+# EDR.API.csproj is at backend/src/EDR.API/
+# ../../../VERSION from there points specifically to /src/VERSION
+COPY VERSION ./VERSION
+RUN cat ./VERSION
 
 # Copy project files first (for better layer caching)
 COPY backend/src/EDR.API/EDR.API.csproj backend/src/EDR.API/
@@ -16,8 +18,8 @@ COPY backend/src/EDR.Domain/EDR.Domain.csproj backend/src/EDR.Domain/
 COPY backend/EDR.Infrastructure/EDR.Infrastructure.csproj backend/EDR.Infrastructure/
 COPY backend/EDR.Repositories/EDR.Repositories.csproj backend/EDR.Repositories/
 
-# Restore dependencies
-RUN dotnet restore backend/src/EDR.API/EDR.API.csproj
+# Restore with normal verbosity to see exact evaluation errors
+RUN dotnet restore backend/src/EDR.API/EDR.API.csproj -v n
 
 # Copy full source code
 COPY backend/ backend/
@@ -25,10 +27,11 @@ COPY backend/ backend/
 # (Optional) Debug check - can remove later
 RUN ls -R /src/backend
 
-# Publish application
+# Publish with normal verbosity
 RUN dotnet publish backend/src/EDR.API/EDR.API.csproj \
     -c Release \
-    -o /app/publish
+    -o /app/publish \
+    -v n
 
 # ===============================
 # Runtime Stage
