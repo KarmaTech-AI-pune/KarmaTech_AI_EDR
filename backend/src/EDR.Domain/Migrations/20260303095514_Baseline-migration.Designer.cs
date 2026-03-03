@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EDR.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20260223062935_Baseline-migration")]
+    [Migration("20260303095514_Baseline-migration")]
     partial class Baselinemigration
     {
         /// <inheritdoc />
