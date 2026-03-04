@@ -4,7 +4,7 @@ import FeatureDeleteDialog from './FeatureDeleteDialog';
 
 describe('FeatureDeleteDialog Component', () => {
   const mockFeature = {
-    id: 'f123',
+    id: 123,
     name: 'Advanced Reporting',
     description: 'Generates complex reports',
     isActive: true,

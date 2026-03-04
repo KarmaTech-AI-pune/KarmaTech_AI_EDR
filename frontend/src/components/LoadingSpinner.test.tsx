@@ -8,7 +8,7 @@ describe('LoadingSpinner Component', () => {
     // Mock the hook to return isLoading: false
     vi.spyOn(LoadingContext, 'useLoading').mockReturnValue({
       isLoading: false,
-      setIsLoading: vi.fn(),
+      setLoading: vi.fn(),
     });
 
     const { container } = render(<LoadingSpinner />);
@@ -21,7 +21,7 @@ describe('LoadingSpinner Component', () => {
     // Mock the hook to return isLoading: true
     vi.spyOn(LoadingContext, 'useLoading').mockReturnValue({
       isLoading: true,
-      setIsLoading: vi.fn(),
+      setLoading: vi.fn(),
     });
 
     const { container } = render(<LoadingSpinner />);

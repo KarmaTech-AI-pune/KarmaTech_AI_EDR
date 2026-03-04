@@ -36,12 +36,12 @@ describe('DashboardLayout Component', () => {
   });
 
   const setupSuccessfulApiCalls = () => {
-    vi.mocked(dashboardService.getPendingForms).mockResolvedValue({ totalPendingForms: 5, pendingForms: [] });
-    vi.mocked(dashboardService.getTotalRevenueExpected).mockResolvedValue({ totalRevenue: 1000000, changeType: 'Positive' });
-    vi.mocked(dashboardService.getTotalRevenueActual).mockResolvedValue({ totalRevenue: 950000, changeType: 'Positive' });
-    vi.mocked(dashboardService.getProfitMargin).mockResolvedValue({ profitMargin: 15, changeType: 'Positive' });
-    vi.mocked(dashboardService.getRevenueAtRisk).mockResolvedValue({ revenueAtRisk: 50000, changeType: 'Negative' });
-    vi.mocked(dashboardService.getProjectsAtRisk).mockResolvedValue({ count: 2, projects: [] });
+    vi.mocked(dashboardService.getPendingForms).mockResolvedValue({ totalPendingForms: 5, pendingForms: [] } as any);
+    vi.mocked(dashboardService.getTotalRevenueExpected).mockResolvedValue({ totalRevenue: 1000000, changeType: 'Positive' } as any);
+    vi.mocked(dashboardService.getTotalRevenueActual).mockResolvedValue({ totalRevenue: 950000, changeType: 'Positive' } as any);
+    vi.mocked(dashboardService.getProfitMargin).mockResolvedValue({ profitMargin: 15, changeType: 'Positive' } as any);
+    vi.mocked(dashboardService.getRevenueAtRisk).mockResolvedValue({ revenueAtRisk: 50000, changeType: 'Negative' } as any);
+    vi.mocked(dashboardService.getProjectsAtRisk).mockResolvedValue({ count: 2, projects: [] } as any);
     vi.mocked(dashboardService.getMonthlyCashflow).mockResolvedValue([]);
     vi.mocked(dashboardService.getRegionalPortfolio).mockResolvedValue([]);
     vi.mocked(dashboardService.getNpvProfitability).mockResolvedValue({
@@ -51,7 +51,7 @@ describe('DashboardLayout Component', () => {
       avgProfitabilityIndex: 0,
       projectCount: 0,
       lastUpdated: new Date().toISOString()
-    });
+    } as any);
     vi.mocked(dashboardService.getMilestoneBilling).mockResolvedValue([]);
   };
 

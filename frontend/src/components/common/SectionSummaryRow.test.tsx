@@ -8,7 +8,7 @@ describe('SectionSummaryRow Component', () => {
     render(
       <table>
         <tbody>
-          <SectionSummaryRow label="Total Revenue" value="$1,000" />
+          <SectionSummaryRow label="Total Revenue" value="$1,000" tableCellStyle={{}} />
         </tbody>
       </table>
     );
@@ -21,7 +21,7 @@ describe('SectionSummaryRow Component', () => {
     render(
       <table>
         <tbody>
-          <SectionSummaryRow label="Test Colspan" value="100" colSpan={3} />
+          <SectionSummaryRow label="Test Colspan" value="100" colSpan={3} tableCellStyle={{}} />
         </tbody>
       </table>
     );
@@ -36,7 +36,7 @@ describe('SectionSummaryRow Component', () => {
     render(
       <table>
         <tbody>
-          <SectionSummaryRow label="Profit" value="$500" isHighlighted={true} isNegativeHighlight={false} />
+          <SectionSummaryRow label="Profit" value="$500" isHighlighted={true} isNegativeHighlight={false} tableCellStyle={{}} />
         </tbody>
       </table>
     );
@@ -49,7 +49,7 @@ describe('SectionSummaryRow Component', () => {
     render(
       <table>
         <tbody>
-          <SectionSummaryRow label="Loss" value="-$200" isHighlighted={true} isNegativeHighlight={true} />
+          <SectionSummaryRow label="Loss" value="-$200" isHighlighted={true} isNegativeHighlight={true} tableCellStyle={{}} />
         </tbody>
       </table>
     );
