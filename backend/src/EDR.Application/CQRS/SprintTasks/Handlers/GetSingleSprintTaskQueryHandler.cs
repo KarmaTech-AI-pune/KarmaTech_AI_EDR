@@ -67,6 +67,7 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
                 RemainingHours = sprintTask.RemainingHours,
                 StartedAt = sprintTask.StartedAt,
                 CompletedAt = sprintTask.CompletedAt,
+                TotalLoggedHours = sprintTask.TotalLoggedHours,
                 Subtasks = sprintTask.Subtasks?.Select(s => new SprintSubtaskDto
                 {
                     SubtaskId = s.SubtaskId,

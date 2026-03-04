@@ -36,7 +36,8 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
                                                 StoryPoints = st.StoryPoints,
                                                 TaskAssigneeName = st.TaskAssigneeName,
                                                 Taskstatus = st.Taskstatus,
-                                                Taskpriority = st.Taskpriority
+                                                Taskpriority = st.Taskpriority,
+                                                TotalLoggedHours = st.TotalLoggedHours
                                             })
                                             .ToListAsync(cancellationToken);
 

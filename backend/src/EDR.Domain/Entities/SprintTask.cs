@@ -74,6 +74,8 @@ namespace EDR.Domain.Entities
         public int RemainingHours { get; set; } = 0;
         public DateTime? StartedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TotalLoggedHours { get; set; } = 0;
     }
 }
 

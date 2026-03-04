@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchIssuesForSprintAPI, teamMembers, updateIssueAPI, updateSubtaskAPI, createIssueAPI, deleteIssueAPI, createSubtaskAPI, deleteSubtaskAPI, SprintEmployee, SprintPlanDto, fetchActiveSprintIdAPI, updateSprintPlanAPI, fetchNextSprintAPI } from '../data/todolistData';
+import { fetchIssuesForSprintAPI, updateIssueAPI, updateSubtaskAPI, createIssueAPI, deleteIssueAPI, createSubtaskAPI, deleteSubtaskAPI, SprintEmployee, SprintPlanDto, fetchActiveSprintIdAPI, updateSprintPlanAPI, fetchNextSprintAPI } from '../data/todolistData';
 import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment, TeamMember } from '../types/todolist';
 import { commentService } from '../services/commentService';
 import { useProject } from '../context/ProjectContext';
@@ -14,6 +14,12 @@ export const useTodolistIssues = () => {
   const [sprintEmployees, setSprintEmployees] = useState<SprintEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const teamMembers: TeamMember[] = sprintEmployees.map(emp => ({
+    id: emp.employeeId,
+    name: emp.employeeName,
+    avatar: (emp.employeeName.match(/\b\w/g) || []).join('').substring(0, 2).toUpperCase() || emp.employeeName.substring(0, 2).toUpperCase()
+  }));
 
   // 1. Watch projectId change (RESET & FETCH ACTIVE SPRINT)
   useEffect(() => {
@@ -197,7 +203,7 @@ export const useTodolistIssues = () => {
       description: subtaskData.description,
       status: 'To Do',
       assignee: assignedMember || null,
-      reporter: teamMembers[0], // Current user
+      reporter: teamMembers.length > 0 ? teamMembers[0] : { id: 'current-user', name: 'Current User', avatar: 'CU' }, // Current user fallback
       priority: subtaskData.priority,
       issueType: 'Sub-task',
       storyPoints: subtaskData.storyPoints ? parseInt(subtaskData.storyPoints) : undefined,
@@ -349,7 +355,7 @@ export const useTodolistIssues = () => {
       const response = await commentService.getTaskComments(numericId);
       const transformedComments: Comment[] = response.map(c => ({
         id: c.commentId.toString(),
-        author: teamMembers.find(m => m.name === c.createdBy) || teamMembers[0],
+        author: teamMembers.find(m => m.name === c.createdBy) || { id: 'unknown', name: c.createdBy, avatar: c.createdBy.substring(0, 2).toUpperCase() },
         text: c.commentText,
         createdDate: c.createdDate.split('T')[0]
       }));
@@ -380,7 +386,7 @@ export const useTodolistIssues = () => {
       const response = await commentService.getCommentsBySubtaskId(taskId, numericId);
       const transformedComments: Comment[] = response.map(c => ({
         id: c.subtaskCommentId.toString(),
-        author: teamMembers.find(m => m.name === c.createdBy) || teamMembers[0],
+        author: teamMembers.find(m => m.name === c.createdBy) || { id: 'unknown', name: c.createdBy, avatar: c.createdBy.substring(0, 2).toUpperCase() },
         text: c.commentText,
         createdDate: c.createdDate.split('T')[0]
       }));
@@ -410,10 +416,13 @@ export const useTodolistIssues = () => {
   };
 
   const addComment = async (issueId: string, commentText: string) => {
+    const issue = issues.find(i => i.id === issueId);
+    const author = issue?.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+
     // Optimistic Update
     const newComment: Comment = {
       id: `comment-${Date.now()}`,
-      author: teamMembers[0],
+      author: author,
       text: commentText,
       createdDate: new Date().toISOString().split('T')[0],
     };
@@ -436,7 +445,7 @@ export const useTodolistIssues = () => {
         parseInt(issueId),
         {
           commentText,
-          createdBy: teamMembers[0].name,
+          createdBy: author.name,
         }
       );
     } catch (error) {
@@ -461,10 +470,13 @@ export const useTodolistIssues = () => {
       return;
     }
 
+    const subtask = issues.find(i => i.id === parentTaskId)?.subtasks.find(s => s.id === subtaskId);
+    const author = subtask?.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+
     // Optimistic Update
     const newComment: Comment = {
       id: `subcomment-${Date.now()}`,
-      author: teamMembers[0],
+      author: author,
       text: commentText,
       createdDate: new Date().toISOString().split('T')[0],
     };
@@ -495,7 +507,7 @@ export const useTodolistIssues = () => {
         parseInt(subtaskId),
         {
           commentText,
-          createdBy: teamMembers[0].name,
+          createdBy: author.name,
         }
       );
     } catch (error) {
@@ -522,10 +534,13 @@ export const useTodolistIssues = () => {
       const taskNumericId = parseInt(issueId);
       const commentNumericId = parseInt(commentId.replace('comment-', '').replace('subcomment-', ''));
 
+      const issue = issues.find(i => i.id === issueId);
+      const updatedBy = issue?.assignee ? issue.assignee.name : 'Unknown';
+
       if (!isNaN(taskNumericId) && !isNaN(commentNumericId)) {
         await commentService.updateTaskComment(taskNumericId, commentNumericId, {
           commentText: text,
-          updatedBy: teamMembers[0].name
+          updatedBy: updatedBy
         });
       }
     } catch (error) {
@@ -593,10 +608,13 @@ export const useTodolistIssues = () => {
       const subtaskNumericId = parseInt(subtaskId);
       const commentNumericId = parseInt(commentId.replace('comment-', '').replace('subcomment-', ''));
 
+      const subtask = issues.find(i => i.id === parentTaskId)?.subtasks.find(s => s.id === subtaskId);
+      const updatedBy = subtask?.assignee ? subtask.assignee.name : 'Unknown';
+
       if (!isNaN(taskNumericId) && !isNaN(subtaskNumericId) && !isNaN(commentNumericId)) {
         await commentService.updateSubtaskComment(taskNumericId, subtaskNumericId, commentNumericId, {
           commentText: text,
-          updatedBy: teamMembers[0].name
+          updatedBy: updatedBy
         });
       }
     } catch (error) {

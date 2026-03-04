@@ -35,6 +35,7 @@ namespace EDR.Application.Dtos
         public int? RemainingHours { get; set; }
         public DateTime? StartedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
+        public decimal? TotalLoggedHours { get; set; }
     }
 }
 
