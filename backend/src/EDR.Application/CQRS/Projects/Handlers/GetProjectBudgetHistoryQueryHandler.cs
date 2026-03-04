@@ -32,7 +32,7 @@ namespace EDR.Application.CQRS.Projects.Handlers{
             var totalCount = await _historyRepository.GetCountByProjectIdAsync(request.ProjectId, request.FieldName);
 
             // Map to DTOs
-            var historyDtos = historyRecords.Select(MapToDto).ToList();
+            var historyDtos = (historyRecords ?? Enumerable.Empty<Domain.Entities.ProjectBudgetChangeHistory>()).Select(MapToDto).ToList();
 
             return new ProjectBudgetHistoryResponseDto
             {

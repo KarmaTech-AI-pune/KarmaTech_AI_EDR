@@ -64,8 +64,14 @@ namespace EDR.API.Tests.Infrastructure
 
             // --- Core Services (from Program.cs) ---
             appBuilder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                })
                 .AddApplicationPart(typeof(EDR.API.Program).Assembly);
 
+            appBuilder.Services.AddMemoryCache();
+            appBuilder.Services.AddResponseCaching();
             appBuilder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             // Tenant strategies
@@ -151,6 +157,18 @@ namespace EDR.API.Tests.Infrastructure
             // --- Configure middleware pipeline (simplified from ConfigureApplication) ---
             app.UseRouting();
             app.UseCors("AllowSpecificOrigin");
+            app.UseResponseCaching();
+            
+            // Add fake response caching feature for tests so VaryByQueryKeys doesn't throw
+            app.Use(async (context, next) =>
+            {
+                if (context.Features.Get<Microsoft.AspNetCore.ResponseCaching.IResponseCachingFeature>() == null)
+                {
+                    context.Features.Set<Microsoft.AspNetCore.ResponseCaching.IResponseCachingFeature>(new FakeResponseCachingFeature());
+                }
+                await next();
+            });
+
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
@@ -232,6 +250,7 @@ namespace EDR.API.Tests.Infrastructure
                 new Claim(ClaimTypes.Name, "testuser@test.com"),
                 new Claim(ClaimTypes.Email, "testuser@test.com"),
                 new Claim("TenantId", "1"),
+                new Claim(ClaimTypes.Role, "Admin")
             };
             var identity = new ClaimsIdentity(claims, "Test");
             var principal = new ClaimsPrincipal(identity);
@@ -296,5 +315,13 @@ namespace EDR.API.Tests.Infrastructure
         {
             return Task.FromResult(true);
         }
+    }
+
+    /// <summary>
+    /// Fake response caching feature to bypass VaryByQueryKeys error in tests.
+    /// </summary>
+    public class FakeResponseCachingFeature : Microsoft.AspNetCore.ResponseCaching.IResponseCachingFeature
+    {
+        public string[] VaryByQueryKeys { get; set; }
     }
 }

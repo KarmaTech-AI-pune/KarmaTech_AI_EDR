@@ -67,6 +67,10 @@ namespace EDR.Application.CQRS.Projects.Handlers
                     request.Id, existingProject.ProgramId, dto.ProgramId);
             }
 
+            // Track budget changes before updating values
+            var budgetChanged = existingProject.EstimatedProjectCost != dto.EstimatedProjectCost ||
+                               existingProject.EstimatedProjectFee != dto.EstimatedProjectFee;
+
             // Update project properties
             existingProject.Name = dto.Name;
             existingProject.ClientName = dto.ClientName;
@@ -111,10 +115,6 @@ namespace EDR.Application.CQRS.Projects.Handlers
                            dto.EndDate.Value.Month - dto.StartDate.Value.Month;
                 existingProject.DurationInMonths = months;
             }
-
-            // Track budget changes if budget values have changed
-            var budgetChanged = existingProject.EstimatedProjectCost != dto.EstimatedProjectCost ||
-                               existingProject.EstimatedProjectFee != dto.EstimatedProjectFee;
 
             if (budgetChanged)
             {
