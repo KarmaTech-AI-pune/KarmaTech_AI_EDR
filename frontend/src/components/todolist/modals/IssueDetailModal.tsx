@@ -339,49 +339,15 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   const recentWorkLogs = showIssueDetail?.comments
     ? showIssueDetail.comments
-      .filter((c: Comment) =>
-        c.text?.toLowerCase().includes('logged ') ||
-        c.text?.toLowerCase().includes('updated total work') ||
-        c.text?.toLowerCase().includes('commite by')
-      )
-      .map((c: Comment) => {
-        const text = c.text || "";
-        const loggedMatch = text.match(/logged ([\d.]+)h(?::\s*(.*))?/i);
-        const updatedMatch = text.match(/updated total work to ([\d.]+)h(?::\s*(.*))?/i);
-        const commiteMatch = text.toLowerCase().includes('commite by');
-
-        let hoursLogged = 0;
-        let description = text;
-
-        if (loggedMatch) {
-          hoursLogged = parseFloat(loggedMatch[1]);
-          description = loggedMatch[2] || "";
-        } else if (updatedMatch) {
-          hoursLogged = parseFloat(updatedMatch[1]);
-          description = updatedMatch[2] || "";
-        } else if (commiteMatch) {
-          description = text.split(':').slice(1).join(':').trim();
-          hoursLogged = 0;
-        }
-
-        return {
-          date: c.createdDate,
-          employeeName: c.author?.name || 'Unknown',
-          hoursLogged: hoursLogged,
-          description: description,
-        };
-      })
+      .filter((c: Comment) => (c.hoursLogged && c.hoursLogged > 0) || c.text?.toLowerCase().includes('commite by'))
+      .map((c: Comment) => ({
+        date: c.createdDate,
+        employeeName: c.author?.name || 'Unknown',
+        hoursLogged: c.hoursLogged || 0,
+        description: c.description || "",
+      }))
       .reverse()
     : [];
-
-  const totalEmployeeLoggedHours = showIssueDetail?.comments
-    ? showIssueDetail.comments
-      .filter((c: Comment) => c.text?.toLowerCase().includes('logged '))
-      .reduce((sum, c) => {
-        const match = (c.text || "").match(/logged ([\d.]+)h/i);
-        return sum + (match ? parseFloat(match[1]) : 0);
-      }, 0)
-    : 0;
 
   return (
     <Dialog
@@ -642,7 +608,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
               originalEstimate={showIssueDetail.estimatedHours || 0}
               remainingEstimate={showIssueDetail.remainingHours || 0}
               timeSpent={showIssueDetail.actualHours || 0}
-              employeeLoggedHours={totalEmployeeLoggedHours}
+              employeeLoggedHours={showIssueDetail.totalLoggedHours || 0}
               onLogWork={(time, rem, desc, modalType) => handleLogWork(time, rem, desc, modalType)}
               recentLogs={recentWorkLogs}
             />

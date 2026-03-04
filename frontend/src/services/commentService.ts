@@ -13,6 +13,13 @@ export interface TaskCommentResponse {
     createdDate: string;
     updatedBy?: string;
     updatedDate?: string;
+    hoursLogged: number;
+    description?: string;
+}
+
+export interface TaskCommentsWithTotalResponse {
+    comments: TaskCommentResponse[];
+    totalLoggedHours: number;
 }
 
 export interface SubtaskCommentResponse {
@@ -34,9 +41,9 @@ export interface UpdateCommentRequest {
 export const commentService = {
     // --- Task Comments ---
 
-    // Get all comments for a task
-    async getTaskComments(taskId: number): Promise<TaskCommentResponse[]> {
-        const response = await axiosInstance.get<TaskCommentResponse[]>(
+    // Get all comments for a task (returns list + backend-computed total logged hours)
+    async getTaskComments(taskId: number): Promise<TaskCommentsWithTotalResponse> {
+        const response = await axiosInstance.get<TaskCommentsWithTotalResponse>(
             `/api/sprint-tasks/${taskId}/comments`
         );
         return response.data;

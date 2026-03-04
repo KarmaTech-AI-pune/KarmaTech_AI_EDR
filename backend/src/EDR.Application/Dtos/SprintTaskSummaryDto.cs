@@ -8,7 +8,6 @@
         public string? TaskAssigneeName { get; set; }
         public string? Taskstatus { get; set; }
         public string? Taskpriority { get; set; }
-        public decimal TotalLoggedHours { get; set; }
     }
 }
 

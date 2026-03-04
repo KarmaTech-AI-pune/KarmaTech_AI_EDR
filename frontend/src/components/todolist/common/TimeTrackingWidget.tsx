@@ -103,11 +103,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                 <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2 }}>
                     Employee Work Log
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Box>
-                        <Typography variant="caption" color="text.secondary" display="block">Total Logged Hours</Typography>
-                        <Typography variant="body2" fontWeight="bold">{employeeLoggedHours}h</Typography>
-                    </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
                     <Box sx={{ textAlign: 'right' }}>
                         <Typography variant="caption" color="text.secondary" display="block">Remaining Hours</Typography>
                         <Typography variant="body2" fontWeight="bold">{remainingEstimate}h</Typography>
@@ -239,16 +235,6 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
                                             <TextField
-                                                label="Total Logged Hours"
-                                                value={employeeLoggedHours}
-                                                fullWidth
-                                                size="small"
-                                                InputProps={{ readOnly: true }}
-                                                sx={{ bgcolor: 'action.hover' }}
-                                            />
-                                        </Grid>
-                                        <Grid item xs={12} sm={6}>
-                                            <TextField
                                                 label="Estimated Hours"
                                                 value={originalEstimate}
                                                 fullWidth
@@ -315,11 +301,14 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                                                 fontSize: '0.7rem',
                                                                 lineHeight: 1.4
                                                             }}>
-                                                                {log.hoursLogged > 0 ? `Logged ${log.hoursLogged}h: ` : ''}{log.description}
+                                                                {log.hoursLogged > 0 ? `Logged ${log.hoursLogged}h${log.description ? ': ' : ''}` : ''}{log.description}
                                                             </Typography>
                                                         </Box>
                                                     ))}
                                                 </Box>
+                                                <Typography variant="caption" fontWeight="bold" color="primary.main" sx={{ display: 'block', mt: 1, textAlign: 'right' }}>
+                                                    Total Logged Hours: {employeeLoggedHours}h
+                                                </Typography>
                                             </Grid>
                                         )}
                                     </Grid>
@@ -445,11 +434,14 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                                             fontSize: '0.7rem',
                                                             lineHeight: 1.4
                                                         }}>
-                                                            {log.hoursLogged > 0 ? `Logged ${log.hoursLogged}h: ` : ''}{log.description}
+                                                            {log.hoursLogged > 0 ? `Logged ${log.hoursLogged}h${log.description ? ': ' : ''}` : ''}{log.description}
                                                         </Typography>
                                                     </Box>
                                                 ))}
                                             </Box>
+                                            <Typography variant="caption" fontWeight="bold" color="primary.main" sx={{ display: 'block', mt: 1, textAlign: 'right' }}>
+                                                Total Logged Hours: {employeeLoggedHours}h
+                                            </Typography>
                                         </Grid>
                                     )}
                                 </Grid>

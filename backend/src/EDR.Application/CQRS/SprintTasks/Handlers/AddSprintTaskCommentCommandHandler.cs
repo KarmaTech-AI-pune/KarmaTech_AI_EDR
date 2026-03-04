@@ -4,9 +4,9 @@ using EDR.Domain.Database;
 using EDR.Domain.Entities;
 using System;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 
 namespace EDR.Application.CQRS.SprintTasks.Handlers
@@ -28,48 +28,46 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
                 return false; // SprintTask not found
             }
 
+            // 1. Calculate sum from existing comments
+            var existingComments = await _context.SprintTaskComments
+                .Where(c => c.Taskid == request.TaskId)
+                .Select(c => c.CommentText)
+                .ToListAsync(cancellationToken);
+
+            decimal total = 0;
+            var regex = new Regex(@"logged ([\d.]+)h", RegexOptions.IgnoreCase);
+            
+            foreach (var text in existingComments)
+            {
+                if (string.IsNullOrEmpty(text)) continue;
+                var m = regex.Match(text);
+                if (m.Success && decimal.TryParse(m.Groups[1].Value, out decimal h))
+                {
+                    total += h;
+                }
+            }
+
+            // 2. Add current log's hours
+            var currentMatch = regex.Match(request.CommentText ?? "");
+            if (currentMatch.Success && decimal.TryParse(currentMatch.Groups[1].Value, out decimal currentH))
+            {
+                total += currentH;
+            }
+
             var comment = new SprintTaskComment
             {
                 Taskid = request.TaskId,
                 CommentText = request.CommentText,
                 CreatedBy = request.CreatedBy,
                 CreatedDate = DateTime.UtcNow,
-                TenantId = _context.TenantId ?? 0 // Securely assign TenantId
+                TenantId = _context.TenantId ?? 0,
+                TotalLoggedHours = total // Point-in-time total
             };
 
             _context.SprintTaskComments.Add(comment);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Recalculate and update TotalLoggedHours on the Task
-            await UpdateTaskTotalLoggedHours(request.TaskId, cancellationToken);
-
             return true;
-        }
-
-        private async Task UpdateTaskTotalLoggedHours(int taskId, CancellationToken cancellationToken)
-        {
-            var sprintTask = await _context.SprintTasks.FindAsync(new object[] { taskId }, cancellationToken);
-            if (sprintTask == null) return;
-
-            var comments = await _context.SprintTaskComments
-                .Where(c => c.Taskid == taskId)
-                .ToListAsync(cancellationToken);
-
-            decimal total = 0;
-            foreach (var c in comments)
-            {
-                if (string.IsNullOrEmpty(c.CommentText)) continue;
-
-                // Match "logged 2h" or "logged 2.5h" (case insensitive)
-                var match = Regex.Match(c.CommentText, @"logged ([\d.]+)h", RegexOptions.IgnoreCase);
-                if (match.Success && decimal.TryParse(match.Groups[1].Value, out decimal hours))
-                {
-                    total += hours;
-                }
-            }
-
-            sprintTask.TotalLoggedHours = total;
-            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

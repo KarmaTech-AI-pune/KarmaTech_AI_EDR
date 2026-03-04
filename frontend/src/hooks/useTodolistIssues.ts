@@ -353,15 +353,17 @@ export const useTodolistIssues = () => {
       if (isNaN(numericId)) return;
 
       const response = await commentService.getTaskComments(numericId);
-      const transformedComments: Comment[] = response.map(c => ({
+      const transformedComments: Comment[] = response.comments.map(c => ({
         id: c.commentId.toString(),
         author: teamMembers.find(m => m.name === c.createdBy) || { id: 'unknown', name: c.createdBy, avatar: c.createdBy.substring(0, 2).toUpperCase() },
         text: c.commentText,
+        hoursLogged: c.hoursLogged,
+        description: c.description,
         createdDate: c.createdDate.split('T')[0]
       }));
 
       setIssues(prevIssues => prevIssues.map(issue =>
-        issue.id === issueId ? { ...issue, comments: transformedComments } : issue
+        issue.id === issueId ? { ...issue, comments: transformedComments, totalLoggedHours: response.totalLoggedHours } : issue
       ));
     } catch (error) {
       console.error('Failed to fetch task comments:', error);
@@ -448,6 +450,8 @@ export const useTodolistIssues = () => {
           createdBy: author.name,
         }
       );
+      // Wait for comments and total logged hours to be refreshed from server
+      await fetchTaskComments(issueId);
     } catch (error) {
       console.error('Failed to add task comment:', error);
       // Revert if failed (optional: refresh issues)
