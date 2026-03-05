@@ -26,6 +26,8 @@ export interface Comment {
   id: string;
   author: TeamMember;
   text: string;
+  hoursLogged?: number;
+  description?: string;
   createdDate: string;
 }
 
@@ -44,6 +46,7 @@ export interface Issue {
   estimatedHours?: number;   // Original Estimate
   remainingHours?: number;   // Remaining Estimate
   actualHours?: number;      // Time Spent
+  totalLoggedHours?: number;
   fixVersion: string;
   components: string[];
   flagged: boolean;

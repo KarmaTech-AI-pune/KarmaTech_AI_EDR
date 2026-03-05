@@ -23,6 +23,9 @@ import { SubtaskList } from "../SubtaskList";
 import { SubtaskDetailModal } from "./SubtaskDetailModal";
 import { InlineEdit } from "../common/InlineEdit";
 import { TimeTrackingWidget } from "../common/TimeTrackingWidget";
+import { projectApi } from '../../../services/projectApi';
+import { getUserById } from '../../../services/userApi';
+import { useProject } from '../../../context/ProjectContext';
 import { updateIssueTimeAPI } from "../../../data/todolistData";
 
 interface IssueDetailModalProps {
@@ -66,6 +69,39 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   teamMembers,
 }) => {
   if (!showIssueDetail) return null;
+
+  const { projectId } = useProject();
+  const [projectManager, setProjectManager] = useState<TeamMember | null>(null);
+
+  React.useEffect(() => {
+    const fetchPM = async () => {
+      if (projectId) {
+        try {
+          const project = await projectApi.getById(projectId);
+          if (project && project.projectManagerId) {
+            const user = await getUserById(project.projectManagerId);
+            if (user && user.name && user.name !== 'Unknown') {
+              setProjectManager({
+                id: user.id || project.projectManagerId,
+                name: user.name,
+                avatar: (user.name.match(/\b\w/g) || []).join('').substring(0, 2).toUpperCase() || user.name.substring(0, 2).toUpperCase()
+              });
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('IssueDetailModal: fetchPM error', e);
+        }
+      }
+
+      // If we fall through, use the task's reporter as temporary PM info
+      setProjectManager(showIssueDetail?.reporter || null);
+    };
+
+    if (showIssueDetail) {
+      fetchPM();
+    }
+  }, [projectId, showIssueDetail?.id]); // Depend on issue identity
 
   const [newCommentText, setNewCommentText] = useState("");
   const [viewingSubtaskId, setViewingSubtaskId] = useState<string | null>(null);
@@ -140,7 +176,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     if (newCommentText.trim() && showIssueDetail) {
       const newComment: Comment = {
         id: `comment-${Date.now()}`, // Simple unique ID
-        author: showIssueDetail.reporter, // Assuming reporter is the commenter for now
+        author: showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' },
         text: newCommentText,
         createdDate: new Date().toISOString().split("T")[0],
       };
@@ -156,10 +192,13 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   const handleSubtaskAddComment = (subtaskId: string, text: string) => {
     if (showIssueDetail) {
+      const subtask = showIssueDetail.subtasks.find(s => s.id === subtaskId);
+      const commenter = subtask?.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+
       // Optimistic update for subtask comment addition
       const newComment: Comment = {
         id: `subcomment-${Date.now()}`,
-        author: teamMembers[0], // Current user
+        author: commenter,
         text: text,
         createdDate: new Date().toISOString().split("T")[0],
       };
@@ -248,9 +287,12 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
 
 
-  const handleLogWork = async (timeSpent: number, remainingEstimate: number) => {
+  const handleLogWork = async (timeSpent: number, remainingEstimate: number, description: string, modalType?: 'employee' | 'reporter') => {
     if (showIssueDetail) {
-      const newActual = (showIssueDetail.actualHours || 0) + timeSpent;
+      // If modalType is reporter, timeSpent is treated as the TOTAL actual hours (actual work time spend).
+      // If modalType is employee, timeSpent is added to existing total.
+      const newActual = modalType === 'reporter' ? timeSpent : (showIssueDetail.actualHours || 0) + timeSpent;
+      const addedHours = modalType === 'reporter' ? (timeSpent - (showIssueDetail.actualHours || 0)) : timeSpent;
 
       // Optimistic update
       const updatedIssue = {
@@ -258,6 +300,30 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         actualHours: newActual,
         remainingHours: remainingEstimate
       };
+
+      const reporterDisplayName = projectManager?.name && projectManager.name !== 'Unknown'
+        ? projectManager.name
+        : showIssueDetail.reporter?.name || 'Unknown';
+
+      const logActionText = modalType === 'reporter'
+        ? `Commite by (${reporterDisplayName})`
+        : `logged ${timeSpent}h`;
+
+      const workLogComment = description.trim()
+        ? `${logActionText}: ${description}`
+        : logActionText;
+
+      // Comments always represent the assignee's work — use assignee as author regardless of who is submitting
+      const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+
+      const newComment: Comment = {
+        id: `comment-${Date.now()}`,
+        author: author,
+        text: workLogComment,
+        createdDate: new Date().toISOString().split("T")[0]
+      };
+      updatedIssue.comments = [...updatedIssue.comments, newComment];
+      onAddComment(showIssueDetail.id, workLogComment);
 
       setShowIssueDetail(updatedIssue);
       // Update the issue in the main list as well
@@ -271,9 +337,17 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     }
   };
 
-  const handleUpdateOriginalEstimate = (newEstimate: number) => {
-    handleUpdateIssueAndState(showIssueDetail.id, { estimatedHours: newEstimate });
-  };
+  const recentWorkLogs = showIssueDetail?.comments
+    ? showIssueDetail.comments
+      .filter((c: Comment) => (c.hoursLogged && c.hoursLogged > 0) || c.text?.toLowerCase().includes('commite by'))
+      .map((c: Comment) => ({
+        date: c.createdDate,
+        employeeName: c.author?.name || 'Unknown',
+        hoursLogged: c.hoursLogged || 0,
+        description: c.description || "",
+      }))
+      .reverse()
+    : [];
 
   return (
     <Dialog
@@ -527,11 +601,16 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           <Box sx={{ mb: 3 }}>
             {/* Time Tracking Widget */}
             <TimeTrackingWidget
+              status={showIssueDetail.status}
+              storyPoints={showIssueDetail.storyPoints}
+              taskName={showIssueDetail.summary}
+              reporterName={projectManager?.name || showIssueDetail.reporter?.name}
               originalEstimate={showIssueDetail.estimatedHours || 0}
               remainingEstimate={showIssueDetail.remainingHours || 0}
               timeSpent={showIssueDetail.actualHours || 0}
-              onLogWork={handleLogWork}
-              onUpdateOriginalEstimate={handleUpdateOriginalEstimate}
+              employeeLoggedHours={showIssueDetail.totalLoggedHours || 0}
+              onLogWork={(time, rem, desc, modalType) => handleLogWork(time, rem, desc, modalType)}
+              recentLogs={recentWorkLogs}
             />
           </Box>
 
@@ -605,13 +684,26 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   icon: <Avatar sx={{ width: 16, height: 16, fontSize: '0.5rem' }}>{m.avatar}</Avatar>
                 }))}
                 renderValue={(val) => {
-                  const reporter = teamMembers.find(m => m.id === val) || showIssueDetail.reporter;
+                  const reporter = (projectManager && projectManager.name !== 'Unknown')
+                    ? projectManager
+                    : (teamMembers.find(m => m.id === val) || showIssueDetail.reporter);
+
                   return (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Avatar sx={{ bgcolor: "primary.main", width: 24, height: 24, fontSize: "0.75rem" }}>
+                      <Avatar sx={{
+                        bgcolor: reporter.name === 'Unknown' ? "grey.300" : "primary.main",
+                        width: 24,
+                        height: 24,
+                        fontSize: "0.75rem"
+                      }}>
                         {reporter.avatar}
                       </Avatar>
-                      <Typography variant="body2">{reporter.name}</Typography>
+                      <Typography variant="body2" sx={{
+                        color: reporter.name === 'Unknown' ? "text.secondary" : "text.primary",
+                        fontStyle: reporter.name === 'Unknown' ? "italic" : "normal"
+                      }}>
+                        {reporter.name === 'Unknown' ? 'Project Manager Not Assigned' : reporter.name}
+                      </Typography>
                     </Box>
                   );
                 }}

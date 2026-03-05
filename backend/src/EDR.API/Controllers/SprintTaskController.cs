@@ -552,13 +552,12 @@ namespace EDR.API.Controllers
 
 
         /// <summary>
-        /// Gets all comments for a specific SprintTask.
+        /// Gets all comments for a specific SprintTask, including the total logged hours calculated server-side.
         /// </summary>
         /// <param name="taskId">The ID of the parent SprintTask.</param>
-        /// <returns>A list of SprintTaskCommentDto.</returns>
+        /// <returns>SprintTaskCommentsWithTotalDto containing comments and total logged hours.</returns>
         [HttpGet("{taskId}/comments")]
-        [ProducesResponseType(typeof(IEnumerable<SprintTaskCommentDto>), 200)]
-        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(SprintTaskCommentsWithTotalDto), 200)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetSprintTaskCommentsByTaskId(int taskId)
         {
@@ -567,16 +566,11 @@ namespace EDR.API.Controllers
             try
             {
                 var query = new GetSprintTaskCommentsByTaskIdQuery { Taskid = taskId };
-                var comments = await _mediator.Send(query);
+                var result = await _mediator.Send(query);
 
-                if (comments == null || !comments.Any())
-                {
-                    _logger.LogWarning("No SprintTask comments found for Task ID {TaskId}.", taskId);
-                    return NotFound($"No SprintTask comments found for Task ID {taskId}.");
-                }
-
-                _logger.LogInformation("Found {Count} SprintTask comments for Task ID {TaskId}.", comments.Count(), taskId);
-                return Ok(comments);
+                _logger.LogInformation("Found {Count} SprintTask comments for Task ID {TaskId}. Total logged hours: {Total}h.",
+                    result.Comments.Count, taskId, result.TotalLoggedHours);
+                return Ok(result);
             }
             catch (Exception ex)
             {

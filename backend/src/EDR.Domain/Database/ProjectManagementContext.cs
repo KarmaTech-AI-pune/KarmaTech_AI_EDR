@@ -377,6 +377,7 @@ namespace EDR.Domain.Database
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Cost).HasPrecision(18, 2);
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Fee).HasPrecision(18, 2);
 
+            modelBuilder.Entity<SprintTaskComment>().Property(st => st.TotalLoggedHours).HasPrecision(18, 2);
 
 
             // Configure Identity tables
