@@ -118,6 +118,7 @@ const JobStartTable: React.FC<JobStartTableProps> = ({
                       size="small"
                       value={row.activity}
                       onChange={(e) => handleRowChange(row.id, 'activity', e.target.value)}
+                      inputProps={{ 'aria-label': 'Activity' }}
                     />
                   )}
                 </TableCell>
@@ -131,6 +132,7 @@ const JobStartTable: React.FC<JobStartTableProps> = ({
                       size="small"
                       value={row.responsibility}
                       onChange={(e) => handleRowChange(row.id, 'responsibility', e.target.value)}
+                      inputProps={{ 'aria-label': 'Responsibility' }}
                     />
                   )}
                 </TableCell>
@@ -146,6 +148,7 @@ const JobStartTable: React.FC<JobStartTableProps> = ({
                       value={row.targetDate}
                       onChange={(e) => handleRowChange(row.id, 'targetDate', e.target.value)}
                       InputLabelProps={{ shrink: true }}
+                      inputProps={{ 'aria-label': 'Target Date' }}
                     />
                   )}
                 </TableCell>
@@ -159,6 +162,7 @@ const JobStartTable: React.FC<JobStartTableProps> = ({
                       size="small"
                       value={row.status}
                       onChange={(e) => handleRowChange(row.id, 'status', e.target.value)}
+                      inputProps={{ 'aria-label': 'Status' }}
                     />
                   )}
                 </TableCell>
@@ -172,6 +176,7 @@ const JobStartTable: React.FC<JobStartTableProps> = ({
                       size="small"
                       value={row.remarks}
                       onChange={(e) => handleRowChange(row.id, 'remarks', e.target.value)}
+                      inputProps={{ 'aria-label': 'Remarks' }}
                     />
                   )}
                 </TableCell>
@@ -181,6 +186,7 @@ const JobStartTable: React.FC<JobStartTableProps> = ({
                       size="small" 
                       onClick={() => handleDeleteRow(row.id)}
                       color="error"
+                      aria-label="delete"
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>

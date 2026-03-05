@@ -206,7 +206,7 @@ export const projects: Project[] = Object.values(projectsData).map(project => ({
   createdAt: project.createdAt,
   updatedAt: project.updatedAt,
   status: project.status
-}));
+} as unknown as Project));
 
 // Utility function to get a single project by ID
 export const getProjectById = (id: string): Project | undefined => {

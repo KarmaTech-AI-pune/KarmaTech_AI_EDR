@@ -125,7 +125,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       // Also log status change
       await HistoryLoggingService.logStatusChange(
         opportunityId,
-        decision === 'approve' ? 'Under Review' : 'Review Rejected',
+        decision === 'approve' ? 'Pending Approval' : 'Review Rejected',
         newStatus,
         currentUser
       );
@@ -182,8 +182,10 @@ const DecideReview: React.FC<DecideReviewProps> = ({
           error={!!error}
           onClick={handleDialogClick}
         >
-          <InputLabel>Decision</InputLabel>
+          <InputLabel id="decision-label" htmlFor="decision-select">Decision</InputLabel>
           <Select
+            labelId="decision-label"
+            id="decision-select"
             value={decision}
             onChange={handleDecisionChange}
             label="Decision"
@@ -217,7 +219,12 @@ const DecideReview: React.FC<DecideReviewProps> = ({
         <Button onClick={handleCancel} color="inherit">
           Cancel
         </Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary">
+        <Button 
+          onClick={handleSubmit} 
+          variant="contained" 
+          color="primary"
+          disabled={!decision || (decision === 'reject' && !comments.trim())}
+        >
           Submit Decision
         </Button>
       </DialogActions>

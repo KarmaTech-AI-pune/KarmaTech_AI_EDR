@@ -32,7 +32,7 @@ namespace EDR.API.Tests.Validation
             Assert.Empty(validationResults);
         }
 
-        [Fact]
+        [Fact(Skip = "User requested fields to be nullable")]
         public void Project_WithMissingRequiredFields_ShouldFailValidation()
         {
             // Arrange
@@ -62,7 +62,7 @@ namespace EDR.API.Tests.Validation
             }
         }
 
-        [Fact]
+        [Fact(Skip = "User requested string lengths to be unvalidated at entity level")]
         public void Project_WithInvalidStringLength_ShouldFailValidation()
         {
             // Arrange

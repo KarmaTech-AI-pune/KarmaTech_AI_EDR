@@ -169,8 +169,10 @@ const DecideReview: React.FC<ProjectDecideReviewProps> = ({
           error={!!error && !decision}
           onClick={handleDialogClick}
         >
-          <InputLabel>Decision</InputLabel>
+          <InputLabel id="decision-label">Decision</InputLabel>
           <Select
+            labelId="decision-label"
+            id="decision-select"
             label="Decision"
             value={decision}
             onChange={handleDecisionChange}

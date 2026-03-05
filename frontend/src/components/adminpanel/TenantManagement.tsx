@@ -323,7 +323,7 @@ const TenantManagement = () => {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleEdit(tenant)} color="primary" size="small">
+                  <IconButton onClick={() => handleEdit(tenant)} color="primary" size="small" aria-label="edit">
                     <EditIcon />
                   </IconButton>
                   <Tooltip title="Manage Users">
@@ -335,7 +335,7 @@ const TenantManagement = () => {
                       <GroupIcon />
                     </IconButton>
                   </Tooltip>
-                  <IconButton onClick={() => handleDelete(tenant.id)} color="error" size="small">
+                  <IconButton onClick={() => handleDelete(tenant.id)} color="error" size="small" aria-label="delete">
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>

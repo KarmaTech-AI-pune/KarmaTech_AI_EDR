@@ -21,6 +21,7 @@ namespace EDR.Application.Extensions
                     options.UseNpgsql(configuration.GetConnectionString("AppDbConnection"),
                         b => b.MigrationsAssembly("EDR.Domain")));
                 services.AddScoped<ITenantMigrationService, TenantMigrationService>();  
+                services.AddScoped<IDatabaseManagementService, TenantCreationPostgresSqlService>();
             }
             else
             {
@@ -29,6 +30,7 @@ namespace EDR.Application.Extensions
                         b => b.MigrationsAssembly("EDR.Domain")));
                 
                 services.AddScoped<ITenantMigrationService, TenantMigrationSqlService>();
+                services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
             }
 
             services.AddScoped<ITenantService, TenantService>();

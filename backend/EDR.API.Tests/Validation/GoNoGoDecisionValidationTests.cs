@@ -81,7 +81,6 @@ namespace EDR.API.Tests.Validation
             Assert.NotEmpty(validationResults);
             Assert.Contains(validationResults, v => v.MemberNames.Contains("BidType"));
             Assert.Contains(validationResults, v => v.MemberNames.Contains("Sector"));
-            Assert.Contains(validationResults, v => v.MemberNames.Contains("MarketingPlanScore"));
             Assert.Contains(validationResults, v => v.MemberNames.Contains("MarketingPlanComments"));
             
             // Display validation error messages

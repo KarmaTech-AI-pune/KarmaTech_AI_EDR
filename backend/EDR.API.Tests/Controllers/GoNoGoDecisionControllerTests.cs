@@ -1,16 +1,17 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using NJS.Application.Services.IContract;
-using NJS.Domain.Entities;
-using NJS.Domain.Repositories;
-using NJSAPI.Controllers;
+using EDR.Application.Services.IContract;
+using EDR.Domain.Entities;
+using EDR.Repositories.Interfaces;
+using EDR.API.Controllers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
+using EDR.Application.Dtos;
 
-namespace NJS.API.Tests.Controllers
+namespace EDR.API.Tests.Controllers
 {
     public class GoNoGoDecisionControllerTests
     {
@@ -31,13 +32,13 @@ namespace NJS.API.Tests.Controllers
         public void GetAll_ReturnsOkResultWithDecisions()
         {
             // Arrange
-            var decisions = new List<GoNoGoDecision>
+            var decisions = new List<GoNoGoSummaryDto>
             {
-                new GoNoGoDecision { Id = 1, ProjectName = "Project 1" },
-                new GoNoGoDecision { Id = 2, ProjectName = "Project 2" }
+                new GoNoGoSummaryDto { Id = 1, ProjectId = 1 },
+                new GoNoGoSummaryDto { Id = 2, ProjectId = 2 }
             };
 
-            _repositoryMock.Setup(r => r.GetAll())
+            _serviceMock.Setup(s => s.GetAllWithCappingInfo())
                 .Returns(decisions);
 
             // Act
@@ -45,15 +46,15 @@ namespace NJS.API.Tests.Controllers
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<GoNoGoDecision>>(okResult.Value);
-            Assert.Equal(2, ((List<GoNoGoDecision>)returnValue).Count);
+            var returnValue = Assert.IsAssignableFrom<IEnumerable<GoNoGoSummaryDto>>(okResult.Value);
+            Assert.Equal(2, ((List<GoNoGoSummaryDto>)returnValue).Count);
         }
 
         [Fact]
         public void GetAll_ThrowsException_ReturnsStatusCode500()
         {
             // Arrange
-            _repositoryMock.Setup(r => r.GetAll())
+            _serviceMock.Setup(s => s.GetAllWithCappingInfo())
                 .Throws(new Exception("Test exception"));
 
             // Act
@@ -66,51 +67,51 @@ namespace NJS.API.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetById_WithValidId_ReturnsOkResultWithDecision()
+        public void GetById_WithValidId_ReturnsOkResultWithDecision()
         {
             // Arrange
             var decisionId = 1;
-            var decision = new GoNoGoDecision { Id = decisionId, ProjectName = "Project 1" };
+            var decisionDto = new GoNoGoDecisionDto { ProjectId = decisionId };
 
-            _repositoryMock.Setup(r => r.GetById(decisionId))
-                .ReturnsAsync(decision);
+            _serviceMock.Setup(s => s.GetByIdWithCappingInfo(decisionId))
+                .Returns(decisionDto);
 
             // Act
-            var result = await _controller.GetById(decisionId);
+            var result = _controller.GetById(decisionId);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            var returnValue = Assert.IsType<GoNoGoDecision>(okResult.Value);
-            Assert.Equal(decisionId, returnValue.Id);
+            var returnValue = Assert.IsType<GoNoGoDecisionDto>(okResult.Value);
+            Assert.Equal(decisionId, returnValue.ProjectId);
         }
 
         [Fact]
-        public async Task GetById_WithInvalidId_ReturnsNotFound()
+        public void GetById_WithInvalidId_ReturnsNotFound()
         {
             // Arrange
             var decisionId = 999;
 
-            _repositoryMock.Setup(r => r.GetById(decisionId))
-                .ReturnsAsync((GoNoGoDecision)null);
+            _serviceMock.Setup(s => s.GetByIdWithCappingInfo(decisionId))
+                .Returns((GoNoGoDecisionDto)null);
 
             // Act
-            var result = await _controller.GetById(decisionId);
+            var result = _controller.GetById(decisionId);
 
             // Assert
-            Assert.IsType<NotFoundResult>(result.Result);
+            Assert.IsType<NotFoundObjectResult>(result.Result);
         }
 
         [Fact]
-        public async Task GetById_ThrowsException_ReturnsStatusCode500()
+        public void GetById_ThrowsException_ReturnsStatusCode500()
         {
             // Arrange
             var decisionId = 1;
 
-            _repositoryMock.Setup(r => r.GetById(decisionId))
-                .ThrowsAsync(new Exception("Test exception"));
+            _serviceMock.Setup(s => s.GetByIdWithCappingInfo(decisionId))
+                .Throws(new Exception("Test exception"));
 
             // Act
-            var result = await _controller.GetById(decisionId);
+            var result = _controller.GetById(decisionId);
 
             // Assert
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
@@ -119,164 +120,118 @@ namespace NJS.API.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_WithValidData_ReturnsCreatedAtActionResult()
-        {
-            // Arrange
-            var decision = new GoNoGoDecision { ProjectName = "New Project" };
-            var createdDecisionId = 1;
-
-            _repositoryMock.Setup(r => r.Create(It.IsAny<GoNoGoDecision>()))
-                .ReturnsAsync(createdDecisionId);
-
-            var createdDecision = new GoNoGoDecision { Id = createdDecisionId, ProjectName = decision.ProjectName };
-
-            _repositoryMock.Setup(r => r.GetById(createdDecisionId))
-                .ReturnsAsync(createdDecision);
-
-            // Act
-            var result = await _controller.Create(decision);
-
-            // Assert
-            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-            Assert.Equal(nameof(_controller.GetById), createdAtActionResult.ActionName);
-            Assert.Equal(createdDecisionId, createdAtActionResult.RouteValues["id"]);
-            var returnValue = Assert.IsType<GoNoGoDecision>(createdAtActionResult.Value);
-            Assert.Equal(createdDecisionId, returnValue.Id);
-        }
-
-        [Fact]
-        public async Task Create_ThrowsException_ReturnsStatusCode500()
-        {
-            // Arrange
-            var decision = new GoNoGoDecision { ProjectName = "New Project" };
-
-            _repositoryMock.Setup(r => r.Create(It.IsAny<GoNoGoDecision>()))
-                .ThrowsAsync(new Exception("Test exception"));
-
-            // Act
-            var result = await _controller.Create(decision);
-
-            // Assert
-            var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
-            Assert.Equal(500, statusCodeResult.StatusCode);
-            Assert.Contains("Internal server error", statusCodeResult.Value.ToString());
-        }
-
-        [Fact]
-        public async Task Update_WithValidData_ReturnsOkResult()
+        public void Update_WithValidData_ReturnsNoContent()
         {
             // Arrange
             var decisionId = 1;
-            var decision = new GoNoGoDecision { Id = decisionId, ProjectName = "Updated Project" };
-
-            _repositoryMock.Setup(r => r.Update(It.IsAny<GoNoGoDecision>()))
-                .ReturnsAsync(true);
+            var decision = new GoNoGoDecision { Id = decisionId, ProjectId = 1 };
 
             _repositoryMock.Setup(r => r.GetById(decisionId))
-                .ReturnsAsync(decision);
+                .Returns(decision);
 
             // Act
-            var result = await _controller.Update(decisionId, decision);
-
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            var returnValue = Assert.IsType<GoNoGoDecision>(okResult.Value);
-            Assert.Equal(decisionId, returnValue.Id);
-        }
-
-        [Fact]
-        public async Task Update_WithMismatchedId_ReturnsBadRequest()
-        {
-            // Arrange
-            var decisionId = 1;
-            var decision = new GoNoGoDecision { Id = 2, ProjectName = "Updated Project" };
-
-            // Act
-            var result = await _controller.Update(decisionId, decision);
-
-            // Assert
-            Assert.IsType<BadRequestObjectResult>(result.Result);
-        }
-
-        [Fact]
-        public async Task Update_WithNonExistentId_ReturnsNotFound()
-        {
-            // Arrange
-            var decisionId = 999;
-            var decision = new GoNoGoDecision { Id = decisionId, ProjectName = "Updated Project" };
-
-            _repositoryMock.Setup(r => r.Update(It.IsAny<GoNoGoDecision>()))
-                .ReturnsAsync(false);
-
-            // Act
-            var result = await _controller.Update(decisionId, decision);
-
-            // Assert
-            Assert.IsType<NotFoundResult>(result.Result);
-        }
-
-        [Fact]
-        public async Task Update_ThrowsException_ReturnsStatusCode500()
-        {
-            // Arrange
-            var decisionId = 1;
-            var decision = new GoNoGoDecision { Id = decisionId, ProjectName = "Updated Project" };
-
-            _repositoryMock.Setup(r => r.Update(It.IsAny<GoNoGoDecision>()))
-                .ThrowsAsync(new Exception("Test exception"));
-
-            // Act
-            var result = await _controller.Update(decisionId, decision);
-
-            // Assert
-            var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
-            Assert.Equal(500, statusCodeResult.StatusCode);
-            Assert.Contains("Internal server error", statusCodeResult.Value.ToString());
-        }
-
-        [Fact]
-        public async Task Delete_WithValidId_ReturnsNoContent()
-        {
-            // Arrange
-            var decisionId = 1;
-
-            _repositoryMock.Setup(r => r.Delete(decisionId))
-                .ReturnsAsync(true);
-
-            // Act
-            var result = await _controller.Delete(decisionId);
+            var result = _controller.Update(decisionId, decision);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
+            _serviceMock.Verify(s => s.Update(decision), Times.Once);
         }
 
         [Fact]
-        public async Task Delete_WithInvalidId_ReturnsNotFound()
+        public void Update_WithMismatchedId_ReturnsBadRequest()
+        {
+            // Arrange
+            var decisionId = 1;
+            var decision = new GoNoGoDecision { Id = 2 };
+
+            // Act
+            var result = _controller.Update(decisionId, decision);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public void Update_WithNonExistentId_ReturnsNotFound()
+        {
+            // Arrange
+            var decisionId = 999;
+            var decision = new GoNoGoDecision { Id = decisionId };
+
+            _repositoryMock.Setup(r => r.GetById(decisionId))
+                .Returns((GoNoGoDecision)null);
+
+            // Act
+            var result = _controller.Update(decisionId, decision);
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result);
+        }
+
+        [Fact]
+        public void Update_ThrowsException_ReturnsStatusCode500()
+        {
+            // Arrange
+            var decisionId = 1;
+            var decision = new GoNoGoDecision { Id = decisionId };
+
+            _repositoryMock.Setup(r => r.GetById(decisionId))
+                .Throws(new Exception("Test exception"));
+
+            // Act
+            var result = _controller.Update(decisionId, decision);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusCodeResult.StatusCode);
+            Assert.Contains("Internal server error", statusCodeResult.Value.ToString());
+        }
+
+        [Fact]
+        public void Delete_WithValidId_ReturnsNoContent()
+        {
+            // Arrange
+            var decisionId = 1;
+            var decision = new GoNoGoDecision { Id = decisionId };
+
+            _repositoryMock.Setup(r => r.GetById(decisionId))
+                .Returns(decision);
+
+            // Act
+            var result = _controller.Delete(decisionId);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            _repositoryMock.Verify(r => r.Delete(decisionId), Times.Once);
+        }
+
+        [Fact]
+        public void Delete_WithInvalidId_ReturnsNotFound()
         {
             // Arrange
             var decisionId = 999;
 
-            _repositoryMock.Setup(r => r.Delete(decisionId))
-                .ReturnsAsync(false);
+            _repositoryMock.Setup(r => r.GetById(decisionId))
+                .Returns((GoNoGoDecision)null);
 
             // Act
-            var result = await _controller.Delete(decisionId);
+            var result = _controller.Delete(decisionId);
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            Assert.IsType<NotFoundObjectResult>(result);
         }
 
         [Fact]
-        public async Task Delete_ThrowsException_ReturnsStatusCode500()
+        public void Delete_ThrowsException_ReturnsStatusCode500()
         {
             // Arrange
             var decisionId = 1;
 
-            _repositoryMock.Setup(r => r.Delete(decisionId))
-                .ThrowsAsync(new Exception("Test exception"));
+            _repositoryMock.Setup(r => r.GetById(decisionId))
+                .Throws(new Exception("Test exception"));
 
             // Act
-            var result = await _controller.Delete(decisionId);
+            var result = _controller.Delete(decisionId);
 
             // Assert
             var statusCodeResult = Assert.IsType<ObjectResult>(result);

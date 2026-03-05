@@ -23,7 +23,7 @@ import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { Tenant } from '../models/tenantModel';
-import { VersionDisplay } from '../components/VersionDisplay';
+import VersionDisplay from '../components/VersionDisplay';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -64,6 +64,7 @@ export const EnhancedLoginScreen: React.FC = () => {
     const { setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
     const navigation = useAppNavigation();
 
+
     // Fetch available tenants from backend
     useEffect(() => {
         const fetchTenants = async () => {
@@ -81,7 +82,6 @@ export const EnhancedLoginScreen: React.FC = () => {
                 setIsLoadingTenants(false);
             }
         };
-
         fetchTenants();
     }, []);
 
@@ -314,21 +314,33 @@ export const EnhancedLoginScreen: React.FC = () => {
                         </Typography>
 
                         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                            <FormControl fullWidth>
-                                <InputLabel>Select Tenant</InputLabel>
+                            <FormControl fullWidth variant="outlined">
+                                <InputLabel id="tenant-select-label">Select Tenant</InputLabel>
                                 <Select
+                                    labelId="tenant-select-label"
+                                    id="tenant-select"
+                                    data-testid="tenant-select"
                                     value={selectedTenant}
                                     onChange={(e) => setSelectedTenant(e.target.value)}
                                     label="Select Tenant"
-                                    disabled={isLoadingTenants}
+                                    disabled={isLoadingTenants || availableTenants.length === 0}
+                                    displayEmpty
+                                    renderValue={(selected) => {
+                                        if (isLoadingTenants) return "Loading tenants...";
+                                        if (!selected) {
+                                            return availableTenants.length === 0 ? "No tenants available" : "Select Tenant";
+                                        }
+                                        const tenant = availableTenants.find(t => t.domain === selected);
+                                        return tenant ? tenant.name : selected;
+                                    }}
                                 >
                                 {isLoadingTenants ? (
-                                    <MenuItem disabled>
+                                    <MenuItem disabled value="">
                                         <CircularProgress size={20} sx={{ mr: 1 }} />
                                         Loading tenants...
                                     </MenuItem>
                                 ) : availableTenants.length === 0 ? (
-                                    <MenuItem disabled>No tenants available</MenuItem>
+                                    <MenuItem disabled value="">No tenants available</MenuItem>
                                 ) : (
                                     availableTenants.map((tenant) => (
                                         <MenuItem key={tenant.id} value={tenant.domain}>

@@ -179,6 +179,9 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       feeType: opportunity.contractType === 'Lump Sum' ? 'Lumpsum' : opportunity.contractType ?? '',
+      fundingStream: opportunity.fundingStream || '',
+      contractType: opportunity.contractType || '',
+      programId: importedProjectData?.programId || 0, // Fallback if program handle logic is needed
     };
 
     setImportedProjectData(projectData);

@@ -1,10 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
-using NJS.API.Tests.Infrastructure;
-using NJS.Application.CQRS.SprintDailyProgresses.Commands;
+using EDR.API.Tests.Infrastructure;
+using EDR.Application.CQRS.SprintDailyProgresses.Commands;
 using Xunit;
 
-namespace NJS.API.Tests.Integration
+namespace EDR.API.Tests.Integration
 {
     /// <summary>
     /// Integration tests for SprintDailyProgressController.

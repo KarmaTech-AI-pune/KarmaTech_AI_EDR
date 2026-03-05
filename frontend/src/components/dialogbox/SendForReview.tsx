@@ -219,8 +219,10 @@ const SendForReview: React.FC<SendForReviewProps> = ({
             </div>
           ) : (
             <>
-              <InputLabel>Regional Manager</InputLabel>
+              <InputLabel id="regional-manager-select-label" htmlFor="regional-manager-select">Regional Manager</InputLabel>
               <Select
+                labelId="regional-manager-select-label"
+                id="regional-manager-select"
                 value={selectedReviewer}
                 onChange={handleReviewerChange}
                 label="Regional Manager"

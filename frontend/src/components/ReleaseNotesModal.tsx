@@ -9,8 +9,6 @@
  * - Loading and error states
  * - Proper accessibility and keyboard navigation
  * - Fallback to hardcoded release notes when API unavailable
- * 
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 5.2, 5.4
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -37,6 +35,7 @@ import {
   useTheme,
   useMediaQuery,
   Snackbar,
+  DialogActions,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -48,16 +47,30 @@ import {
   Code as CommitIcon,
   Person as AuthorIcon,
   CalendarToday as DateIcon,
-  Refresh as RefreshIcon,
-  ErrorOutline as ErrorIcon,
 } from '@mui/icons-material';
 import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/releaseNotesApi';
 
-/**
- * Hardcoded release notes for when API is unavailable
- * This ensures users always see something meaningful
- */
 const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
+  '1.3.0': {
+    version: '1.3.0',
+    releaseDate: '2026-03-04',
+    environment: 'production',
+    features: [
+      { id: 201, changeType: 'Feature', description: 'Testing & Quality Assurance: Implemented a comprehensive regression testing suite covering frontend, backend (WBS, job, opportunity, etc.), and E2E scenarios. Added extensive unit and integration tests for Sprint, ProgramSprint, SprintDailyProgress, and SprintTask controllers.', commitSha: '1017856' },
+      { id: 202, changeType: 'Feature', description: 'CI/CD & Automation: Set up automated release management hooks and new CI/CD workflows for frontend and backend testing on PRs to master.', commitSha: '0a07d82' },
+      { id: 203, changeType: 'Feature', description: 'Database & Architecture: Added PostgreSQL integration (updated dev connection string), added baseline migration, and introduced initial database seed data for features.', commitSha: '96122ca' },
+      { id: 204, changeType: 'Feature', description: 'API Enhancements: Added a new level 3 task API and implemented full feature retrieval upon admin login.', commitSha: '1f5b6d0' },
+      { id: 205, changeType: 'Feature', description: 'Project Structure: Renamed application references from EDR to Kiro/dev and updated corresponding frontend dependencies.', commitSha: '733b01d' },
+    ],
+    bugFixes: [
+      { id: 206, changeType: 'BugFix', description: 'Fixed a null reference error in the dashboard by adding optional chaining.', commitSha: 'df8f71c' },
+      { id: 207, changeType: 'BugFix', description: 'Resolved a tenant creation issue and removed an unnecessary tenant ID filter.', commitSha: 'a50d385' },
+      { id: 208, changeType: 'BugFix', description: 'Fixed various build errors and test case compatibility issues.', commitSha: 'd0652be' },
+      { id: 209, changeType: 'BugFix', description: 'Cleaned up the codebase by removing unused folders (e.g., NJSEI) and duplicate files.', commitSha: '5429b29' },
+    ],
+    improvements: [],
+    breakingChanges: [],
+  },
   '1.2.0': {
     version: '1.2.0',
     releaseDate: '2026-02-16',
@@ -113,94 +126,24 @@ const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
     environment: 'dev',
     features: [
       { id: 1, changeType: 'Feature', description: 'Interactive version display with clickable release notes popup' },
-      { id: 2, changeType: 'Feature', description: 'Automatic versioning system based on conventional commits' },
-      { id: 3, changeType: 'Feature', description: 'Release notes generation from commit messages' },
-      { id: 4, changeType: 'Feature', description: 'Project Budget change tracking with audit history' },
-      { id: 5, changeType: 'Feature', description: 'Go/No-Go decision score cap functionality' },
     ],
-    bugFixes: [
-      { id: 6, changeType: 'BugFix', description: 'Fixed version synchronization across all application components' },
-      { id: 7, changeType: 'BugFix', description: 'Fixed build-time version injection for consistent version display' },
-    ],
-    improvements: [
-      { id: 8, changeType: 'Improvement', description: 'Enhanced GitHub Actions workflow with conventional commit parsing' },
-      { id: 9, changeType: 'Improvement', description: 'Replaced hardcoded version with dynamic version injection' },
-      { id: 10, changeType: 'Improvement', description: 'Updated build process to include version information' },
-    ],
+    bugFixes: [],
+    improvements: [],
     breakingChanges: [],
   },
 };
 
-/**
- * Gets fallback release notes for a version when API is unavailable
- * Provides meaningful content to users even when backend is down
- * @param version - Version string to get fallback notes for
- * @returns ProcessedReleaseNotes object or null if no fallback available
- */
 function getFallbackReleaseNotes(version: string): ProcessedReleaseNotes | null {
   const cleanVersion = version.startsWith('v') ? version.substring(1) : version;
   return FALLBACK_RELEASE_NOTES[cleanVersion] || null;
 }
 
-/**
- * Props interface for the ReleaseNotesModal component
- */
 interface ReleaseNotesModalProps {
-  /** 
-   * Version to display release notes for (e.g., "1.0.38" or "v1.0.38")
-   * The component will clean the version string automatically
-   */
   version: string;
-
-  /** 
-   * Whether the modal dialog is currently open
-   */
   isOpen: boolean;
-
-  /** 
-   * Callback function called when modal should be closed
-   * Triggered by close button, escape key, or clicking outside modal
-   */
   onClose: () => void;
 }
 
-/**
- * ReleaseNotesModal Component
- * 
- * A comprehensive modal dialog for displaying version-specific release notes with:
- * - Material-UI Dialog layout with responsive design (mobile/desktop)
- * - Organized content sections (Features, Bug Fixes, Improvements, Breaking Changes)
- * - Loading states with skeleton loaders and progress indicators
- * - Error handling with retry functionality and fallback content
- * - Accessibility support (keyboard navigation, ARIA labels, screen readers)
- * - Caching integration for performance optimization
- * - Fallback release notes when API is unavailable
- * 
- * @example
- * ```tsx
- * const [isModalOpen, setIsModalOpen] = useState(false);
- * const [currentVersion, setCurrentVersion] = useState('1.0.38');
- * 
- * <ReleaseNotesModal
- *   version={currentVersion}
- *   isOpen={isModalOpen}
- *   onClose={() => setIsModalOpen(false)}
- * />
- * ```
- * 
- * @component
- * @since 1.0.38
- * @author Interactive Version Display Feature Team
- * 
- * Requirements Coverage:
- * - 3.1: Modal dialog with version number in header
- * - 3.2: Organized sections for different change types
- * - 3.3: Brief descriptions with commit references
- * - 3.4: Close functionality and loading states
- * - 3.5: Responsive design for mobile and desktop
- * - 5.2: Performance optimization with lazy loading
- * - 5.4: Comprehensive error handling with retry
- */
 const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   version,
   isOpen,
@@ -209,7 +152,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // State for the currently displayed release notes
   const [releaseNotes, setReleaseNotes] = useState<ProcessedReleaseNotes | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -219,71 +161,57 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   const [history, setHistory] = useState<ProcessedReleaseNotes[]>([]);
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
   const [selectedVersion, setSelectedVersion] = useState<string>(version || '');
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState<boolean>(false);
 
-  /**
-   * Fetches the release history list
-   */
   const fetchHistory = useCallback(async () => {
     setLoadingHistory(true);
+    let apiHistory: ProcessedReleaseNotes[] = [];
     try {
-      // Fetch history (last 20 versions should be enough for the list)
-      const historyData = await releaseNotesApi.getReleaseHistory(undefined, 0, 20);
-      setHistory(historyData);
+      apiHistory = await releaseNotesApi.getReleaseHistory(undefined, 0, 20) || [];
     } catch (err) {
       console.error('Failed to fetch release history:', err);
-      // Fallback to static history if API fails
-      const fallbackHistory = Object.values(FALLBACK_RELEASE_NOTES).sort((a, b) =>
+    } finally {
+      // Merge fallback history with API fetched history to ensure local versions display
+      const mergedHistory = [...apiHistory];
+
+      Object.values(FALLBACK_RELEASE_NOTES).forEach(fallbackNote => {
+        if (!mergedHistory.some(h => h.version === fallbackNote.version)) {
+          mergedHistory.push(fallbackNote);
+        }
+      });
+
+      mergedHistory.sort((a, b) =>
         new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
       );
-      setHistory(fallbackHistory);
-    } finally {
+
+      setHistory(mergedHistory);
       setLoadingHistory(false);
     }
   }, []);
 
-  /**
-   * Fetches release notes for a specific version
-   */
   const fetchReleaseNotes = useCallback(async (ver: string) => {
     if (!ver) return;
-
     setLoading(true);
     setError(null);
-
-    // Check if we already have the data in our history list to avoid an API call
-    const cachedInHistory = history.find(n => n.version === ver || n.version === ver.replace('v', ''));
-    if (cachedInHistory) {
-      setReleaseNotes(cachedInHistory);
-      setLoading(false);
-      return;
-    }
-
     try {
       const notes = await releaseNotesApi.getReleaseNotes(ver);
       setReleaseNotes(notes);
     } catch (err) {
-      // Try fallback release notes first
       const fallbackNotes = getFallbackReleaseNotes(ver);
       if (fallbackNotes) {
-        console.log(`Using fallback release notes for version ${ver}`);
         setReleaseNotes(fallbackNotes);
         setError(null);
       } else {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load release notes';
-        setError(errorMessage);
+        setError(err instanceof Error ? err.message : 'Failed to load release notes');
         setShowErrorSnackbar(true);
       }
     } finally {
       setLoading(false);
     }
-  }, [history]);
+  }, []);
 
-  // Initial fetch when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchHistory();
-      // If version is provided, start with that
       if (version) {
         setSelectedVersion(version);
       }
@@ -310,13 +238,7 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     }
   }, [isOpen]);
 
-  const handleRetry = useCallback(() => {
-    // Retry both
-    fetchHistory();
-    if (selectedVersion) {
-      fetchReleaseNotes(selectedVersion);
-    }
-  }, [fetchHistory, fetchReleaseNotes, selectedVersion]);
+
 
   const handleClose = () => {
     if (!loading) onClose();
@@ -324,7 +246,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
 
   const handleVersionClick = (ver: string) => {
     setSelectedVersion(ver);
-    if (isMobile) setMobileDrawerOpen(false);
   };
 
   /**
@@ -390,7 +311,7 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
 
   // Re-declaring helper functions inside the component as they were before
   const getChangeTypeIcon = (changeType: string) => {
-    switch (changeType.toLowerCase()) {
+    switch (changeType?.toLowerCase()) {
       case 'feature': return <FeatureIcon color="primary" />;
       case 'bugfix': case 'bug': case 'fix': return <BugIcon color="error" />;
       case 'improvement': case 'enhancement': return <ImprovementIcon color="success" />;
@@ -399,15 +320,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     }
   };
 
-  const getChangeTypeColor = (changeType: string): 'primary' | 'error' | 'success' | 'warning' | 'default' => {
-    switch (changeType.toLowerCase()) {
-      case 'feature': return 'primary';
-      case 'bugfix': case 'bug': case 'fix': return 'error';
-      case 'improvement': case 'enhancement': return 'success';
-      case 'breaking': case 'breakingchange': return 'warning';
-      default: return 'default';
-    }
-  };
 
   const renderChangeItems = (items: ChangeItem[], title: string, icon: React.ReactNode) => {
     if (!items || items.length === 0) return null;
@@ -430,8 +342,8 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
                     <Box sx={{ mt: 0.5 }}>
                       {item.author && <Chip icon={<AuthorIcon />} label={item.author} size="small" variant="outlined" sx={{ mr: 0.5, mb: 0.5 }} />}
                       {item.commitSha && <Chip icon={<CommitIcon />} label={item.commitSha.substring(0, 7)} size="small" variant="outlined" sx={{ mr: 0.5, mb: 0.5 }} />}
+                      {item.impact && <Chip label={`Impact: ${item.impact}`} size="small" variant="outlined" color={item.impact === 'High' ? 'error' : item.impact === 'Medium' ? 'warning' : 'info'} sx={{ mr: 0.5, mb: 0.5 }} />}
                       {item.jiraTicket && <Chip label={item.jiraTicket} size="small" variant="outlined" sx={{ mr: 0.5, mb: 0.5 }} />}
-                      {item.impact && <Chip label={`Impact: ${item.impact}`} size="small" color={getChangeTypeColor(item.impact)} sx={{ mr: 0.5, mb: 0.5 }} />}
                     </Box>
                   }
                 />
@@ -443,33 +355,36 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     );
   };
 
+
+
   const renderContent = () => {
-    if (loading) {
-      return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 200, gap: 2 }}>
-          <CircularProgress size={48} />
-          <Typography variant="body1" color="text.secondary">Loading release notes for {selectedVersion}...</Typography>
-        </Box>
-      );
-    }
+    if (loading) return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 5 }}>
+        <CircularProgress data-testid="content-loading" />
+        <Typography sx={{ mt: 2 }}>Loading release notes...</Typography>
+      </Box>
+    );
+    if (error) return (
+      <Box sx={{ py: 2 }}>
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={() => fetchReleaseNotes(selectedVersion)}>
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      </Box>
+    );
+    if (!releaseNotes) return <Typography>Select a version</Typography>;
 
-    if (error) {
-      return (
-        <Box sx={{ py: 2 }}>
-          <Alert severity="error" icon={<ErrorIcon />} action={<Button color="inherit" size="small" onClick={() => fetchReleaseNotes(selectedVersion)} startIcon={<RefreshIcon />}>Retry</Button>}>
-            <Typography variant="body2"><strong>{error}</strong></Typography>
-          </Alert>
-        </Box>
-      );
-    }
-
-    if (!releaseNotes) {
-      return (
-        <Box sx={{ py: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">Select a version to view details</Typography>
-        </Box>
-      );
-    }
+    const hasChanges =
+      (releaseNotes.features?.length || 0) > 0 ||
+      (releaseNotes.bugFixes?.length || 0) > 0 ||
+      (releaseNotes.improvements?.length || 0) > 0 ||
+      (releaseNotes.breakingChanges?.length || 0) > 0;
 
     return (
       <Box sx={{ py: 1 }}>
@@ -486,127 +401,58 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
             {releaseNotes.branch && <Chip label={`Branch: ${releaseNotes.branch}`} size="small" variant="outlined" />}
           </Box>
         </Box>
-
-        <Divider sx={{ mb: 2 }} />
-
-        {renderChangeItems(releaseNotes.features, 'New Features', <FeatureIcon color="primary" />)}
-        {renderChangeItems(releaseNotes.improvements, 'Improvements', <ImprovementIcon color="success" />)}
-        {renderChangeItems(releaseNotes.bugFixes, 'Bug Fixes', <BugIcon color="error" />)}
-        {renderChangeItems(releaseNotes.breakingChanges, 'Breaking Changes', <BreakingIcon color="warning" />)}
+        {!hasChanges ? (
+          <Box sx={{ mt: 1 }}>
+            <Typography variant="h6" fontWeight="bold">No changes documented</Typography>
+            <Typography color="text.secondary">This version doesn't have any documented changes.</Typography>
+          </Box>
+        ) : (
+          <>
+            {renderChangeItems(releaseNotes.features, 'New Features', <FeatureIcon />)}
+            {renderChangeItems(releaseNotes.bugFixes, 'Bug Fixes', <BugIcon />)}
+            {renderChangeItems(releaseNotes.improvements, 'Improvements', <ImprovementIcon />)}
+            {renderChangeItems(releaseNotes.breakingChanges, 'Breaking Changes', <BreakingIcon />)}
+          </>
+        )}
       </Box>
     );
   };
 
-  /**
-   * Handles escape key press
-   */
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      handleClose();
-    }
-  };
-
-  /**
-   * Handles error snackbar close
-   */
-  const handleCloseErrorSnackbar = () => {
-    setShowErrorSnackbar(false);
-  };
-
   return (
-    <>
-      <Dialog
-        open={isOpen}
-        onClose={handleClose}
-        onKeyDown={handleKeyDown}
-        maxWidth="lg"
-        fullWidth
-        fullScreen={isMobile}
-        scroll="paper"
-        PaperProps={{
-          sx: { height: isMobile ? '100vh' : '80vh', display: 'flex', flexDirection: 'column' }
-        }}
-      >
-        {/* Header */}
-        <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider', px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {isMobile && (
-              <IconButton edge="start" color="inherit" onClick={() => setMobileDrawerOpen(prev => !prev)} sx={{ mr: 1 }}>
-                <RefreshIcon sx={{ transform: 'rotate(90deg)' }} />
-                <Typography variant="button">History</Typography>
-              </IconButton>
-            )}
-            <Typography variant="h6">Release Notes</Typography>
-          </Box>
-          <IconButton onClick={handleClose} aria-label="close">
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-
-        {/* Body with Sidebars */}
-        <DialogContent sx={{ p: 0, display: 'flex', flex: 1, overflow: 'hidden' }}>
-
-          {/* Sidebar (Desktop) */}
-          {!isMobile && (
-            <Box sx={{ width: 280, borderRight: 1, borderColor: 'divider', overflowY: 'auto', bgcolor: 'grey.50' }}>
-              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                <Typography variant="subtitle2" color="text.secondary">VERSION HISTORY</Typography>
-              </Box>
-              {renderSidebar()}
-            </Box>
-          )}
-
-          {/* Main Content */}
-          <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
-            {renderContent()}
-          </Box>
-
-        </DialogContent>
-        {/* Drawer for Mobile History */}
-        {isMobile && mobileDrawerOpen && (
-          <Box sx={{
-            position: 'absolute', top: 60, left: 0, bottom: 0, width: '80%', zIndex: 10,
-            bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', boxShadow: 3
-          }}>
-            <Box sx={{ p: 1, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button size="small" onClick={() => setMobileDrawerOpen(false)}>Close Menu</Button>
-            </Box>
+    <Dialog
+      open={isOpen}
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMobile}
+      aria-labelledby="release-notes-dialog-title"
+      aria-describedby="release-notes-dialog-content"
+      PaperProps={{
+        sx: { height: '80vh' },
+        'data-testid': 'release-notes-dialog'
+      } as any}
+    >
+      <DialogTitle id="release-notes-dialog-title" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h6">Release Notes</Typography>
+        <IconButton onClick={handleClose} aria-label="close" disabled={loading}><CloseIcon /></IconButton>
+      </DialogTitle>
+      <DialogContent id="release-notes-dialog-content" dividers sx={{ display: 'flex', p: 0 }}>
+        {!isMobile && (
+          <Box sx={{ width: 250, borderRight: 1, borderColor: 'divider', overflowY: 'auto' }}>
             {renderSidebar()}
           </Box>
         )}
-      </Dialog>
-
-      {/* Error notification snackbar */}
-      <Snackbar
-        open={showErrorSnackbar}
-        autoHideDuration={8000}
-        onClose={handleCloseErrorSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseErrorSnackbar}
-          severity="error"
-          sx={{ width: '100%' }}
-          action={
-            error ? (
-              <Button
-                size="small"
-                color="inherit"
-                onClick={() => {
-                  handleCloseErrorSnackbar();
-                  handleRetry();
-                }}
-                startIcon={<RefreshIcon />}
-              >
-                Retry
-              </Button>
-            ) : undefined
-          }
-        >
-          Release Notes: {error || 'Unknown error'}
-        </Alert>
+        <Box sx={{ flex: 1, p: 3, overflowY: 'auto' }}>
+          {renderContent()}
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} disabled={loading}>Close</Button>
+      </DialogActions>
+      <Snackbar open={showErrorSnackbar} autoHideDuration={6000} onClose={() => setShowErrorSnackbar(false)}>
+        <Alert severity="error" onClose={() => setShowErrorSnackbar(false)}>Failed to load release notes</Alert>
       </Snackbar>
-    </>
+    </Dialog>
   );
 });
 

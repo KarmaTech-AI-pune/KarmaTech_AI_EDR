@@ -2,16 +2,16 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NJS.Application.CQRS.SprintPlans.Commands;
-using NJS.Application.CQRS.SprintPlans.Queries;
-using NJS.Application.CQRS.SprintTasks.Commands;
-using NJS.Application.CQRS.SprintTasks.Queries;
-using NJS.Application.CQRS.SprintSubtasks.Commands;
-using NJS.Application.CQRS.SprintSubtasks.Queries;
-using NJS.Application.Dtos;
-using NJSAPI.Controllers;
+using EDR.Application.CQRS.SprintPlans.Commands;
+using EDR.Application.CQRS.SprintPlans.Queries;
+using EDR.Application.CQRS.SprintTasks.Commands;
+using EDR.Application.CQRS.SprintTasks.Queries;
+using EDR.Application.CQRS.SprintSubtasks.Commands;
+using EDR.Application.CQRS.SprintSubtasks.Queries;
+using EDR.Application.Dtos;
+using EDR.API.Controllers;
 
-namespace NJS.API.Tests.Controllers
+namespace EDR.API.Tests.Controllers
 {
     public class SprintTaskControllerTests
     {

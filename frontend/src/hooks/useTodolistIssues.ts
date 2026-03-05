@@ -430,15 +430,15 @@ export const useTodolistIssues = () => {
     };
 
     setIssues(prevIssues =>
-      prevIssues.map(issue => {
-        if (issue.id === issueId) {
+      prevIssues.map(i => {
+        if (i.id === issueId) {
           return {
-            ...issue,
-            comments: [...issue.comments, newComment],
+            ...i,
+            comments: [...i.comments, newComment],
             updatedDate: new Date().toISOString().split('T')[0],
           };
         }
-        return issue;
+        return i;
       })
     );
 
@@ -459,12 +459,22 @@ export const useTodolistIssues = () => {
   };
 
   const addSubtaskComment = async (subtaskId: string, commentText: string) => {
-    // Find the parent task ID for this subtask
+    // Find the parent task and the subtask itself
     let parentTaskId: string | null = null;
+    let subtaskAssignee = teamMembers[0]; // default fallback
+
     for (const issue of issues) {
       const subtask = issue.subtasks.find(s => s.id === subtaskId);
       if (subtask) {
         parentTaskId = issue.id;
+        // Use the subtask's assignee if set, otherwise fall back to teamMembers[0]
+        if (subtask.assignee) {
+          subtaskAssignee = {
+            id: subtask.assignee.id,
+            name: subtask.assignee.name,
+            avatar: subtask.assignee.avatar,
+          };
+        }
         break;
       }
     }

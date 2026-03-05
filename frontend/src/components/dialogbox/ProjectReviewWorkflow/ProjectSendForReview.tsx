@@ -8,6 +8,9 @@ import {
   FormControl,
   FormHelperText,
   Backdrop,
+  CircularProgress,
+  Box,
+  Typography
 } from "@mui/material";
 import { getUserById } from "../../../services/userApi";
 import { HistoryLoggingService } from "../../../services/historyLoggingService";
@@ -206,23 +209,34 @@ const SendForReview: React.FC<ProjectSendForReviewProps> = ({
           margin="normal"
           error={!!error}
         >
-          {seniorPM ? (
-            <div style={{
-              fontSize: "16px",
-              padding: "8px 0",
-              textAlign: "center"
-            }}>
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 2 }}>
+              <CircularProgress size={24} sx={{ mr: 1 }} />
+              <Typography>Loading Senior Project Manager...</Typography>
+            </Box>
+          ) : seniorPM ? (
+            <Typography
+              variant="body1"
+              sx={{
+                fontSize: "16px",
+                padding: "8px 0",
+                textAlign: "center"
+              }}
+            >
               Send to {seniorPM} for review?
-            </div>
+            </Typography>
           ) : (
-            <div style={{
-              fontSize: "16px",
-              padding: "8px 0",
-              textAlign: "center",
-              color: "red"
-            }}>
+            <Typography
+              variant="body1"
+              sx={{
+                fontSize: "16px",
+                padding: "8px 0",
+                textAlign: "center",
+                color: "error.main"
+              }}
+            >
               {error || "Loading Senior Project Manager..."}
-            </div>
+            </Typography>
           )}
 
           {error && !error.includes("Senior Project Manager") && (
@@ -241,8 +255,9 @@ const SendForReview: React.FC<ProjectSendForReviewProps> = ({
           variant="contained"
           color="primary"
           disabled={!seniorPM || isLoading}
+          startIcon={isLoading ? <CircularProgress size={16} /> : null}
         >
-          OK
+          {isLoading ? 'Sending...' : 'OK'}
         </Button>
       </DialogActions>
     </Dialog>

@@ -67,6 +67,8 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [descriptions, setDescriptions] = useState<ScoringDescriptionsResponse>({ descriptions: {} });
 
+
+
   // Fetch BD Manager name from opportunity data and auto-populate BD Head field
   useEffect(() => {
     const fetchBdManagerName = async () => {
@@ -113,17 +115,25 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
             const orderedVersions = [rdVersion, rmVersion, bdmVersion].filter((v): v is GoNoGoVersionDto => v !== undefined);
             setVersions(orderedVersions);
 
-            // Set the current version to the RD version if it exists
-            if (rdVersion) {
-              setCurrentVersion(rdVersion);
+            let versionToLoad: GoNoGoVersionDto | undefined;
 
-              // Parse and set the RD version's data
-              const formData = JSON.parse(rdVersion.formData);
+            if (rdVersion) {
+              versionToLoad = rdVersion;
+            } else if (orderedVersions.length > 0) {
+              versionToLoad = orderedVersions[0];
+            }
+
+            if (versionToLoad) {
+              setCurrentVersion(versionToLoad);
+              setIsVersionSelected(true);
+
+              // Parse and set the version's data
+              const formData = JSON.parse(versionToLoad.formData);
 
               // Update decision status when loading RD version
-              if (onDecisionStatusChange && rdVersion.status === GoNoGoVersionStatus.RD_APPROVED) {
+              if (onDecisionStatusChange && versionToLoad.status === GoNoGoVersionStatus.RD_APPROVED) {
                 const decisionStatus = formData.Summary.Status === GoNoGoStatus.Green ? "GO" : "NO GO";
-                onDecisionStatusChange(decisionStatus, rdVersion.versionNumber);
+                onDecisionStatusChange(decisionStatus, versionToLoad.versionNumber);
               }
 
               setHeaderInfo(prev => ({
@@ -136,7 +146,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                 bdHead: formData.HeaderInfo.BdHead || ''
               }));
 
-              // Update scoring criteria with RD version's data
+              // Update scoring criteria with version's data
               const mappedCriteria = mapScoringCriteria(formData.ScoringCriteria);
               setCriteria(prev => ({
                 ...prev,
@@ -146,6 +156,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
           }
         } catch (error) {
           console.error('Error loading Go/No Go decision:', error);
+          setServerError('Error loading Go/No Go decision:');
         }
       }
     };
@@ -199,7 +210,6 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     tenderFee: '',
     emd: '',
   });
-
   const [criteria, setCriteria] = useState<{ [key: string]: ScoringCriteria }>({
     marketingplan: { comments: '', score: 0, showComments: false, scoringDescriptionId: 1 },
     clientrelationship: { comments: '', score: 0, showComments: false, scoringDescriptionId: 2 },
@@ -214,6 +224,8 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     projectschedule: { comments: '', score: 0, showComments: false, scoringDescriptionId: 11 },
     bidtimeandcosts: { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
+
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const MAX_POSSIBLE_SCORE = 120; // 12 criteria × 10 points each
 
@@ -313,11 +325,10 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     const formData = JSON.parse(version.formData);
 
     // Update decision status when selecting RD-approved version
-    if (onDecisionStatusChange &&
-      version.versionNumber === 3 &&
-      version.status === GoNoGoVersionStatus.RD_APPROVED) {
-      const decisionStatus = formData.Summary.Status === GoNoGoStatus.Green ? "GO" : "NO GO";
-      onDecisionStatusChange(decisionStatus, version.versionNumber);
+    if (onDecisionStatusChange) {
+      const decision = formData.Summary.TotalScore >= 50 ? "GO" : "NO GO";
+      console.log(`DEBUG: onDecisionStatusChange from handleVersionSelect - version: ${version.versionNumber}, score: ${formData.Summary.TotalScore}, decision: ${decision}`);
+      onDecisionStatusChange(decision, version.versionNumber);
     }
 
     setHeaderInfo(prev => ({
@@ -379,22 +390,17 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       });
       if (version.goNoGoDecisionHeaderId) {
         await loadVersions(version.goNoGoDecisionHeaderId);
-
+        
         // Update decision status when RD approves
         if (onDecisionStatusChange && version.versionNumber === 3) {
-          // Get the updated version data after approval
           const updatedVersions = await goNoGoApi.getVersions(version.goNoGoDecisionHeaderId);
           const rdVersion = updatedVersions.find(v => v.versionNumber === 3);
-
           if (rdVersion) {
-            // Parse the form data to get the actual score
+            console.log('DEBUG: Full rdVersion:', JSON.stringify(rdVersion));
             const formData = JSON.parse(rdVersion.formData);
-            const totalScore = formData.Summary.TotalScore;
-            const decisionStatus = totalScore >= 50 ? "GO" : "NO GO";
-
-            // Call the callback with the correct status and version number
-            onDecisionStatusChange(decisionStatus, version.versionNumber);
-
+            const decisionStatus = formData.Summary.TotalScore >= 50 ? "GO" : "NO GO";
+            console.log(`DEBUG: onDecisionStatusChange from handleApproveVersion - score: ${formData.Summary.TotalScore}, decision: ${decisionStatus}`);
+            onDecisionStatusChange(decisionStatus, 3);
           }
         }
       }
@@ -631,6 +637,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       }
     } catch (error) {
       console.error('Error saving go/no-go decision:', error);
+      setServerError('Error saving go/no-go decision:');
     }
   };
 
@@ -689,6 +696,11 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
 
   return (
     <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
+      {serverError && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setServerError(null)}>
+          {serverError}
+        </Alert>
+      )}
       {isLoading && (
         <Typography variant="body1" sx={{ mb: 2 }}>
           Loading...
@@ -734,6 +746,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                   value={headerInfo.typeOfBid.toString()}
                   onChange={(e) => handleHeaderChange('typeOfBid', Number(e.target.value) as TypeOfBid)}
                   label="Type of Bid"
+                  data-testid="type-of-bid-select"
                 >
                   <MenuItem value={TypeOfBid.TimeAndExpense.toString()}>Time&Expense</MenuItem>
                   <MenuItem value={TypeOfBid.Lumpsum.toString()}>Lumpsum</MenuItem>
@@ -801,6 +814,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                       value={value.score}
                       onChange={(e) => handleScoreChange(key, e.target.value)}
                       label="Score"
+                      data-testid={`${key}-score-select`}
                     >
                       {scoreRanges.map((range) => (
                         <MenuItem key={range.value} value={range.value}>

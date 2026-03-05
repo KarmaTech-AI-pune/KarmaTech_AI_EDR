@@ -1,30 +1,45 @@
+
+using EDR.Application.CQRS.JobStartForm.Queries;
+using EDR.Domain.Database;
+using EDR.Domain.Entities;
+using EDR.Domain.Services;
+using EDR.Domain.UnitWork;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Moq;
-using NJS.Application.CQRS.JobStartForm.Handlers;
-using NJS.Application.CQRS.JobStartForm.Queries;
-using NJS.Domain.Entities;
-using NJS.Domain.GenericRepository;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.CQRS.JobStartForm
+namespace EDR.API.Tests.CQRS.JobStartForm
 {
-    public class GetJobStartFormByIdQueryHandlerTests
+    public class GetJobStartFormByIdQueryHandlerTests : IDisposable
     {
-        private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-        private readonly Mock<IRepository<JobStartForm>> _repositoryMock;
-        private readonly GetJobStartFormByIdQueryHandler _handler;
+        private readonly ProjectManagementContext _context;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly EDR.Application.CQRS.JobStartForm.Handlers.GetJobStartFormByIdQueryHandler _handler;
 
         public GetJobStartFormByIdQueryHandlerTests()
         {
-            _unitOfWorkMock = new Mock<IUnitOfWork>();
-            _repositoryMock = new Mock<IRepository<JobStartForm>>();
+            var options = new DbContextOptionsBuilder<ProjectManagementContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
             
-            _unitOfWorkMock.Setup(u => u.GetRepository<JobStartForm>())
-                .Returns(_repositoryMock.Object);
-            
-            _handler = new GetJobStartFormByIdQueryHandler(_unitOfWorkMock.Object);
+            var tenantMock = new Mock<ICurrentTenantService>();
+            var configMock = new Mock<IConfiguration>();
+
+            _context = new ProjectManagementContext(options, tenantMock.Object, configMock.Object);
+            _unitOfWork = new UnitOfWork(_context);
+            _handler = new EDR.Application.CQRS.JobStartForm.Handlers.GetJobStartFormByIdQueryHandler(_unitOfWork);
+        }
+
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
+            _unitOfWork.Dispose();
         }
 
         [Fact]
@@ -32,7 +47,7 @@ namespace NJS.API.Tests.CQRS.JobStartForm
         {
             // Arrange
             var formId = 1;
-            var form = new JobStartForm
+            var form = new EDR.Domain.Entities.JobStartForm
             {
                 FormId = formId,
                 ProjectId = 1,
@@ -40,11 +55,13 @@ namespace NJS.API.Tests.CQRS.JobStartForm
                 FormTitle = "Test Form",
                 Description = "Test Description",
                 StartDate = DateTime.Now,
-                PreparedBy = "User1"
+                PreparedBy = "User1",
+                Selections = new List<JobStartFormSelection>(),
+                Resources = new List<JobStartFormResource>()
             };
 
-            _repositoryMock.Setup(r => r.GetByIdAsync(formId))
-                .ReturnsAsync(form);
+            await _context.JobStartForms.AddAsync(form);
+            await _context.SaveChangesAsync();
 
             var query = new GetJobStartFormByIdQuery(formId);
 
@@ -67,10 +84,6 @@ namespace NJS.API.Tests.CQRS.JobStartForm
         {
             // Arrange
             var formId = 999;
-
-            _repositoryMock.Setup(r => r.GetByIdAsync(formId))
-                .ReturnsAsync((JobStartForm)null);
-
             var query = new GetJobStartFormByIdQuery(formId);
 
             // Act

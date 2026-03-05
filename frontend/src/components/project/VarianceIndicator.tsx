@@ -48,12 +48,21 @@ export const VarianceIndicator: React.FC<VarianceIndicatorProps> = ({
   // Format currency value
   const formatCurrency = (value: number): string => {
     const absValue = Math.abs(value);
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(absValue);
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(absValue);
+    } catch (error) {
+      // Handle invalid currency code gracefully
+      return new Intl.NumberFormat('en-US', {
+        style: 'decimal',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(absValue);
+    }
   };
 
   // Format percentage

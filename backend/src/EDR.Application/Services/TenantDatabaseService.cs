@@ -39,15 +39,9 @@ namespace EDR.Application.Services
                 await _tenantDbContext.SaveChangesAsync();
 
                 // Create the actual database and apply migrations
-                // Dynamically pick the fallback connection string based on DbType
-                var dbType = _configuration["DbType"] ?? "postgresql";
-                var fallbackConnStr = dbType.Equals("sqlserver", StringComparison.OrdinalIgnoreCase)
-                    ? _configuration.GetConnectionString("SqlDbConnection")
-                    : _configuration.GetConnectionString("AppDbConnection");
-
                 string connectionString = !string.IsNullOrEmpty(tenantDatabase.ConnectionString)
                     ? tenantDatabase.ConnectionString
-                    : fallbackConnStr;
+                    : _configuration.GetConnectionString("AppDbConnection");
 
                 await EnsureDatabaseCreatedAsync(connectionString);
 
