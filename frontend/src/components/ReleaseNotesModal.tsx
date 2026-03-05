@@ -56,6 +56,7 @@ const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
     releaseDate: '2026-03-04',
     environment: 'production',
     features: [
+      { id: 200, changeType: 'Feature', description: 'Cash Flow Management: Introduced a full end-to-end Cash Flow module including backend API implementation, revenue calculation with progress deliverables, NPV and profitability analysis, and a dedicated frontend Cash Flow page with real-time dashboard data fetching.', commitSha: '29c45267' },
       { id: 201, changeType: 'Feature', description: 'Testing & Quality Assurance: Implemented a comprehensive regression testing suite covering frontend, backend (WBS, job, opportunity, etc.), and E2E scenarios. Added extensive unit and integration tests for Sprint, ProgramSprint, SprintDailyProgress, and SprintTask controllers.', commitSha: '1017856' },
       { id: 202, changeType: 'Feature', description: 'CI/CD & Automation: Set up automated release management hooks and new CI/CD workflows for frontend and backend testing on PRs to master.', commitSha: '0a07d82' },
       { id: 203, changeType: 'Feature', description: 'Database & Architecture: Added PostgreSQL integration (updated dev connection string), added baseline migration, and introduced initial database seed data for features.', commitSha: '96122ca' },

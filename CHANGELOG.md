@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2026-03-04
 
 ### ✨ Features
+- **Cash Flow Management** (`29c45267`, `2d6f8ecb`, `8927c05b`, `e6d6b53d`, `110273f5`): Introduced a full end-to-end Cash Flow module including backend API implementation, revenue calculation with progress deliverables, NPV and profitability analysis, and a dedicated frontend Cash Flow page with real-time dashboard data fetching.
 - **Testing & Quality Assurance** (`10178566`, `13e5d3ba`, `1587462d`, `89ba6fdb`, `685b8115`): Implemented a comprehensive regression testing suite covering frontend, backend (WBS, job, opportunity, etc.), and E2E scenarios. Added extensive unit and integration tests for Sprint, ProgramSprint, SprintDailyProgress, and SprintTask controllers.
 - **CI/CD & Automation** (`0a07d827`, `94c47571`): Set up automated release management hooks and new CI/CD workflows for frontend and backend testing on PRs to master.
 - **Database & Architecture** (`96122ca4`, `66a2d530`, `d8dc31f7`, `aa4ca306`): Added PostgreSQL integration (updated dev connection string), added baseline migration, and introduced initial database seed data for features.
