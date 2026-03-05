@@ -90,7 +90,7 @@ describe('BusinessDevelopmentContext', () => {
   });
 
   it('handles "Opportunity not found" error', async () => {
-    vi.mocked(opportunityApi.getById).mockResolvedValue(null);
+    vi.mocked(opportunityApi.getById).mockResolvedValue(null as any);
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <BusinessDevelopmentProvider>{children}</BusinessDevelopmentProvider>
