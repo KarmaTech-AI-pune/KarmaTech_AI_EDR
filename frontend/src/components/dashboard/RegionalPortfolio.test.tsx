@@ -7,18 +7,27 @@ describe('RegionalPortfolio Component', () => {
     {
       region: "North America",
       profit: 18.5,
+      q1: 0,
+      q2: 0,
+      q3: 0,
       q4: 12,
       revenue: 2500000
     },
     {
       region: "Europe",
       profit: 15.2,
+      q1: 0,
+      q2: 0,
+      q3: 0,
       q4: 8,
       revenue: 1800000
     },
     {
       region: "Asia Pacific",
       profit: 12.4,
+      q1: 0,
+      q2: 0,
+      q3: 0,
       q4: 15,
       revenue: 3200000
     }

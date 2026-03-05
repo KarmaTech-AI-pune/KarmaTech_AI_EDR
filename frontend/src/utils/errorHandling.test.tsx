@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import ErrorHandler, {
   ErrorType,
   createUserFriendlyMessage,
@@ -21,26 +21,26 @@ describe('ErrorHandler', () => {
   describe('categorizeError', () => {
     it('categorizes a network error', () => {
       const error = new TypeError('Failed to fetch');
-      const info = handler.categorizeError(error);
+      const info = (handler as any).categorizeError(error);
       expect(info.type).toBe(ErrorType.NETWORK_ERROR);
       expect(info.retryable).toBe(true);
     });
 
     it('categorizes a timeout error', () => {
       const error = new Error('timeout exceeded');
-      const info = handler.categorizeError(error);
+      const info = (handler as any).categorizeError(error);
       expect(info.type).toBe(ErrorType.TIMEOUT_ERROR);
       expect(info.retryable).toBe(true);
     });
 
     it('categorizes a string error', () => {
-      const info = handler.categorizeError('something went wrong');
+      const info = (handler as any).categorizeError('something went wrong');
       expect(info.type).toBe(ErrorType.UNKNOWN_ERROR);
       expect(info.message).toBe('something went wrong');
     });
 
     it('includes context in categorized error', () => {
-      const info = handler.categorizeError('error', { component: 'Dashboard' });
+      const info = (handler as any).categorizeError('error', { component: 'Dashboard' });
       expect(info.context).toEqual({ component: 'Dashboard' });
     });
   });

@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import MetricsGrid from './MetricsGrid';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
