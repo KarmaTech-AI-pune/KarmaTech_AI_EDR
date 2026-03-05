@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using EDR.Application.CQRS.Projects.Commands;
 using EDR.Application.CQRS.Projects.Handlers;
 using EDR.Application.Dtos;
@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace EDR.Application.Tests.Handlers
+namespace EDR.API.Tests.Handlers
 {
     public class UpdateProjectBudgetCommandHandlerTests
     {
