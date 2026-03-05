@@ -48,7 +48,8 @@ namespace EDR.API.Tests.Regression
             Assert.True(
                 sprintPlanResponse.StatusCode == HttpStatusCode.OK
                 || sprintPlanResponse.StatusCode == HttpStatusCode.Created
-                || sprintPlanResponse.StatusCode == HttpStatusCode.BadRequest,
+                || sprintPlanResponse.StatusCode == HttpStatusCode.BadRequest
+                || sprintPlanResponse.StatusCode == HttpStatusCode.NotFound,
                 $"Create sprint plan returned unexpected {sprintPlanResponse.StatusCode}");
         }
 

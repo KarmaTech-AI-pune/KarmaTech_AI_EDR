@@ -50,8 +50,8 @@ namespace EDR.API.Tests.CQRS.SprintWbsPlans
             {
                 Items = new List<CreateSprintWbsPlanDto>
                 {
-                    new CreateSprintWbsPlanDto { ProjectId = 1, WBSTaskName = "Task 1", SprintNumber = 1 },
-                    new CreateSprintWbsPlanDto { ProjectId = 1, WBSTaskName = "Task 2", SprintNumber = 1 }
+                    new CreateSprintWbsPlanDto { ProjectId = 1, WBSTaskName = "Task 1", SprintNumber = 1, PlannedHours = 8 },
+                    new CreateSprintWbsPlanDto { ProjectId = 1, WBSTaskName = "Task 2", SprintNumber = 1, PlannedHours = 8 }
                 }
             };
 

@@ -99,7 +99,7 @@ namespace EDR.API.Tests.CQRS.SprintTasks
             var result = await handler.Handle(query, CancellationToken.None);
 
             // Assert
-            Assert.Equal(2, result.Count());
+            Assert.Equal(2, result.Comments.Count);
         }
 
         [Fact]
