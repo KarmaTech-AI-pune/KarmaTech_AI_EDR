@@ -50,6 +50,7 @@ namespace EDR.Application.Extensions
             services.AddScoped<IMonthlyProgressRepository, MonthlyProgressRepository>(); // Added for Monthly Progress module
             services.AddScoped<IScoringDescriptionRepository, ScoringDescriptionRepository>();
             services.AddScoped<IScoringDescriptionService, ScoringDescriptionService>();
+            services.AddScoped<IPaymentMilestoneRepository, PaymentMilestoneRepository>(); // Added for Payment Schedule
 
             services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
             services.AddScoped<IWBSTaskRepository, WBSTaskRepository>(); // Add this line
@@ -73,7 +74,7 @@ namespace EDR.Application.Extensions
             services.AddScoped<IProgramRepository, ProgramRepository>();
 
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
-            services.AddScoped<ICashflowRepository, CashflowRepository>();
+
             services.AddScoped<IMeasurementUnitRepository, MeasurementUnitRepository>();
             services.AddScoped<IProjectScheduleRepository, ProjectScheduleRepository>();
 
