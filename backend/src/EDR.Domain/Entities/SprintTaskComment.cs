@@ -22,6 +22,7 @@ namespace EDR.Domain.Entities
         public DateTime? CreatedDate { get; set; }
         public string? UpdatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
+        public decimal? TotalLoggedHours { get; set; }
     }
 }
 

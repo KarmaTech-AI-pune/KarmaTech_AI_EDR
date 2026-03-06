@@ -2,7 +2,7 @@ name: Regression Tests
 
 on:
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "Kiro/dev" ]
   schedule:
     # Run nightly at 2:00 AM UTC
     - cron: '0 2 * * *'

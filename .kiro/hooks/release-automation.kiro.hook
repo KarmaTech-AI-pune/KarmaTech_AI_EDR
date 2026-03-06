@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "name": "Release Automation Workflow",
+  "description": "Automates the complete release process: runs PublishProject.ps1, creates release branch from Kiro/dev, opens PR to master, and manages post-approval merge",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Execute the release workflow:\n1. Run PublishProject.ps1 script to create dist and publish profile for local deployment\n2. Create a release branch from Kiro/dev branch (format: release/vX.X.X)\n3. Open a PR from the release branch to master branch (this will trigger GitHub Actions to run tests)\n4. Wait for thorough testing and QA approval\n5. After approval, merge the PR to master and delete the release branch\n6. Confirm deployment status\n\nProvide status updates at each step and wait for human approval before merging."
+  },
+  "workspaceFolderName": "KarmaTech_AI_EDR",
+  "shortName": "release-automation"
+}

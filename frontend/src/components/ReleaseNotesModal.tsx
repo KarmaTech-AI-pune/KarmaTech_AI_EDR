@@ -51,6 +51,27 @@ import {
 import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/releaseNotesApi';
 
 const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
+  '1.3.0': {
+    version: '1.3.0',
+    releaseDate: '2026-03-04',
+    environment: 'production',
+    features: [
+      { id: 200, changeType: 'Feature', description: 'Cash Flow Management: Introduced a full end-to-end Cash Flow module including backend API implementation, revenue calculation with progress deliverables, NPV and profitability analysis, and a dedicated frontend Cash Flow page with real-time dashboard data fetching.', commitSha: '29c45267' },
+      { id: 201, changeType: 'Feature', description: 'Testing & Quality Assurance: Implemented a comprehensive regression testing suite covering frontend, backend (WBS, job, opportunity, etc.), and E2E scenarios. Added extensive unit and integration tests for Sprint, ProgramSprint, SprintDailyProgress, and SprintTask controllers.', commitSha: '1017856' },
+      { id: 202, changeType: 'Feature', description: 'CI/CD & Automation: Set up automated release management hooks and new CI/CD workflows for frontend and backend testing on PRs to master.', commitSha: '0a07d82' },
+      { id: 203, changeType: 'Feature', description: 'Database & Architecture: Added PostgreSQL integration (updated dev connection string), added baseline migration, and introduced initial database seed data for features.', commitSha: '96122ca' },
+      { id: 204, changeType: 'Feature', description: 'API Enhancements: Added a new level 3 task API and implemented full feature retrieval upon admin login.', commitSha: '1f5b6d0' },
+      { id: 205, changeType: 'Feature', description: 'Project Structure: Renamed application references from EDR to Kiro/dev and updated corresponding frontend dependencies.', commitSha: '733b01d' },
+    ],
+    bugFixes: [
+      { id: 206, changeType: 'BugFix', description: 'Fixed a null reference error in the dashboard by adding optional chaining.', commitSha: 'df8f71c' },
+      { id: 207, changeType: 'BugFix', description: 'Resolved a tenant creation issue and removed an unnecessary tenant ID filter.', commitSha: 'a50d385' },
+      { id: 208, changeType: 'BugFix', description: 'Fixed various build errors and test case compatibility issues.', commitSha: 'd0652be' },
+      { id: 209, changeType: 'BugFix', description: 'Cleaned up the codebase by removing unused folders (e.g., NJSEI) and duplicate files.', commitSha: '5429b29' },
+    ],
+    improvements: [],
+    breakingChanges: [],
+  },
   '1.2.0': {
     version: '1.2.0',
     releaseDate: '2026-02-16',
@@ -144,17 +165,26 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
 
   const fetchHistory = useCallback(async () => {
     setLoadingHistory(true);
+    let apiHistory: ProcessedReleaseNotes[] = [];
     try {
-      const historyData = await releaseNotesApi.getReleaseHistory(undefined, 0, 20);
-      setHistory(historyData || []);
+      apiHistory = await releaseNotesApi.getReleaseHistory(undefined, 0, 20) || [];
     } catch (err) {
       console.error('Failed to fetch release history:', err);
-      // Fallback to static history if API fails
-      const fallbackHistory = Object.values(FALLBACK_RELEASE_NOTES).sort((a, b) =>
+    } finally {
+      // Merge fallback history with API fetched history to ensure local versions display
+      const mergedHistory = [...apiHistory];
+
+      Object.values(FALLBACK_RELEASE_NOTES).forEach(fallbackNote => {
+        if (!mergedHistory.some(h => h.version === fallbackNote.version)) {
+          mergedHistory.push(fallbackNote);
+        }
+      });
+
+      mergedHistory.sort((a, b) =>
         new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
       );
-      setHistory(fallbackHistory);
-    } finally {
+
+      setHistory(mergedHistory);
       setLoadingHistory(false);
     }
   }, []);
@@ -337,8 +367,8 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     );
     if (error) return (
       <Box sx={{ py: 2 }}>
-        <Alert 
-          severity="error" 
+        <Alert
+          severity="error"
           action={
             <Button color="inherit" size="small" onClick={() => fetchReleaseNotes(selectedVersion)}>
               Retry
@@ -351,10 +381,10 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     );
     if (!releaseNotes) return <Typography>Select a version</Typography>;
 
-    const hasChanges = 
-      (releaseNotes.features?.length || 0) > 0 || 
-      (releaseNotes.bugFixes?.length || 0) > 0 || 
-      (releaseNotes.improvements?.length || 0) > 0 || 
+    const hasChanges =
+      (releaseNotes.features?.length || 0) > 0 ||
+      (releaseNotes.bugFixes?.length || 0) > 0 ||
+      (releaseNotes.improvements?.length || 0) > 0 ||
       (releaseNotes.breakingChanges?.length || 0) > 0;
 
     return (
@@ -390,15 +420,15 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   };
 
   return (
-    <Dialog 
-      open={isOpen} 
-      onClose={handleClose} 
-      maxWidth="md" 
-      fullWidth 
+    <Dialog
+      open={isOpen}
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
       fullScreen={isMobile}
       aria-labelledby="release-notes-dialog-title"
       aria-describedby="release-notes-dialog-content"
-      PaperProps={{ 
+      PaperProps={{
         sx: { height: '80vh' },
         'data-testid': 'release-notes-dialog'
       } as any}

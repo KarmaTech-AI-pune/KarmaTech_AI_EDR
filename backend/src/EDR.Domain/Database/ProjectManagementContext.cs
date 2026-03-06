@@ -118,7 +118,8 @@ namespace EDR.Domain.Database
         public DbSet<CheckReview> CheckReviews { get; set; }
         public DbSet<ChangeControl> ChangeControls { get; set; }
         public DbSet<ProjectClosure> ProjectClosures { get; set; }
-        public DbSet<Cashflow> Cashflows { get; set; }
+        public DbSet<PaymentMilestone> PaymentMilestones { get; set; }
+        
 
         // PM Workflow entities
         public DbSet<PMWorkflowStatus> PMWorkflowStatuses { get; set; }
@@ -377,6 +378,7 @@ namespace EDR.Domain.Database
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Cost).HasPrecision(18, 2);
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Fee).HasPrecision(18, 2);
 
+            modelBuilder.Entity<SprintTaskComment>().Property(st => st.TotalLoggedHours).HasPrecision(18, 2);
 
 
             // Configure Identity tables
@@ -1374,12 +1376,7 @@ namespace EDR.Domain.Database
                 .HasForeignKey(g => g.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configure Cashflow Cascade Delete
-            modelBuilder.Entity<Cashflow>()
-                .HasOne<Project>()
-                .WithMany()
-                .HasForeignKey(c => c.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
+
 
             // Configure ProjectResource Cascade Delete
             modelBuilder.Entity<ProjectResource>()

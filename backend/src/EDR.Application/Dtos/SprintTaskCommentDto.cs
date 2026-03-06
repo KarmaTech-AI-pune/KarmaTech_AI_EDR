@@ -10,7 +10,9 @@ namespace EDR.Application.Dtos
         public string? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; } // Made nullable
         public string? UpdatedBy { get; set; }
-        public DateTime? UpdatedDate { get; set; } // Added UpdatedBy and UpdatedDate
+        public DateTime? UpdatedDate { get; set; }
+        public decimal HoursLogged { get; set; }
+        public string? Description { get; set; }
     }
 }
 

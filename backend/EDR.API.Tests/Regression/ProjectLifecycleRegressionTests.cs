@@ -35,7 +35,7 @@ namespace EDR.API.Tests.Regression
                 $"Expected positive int program ID, got: {programIdStr}");
 
             // Step 2: Create Project linked to Program
-            var projectName = $"Regression Lifecycle Project {Guid.NewGuid():N[..8]}";
+            var projectName = $"Regression Lifecycle Project {Guid.NewGuid().ToString("N")[..8]}";
             var projectDto = new ProjectDto
             {
                 TenantId = 1,
@@ -145,7 +145,7 @@ namespace EDR.API.Tests.Regression
             var seed = await SeedProjectOnlyAsync();
 
             // Create second project under same program with unique name
-            var secondProjectName = $"Second Regression Project {Guid.NewGuid():N[..8]}";
+            var secondProjectName = $"Second Regression Project {Guid.NewGuid().ToString("N")[..8]}";
             var project2Dto = new ProjectDto
             {
                 TenantId = 1,

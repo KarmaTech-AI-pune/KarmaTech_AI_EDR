@@ -2,7 +2,7 @@ name: Frontend CI Checks
 
 on:
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "Kiro/dev" ]
 
 jobs:
   build_and_test:

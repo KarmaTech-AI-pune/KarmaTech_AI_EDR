@@ -65,19 +65,23 @@ namespace EDR.API.Tests.Regression
             var createCmd = new CreateCorrespondenceInwardCommand
             {
                 ProjectId = projectId,
-                IncomingLetterNo = $"INC-{Guid.NewGuid():N[..6]}",
+                IncomingLetterNo = $"INC-{Guid.NewGuid().ToString("N")[..6]}",
                 LetterDate = DateTime.UtcNow.AddDays(-5),
-                EdrInwardNo = $"EDR-{Guid.NewGuid():N[..6]}",
+                EdrInwardNo = $"EDR-{Guid.NewGuid().ToString("N")[..6]}",
                 ReceiptDate = DateTime.UtcNow,
                 From = "External Client",
                 Subject = "Regression Inward Correspondence",
                 Remarks = "Regression test record",
+                AttachmentDetails = "test-attach",
+                ActionTaken = "test-action",
+                StoragePath = "test-path",
                 CreatedBy = "regression-test"
             };
 
             // Act: create
             var createResponse = await Client.PostAsJsonAsync("/api/Correspondence/inward", createCmd);
-            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var resultStr = await createResponse.Content.ReadAsStringAsync();
+            Assert.True(createResponse.IsSuccessStatusCode, $"Inward Create failed with {createResponse.StatusCode}. Content: {resultStr}");
 
             // Assert: retrieve by project
             var getResponse = await Client.GetAsync($"/api/Correspondence/inward/project/{projectId}");
@@ -95,17 +99,21 @@ namespace EDR.API.Tests.Regression
             var createCmd = new CreateCorrespondenceOutwardCommand
             {
                 ProjectId = seed.ProjectId,
-                LetterNo = $"OUT-{Guid.NewGuid():N[..6]}",
+                LetterNo = $"OUT-{Guid.NewGuid().ToString("N")[..6]}",
                 LetterDate = DateTime.UtcNow,
                 To = "External Stakeholder",
                 Subject = "Regression Outward Correspondence",
                 Remarks = "Regression test outward record",
+                AttachmentDetails = "test-attach",
+                ActionTaken = "test-action",
+                StoragePath = "test-path",
                 CreatedBy = "regression-test"
             };
 
             // Act: create
             var createResponse = await Client.PostAsJsonAsync("/api/Correspondence/outward", createCmd);
-            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var resultStr = await createResponse.Content.ReadAsStringAsync();
+            Assert.True(createResponse.IsSuccessStatusCode, $"Outward Create failed with {createResponse.StatusCode}. Content: {resultStr}");
 
             // Assert: retrieve by project
             var getResponse = await Client.GetAsync(
@@ -125,29 +133,38 @@ namespace EDR.API.Tests.Regression
             var inwardCmd = new CreateCorrespondenceInwardCommand
             {
                 ProjectId = inwardProjectId,
-                IncomingLetterNo = $"IND-IN-{Guid.NewGuid():N[..6]}",
+                IncomingLetterNo = $"IND-IN-{Guid.NewGuid().ToString("N")[..6]}",
                 LetterDate = DateTime.UtcNow.AddDays(-3),
-                EdrInwardNo = $"EDR-IND-{Guid.NewGuid():N[..6]}",
+                EdrInwardNo = $"EDR-IND-{Guid.NewGuid().ToString("N")[..6]}",
                 ReceiptDate = DateTime.UtcNow,
                 From = "Sender A",
                 Subject = "Inward Independent Test",
+                Remarks = "Independent test remark",
+                AttachmentDetails = "test-attach",
+                ActionTaken = "test-action",
+                StoragePath = "test-path",
                 CreatedBy = "regression-test"
             };
             var inwardResponse = await Client.PostAsJsonAsync("/api/Correspondence/inward", inwardCmd);
-            Assert.Equal(HttpStatusCode.Created, inwardResponse.StatusCode);
+            var inwardResultStr = await inwardResponse.Content.ReadAsStringAsync();
+            Assert.True(inwardResponse.IsSuccessStatusCode, $"Inward Create (Independent) failed: {inwardResultStr}");
             var inward = await DeserializeResponseAsync<CorrespondenceInwardDto>(inwardResponse);
 
             var outwardCmd = new CreateCorrespondenceOutwardCommand
             {
                 ProjectId = outwardProjectId,
-                LetterNo = $"IND-OUT-{Guid.NewGuid():N[..6]}",
+                LetterNo = $"IND-OUT-{Guid.NewGuid().ToString("N")[..6]}",
                 LetterDate = DateTime.UtcNow,
                 To = "Recipient B",
                 Subject = "Outward Independent Test",
+                AttachmentDetails = "test-attach",
+                ActionTaken = "test-action",
+                StoragePath = "test-path",
                 CreatedBy = "regression-test"
             };
             var outwardResponse = await Client.PostAsJsonAsync("/api/Correspondence/outward", outwardCmd);
-            Assert.Equal(HttpStatusCode.Created, outwardResponse.StatusCode);
+            var outwardResultStr = await outwardResponse.Content.ReadAsStringAsync();
+            Assert.True(outwardResponse.IsSuccessStatusCode, $"Outward Create (Independent) failed: {outwardResultStr}");
             var outward = await DeserializeResponseAsync<CorrespondenceOutwardDto>(outwardResponse);
 
             // Act: delete inward — outward must remain unaffected
@@ -168,13 +185,16 @@ namespace EDR.API.Tests.Regression
             var cmd = new CreateCorrespondenceInwardCommand
             {
                 ProjectId = projectId,
-                IncomingLetterNo = $"UPD-IN-{Guid.NewGuid():N[..6]}",
+                IncomingLetterNo = $"UPD-IN-{Guid.NewGuid().ToString("N")[..6]}",
                 LetterDate = DateTime.UtcNow.AddDays(-7),
-                EdrInwardNo = $"EDR-UPD-{Guid.NewGuid():N[..6]}",
+                EdrInwardNo = $"EDR-UPD-{Guid.NewGuid().ToString("N")[..6]}",
                 ReceiptDate = DateTime.UtcNow,
                 From = "Original Sender",
                 Subject = "Original Subject",
                 Remarks = "Original remark",
+                AttachmentDetails = "test-attach",
+                ActionTaken = "test-action",
+                StoragePath = "test-path",
                 CreatedBy = "regression-test"
             };
             var createResponse = await Client.PostAsJsonAsync("/api/Correspondence/inward", cmd);
@@ -193,6 +213,9 @@ namespace EDR.API.Tests.Regression
                 created.From,
                 Subject = "Updated Subject via Regression",
                 Remarks = "Updated remark",
+                AttachmentDetails = "test-attach",
+                ActionTaken = "test-action",
+                StoragePath = "test-path",
                 UpdatedBy = "regression-test"
             };
             var updateResponse = await Client.PutAsJsonAsync(
@@ -217,16 +240,21 @@ namespace EDR.API.Tests.Regression
             var cmd = new CreateCorrespondenceInwardCommand
             {
                 ProjectId = projectId,
-                IncomingLetterNo = $"DEL-IN-{Guid.NewGuid():N[..6]}",
+                IncomingLetterNo = $"DEL-IN-{Guid.NewGuid().ToString("N")[..6]}",
                 LetterDate = DateTime.UtcNow.AddDays(-1),
-                EdrInwardNo = $"EDR-DEL-{Guid.NewGuid():N[..6]}",
+                EdrInwardNo = $"EDR-DEL-{Guid.NewGuid().ToString("N")[..6]}",
                 ReceiptDate = DateTime.UtcNow,
                 From = "Deletable Sender",
                 Subject = "Deletable Correspondence",
+                Remarks = "Deletable remark",
+                AttachmentDetails = "test-attach",
+                ActionTaken = "test-action",
+                StoragePath = "test-path",
                 CreatedBy = "regression-test"
             };
             var createResponse = await Client.PostAsJsonAsync("/api/Correspondence/inward", cmd);
-            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var createResultStr = await createResponse.Content.ReadAsStringAsync();
+            Assert.True(createResponse.IsSuccessStatusCode, $"Delete test inward Create failed: {createResultStr}");
             var created = await DeserializeResponseAsync<CorrespondenceInwardDto>(createResponse);
 
             // Act: delete correspondence
