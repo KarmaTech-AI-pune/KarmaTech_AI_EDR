@@ -4,6 +4,7 @@ import { projectApi } from './projectApi';
 import { MonthlyProgressSchemaType } from '../schemas/monthlyProgress/MonthlyProgressSchema';
 import { addCalculation, percentageCalculation } from '../utils/calculations';
 import { MonthlyProgressAPI, ManpowerResourcesResponse, MonthlyHourDto } from './monthlyProgressApi';
+import { formatDateForInput } from '../utils/dateUtils';
 
 // Define types for the expected API responses for better type safety
 interface JobStartData {
@@ -166,10 +167,10 @@ const transformDataForMonthlyProgress = (
       }
     }
     if (transformedData.schedule) {
-      transformedData.schedule.dateOfIssueWOLOI = project.startDate;
-      transformedData.schedule.completionDateAsPerContract = project.endDate;
-      transformedData.schedule.completionDateAsPerExtension = project.endDate;
-      transformedData.schedule.expectedCompletionDate = project.endDate;
+      transformedData.schedule.dateOfIssueWOLOI = formatDateForInput(project.startDate) || null;
+      transformedData.schedule.completionDateAsPerContract = formatDateForInput(project.endDate) || null;
+      transformedData.schedule.completionDateAsPerExtension = formatDateForInput(project.endDate) || null;
+      transformedData.schedule.expectedCompletionDate = formatDateForInput(project.endDate) || null;
     }
   }
 
@@ -309,10 +310,21 @@ export const getMonthlyProgressData = async (
     // Check if the response is not null and has keys, indicating existing data
     if (monthlyProgressData && Object.keys(monthlyProgressData).length > 0) {
       const aggregatedData = await getAggregatedMonthlyProgressData(projectId);
+      
+      // Format schedule dates before merging
+      const formattedSchedule = monthlyProgressData.schedule ? {
+        ...monthlyProgressData.schedule,
+        dateOfIssueWOLOI: formatDateForInput(monthlyProgressData.schedule.dateOfIssueWOLOI) || null,
+        completionDateAsPerContract: formatDateForInput(monthlyProgressData.schedule.completionDateAsPerContract) || null,
+        completionDateAsPerExtension: formatDateForInput(monthlyProgressData.schedule.completionDateAsPerExtension) || null,
+        expectedCompletionDate: formatDateForInput(monthlyProgressData.schedule.expectedCompletionDate) || null,
+      } : undefined;
+
       return {
         ...aggregatedData,
         ...previousMonthData, // Merge previous month's data
         ...monthlyProgressData,
+        ...(formattedSchedule ? { schedule: formattedSchedule } : {}),
         lastMonthActions: previousMonthData.lastMonthActions || monthlyProgressData.lastMonthActions || [],
       };
     }
