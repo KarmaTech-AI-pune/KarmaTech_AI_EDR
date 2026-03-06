@@ -14,7 +14,7 @@ import { ConfirmationDialog } from "../common/ConfirmationDialog";
 
 interface SubtaskItemProps {
   subtask: Subtask;
-  teamMembers: TeamMember[];
+  teamMembers?: TeamMember[];
   onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
   onDeleteSubtask: (subtaskId: string) => void;
   onSubtaskClick?: (subtask: Subtask) => void;
@@ -22,7 +22,6 @@ interface SubtaskItemProps {
 
 export const SubtaskItem: React.FC<SubtaskItemProps> = ({
   subtask,
-  teamMembers,
   onUpdateSubtask,
   onDeleteSubtask,
   onSubtaskClick,

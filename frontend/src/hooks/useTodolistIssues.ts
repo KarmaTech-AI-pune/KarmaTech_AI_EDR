@@ -461,20 +461,11 @@ export const useTodolistIssues = () => {
   const addSubtaskComment = async (subtaskId: string, commentText: string) => {
     // Find the parent task and the subtask itself
     let parentTaskId: string | null = null;
-    let subtaskAssignee = teamMembers[0]; // default fallback
 
     for (const issue of issues) {
       const subtask = issue.subtasks.find(s => s.id === subtaskId);
       if (subtask) {
         parentTaskId = issue.id;
-        // Use the subtask's assignee if set, otherwise fall back to teamMembers[0]
-        if (subtask.assignee) {
-          subtaskAssignee = {
-            id: subtask.assignee.id,
-            name: subtask.assignee.name,
-            avatar: subtask.assignee.avatar,
-          };
-        }
         break;
       }
     }

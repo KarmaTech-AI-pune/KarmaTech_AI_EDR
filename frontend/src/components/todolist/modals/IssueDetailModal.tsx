@@ -292,7 +292,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       // If modalType is reporter, timeSpent is treated as the TOTAL actual hours (actual work time spend).
       // If modalType is employee, timeSpent is added to existing total.
       const newActual = modalType === 'reporter' ? timeSpent : (showIssueDetail.actualHours || 0) + timeSpent;
-      const addedHours = modalType === 'reporter' ? (timeSpent - (showIssueDetail.actualHours || 0)) : timeSpent;
 
       // Optimistic update
       const updatedIssue = {
