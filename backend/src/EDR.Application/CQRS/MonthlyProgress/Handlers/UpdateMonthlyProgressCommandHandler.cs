@@ -2,6 +2,7 @@
 using EDR.Application.CQRS.MonthlyProgress.Commands;
 using EDR.Domain.Entities;
 using EDR.Repositories.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,25 +14,38 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
     public class UpdateMonthlyProgressCommandHandler : IRequestHandler<UpdateMonthlyProgressCommand, bool>
     {
         private readonly IMonthlyProgressRepository _monthlyProgressRepository;
+        private readonly ILogger<UpdateMonthlyProgressCommandHandler> _logger;
 
-        public UpdateMonthlyProgressCommandHandler(IMonthlyProgressRepository monthlyProgressRepository)
+        public UpdateMonthlyProgressCommandHandler(
+            IMonthlyProgressRepository monthlyProgressRepository,
+            ILogger<UpdateMonthlyProgressCommandHandler> logger)
         {
             _monthlyProgressRepository = monthlyProgressRepository ?? throw new ArgumentNullException(nameof(monthlyProgressRepository));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<bool> Handle(UpdateMonthlyProgressCommand request, CancellationToken cancellationToken)
         {
-            if (request == null)
+            try
             {
-                throw new ArgumentNullException(nameof(request));
-            }
+                if (request == null)
+                {
+                    _logger.LogError("UpdateMonthlyProgressCommand request is null");
+                    throw new ArgumentNullException(nameof(request));
+                }
 
-            var existingMonthlyProgress = await _monthlyProgressRepository.GetByIdAsync(request.Id);
+                _logger.LogInformation("Updating MonthlyProgress with Id: {MonthlyProgressId}", request.Id);
 
-            if (existingMonthlyProgress == null)
-            {
-                return false; // MonthlyProgress not found
-            }
+                var existingMonthlyProgress = await _monthlyProgressRepository.GetByIdAsync(request.Id);
+
+                if (existingMonthlyProgress == null)
+                {
+                    _logger.LogWarning("MonthlyProgress with Id: {MonthlyProgressId} not found", request.Id);
+                    return false; // MonthlyProgress not found
+                }
+
+                _logger.LogDebug("Found existing MonthlyProgress for Project: {ProjectId}, Year: {Year}, Month: {Month}", 
+                    existingMonthlyProgress.ProjectId, existingMonthlyProgress.Year, existingMonthlyProgress.Month);
 
             // Update properties of the main MonthlyProgress entity
             // CreatedDate is typically set on creation and not updated via DTO
@@ -51,7 +65,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
             {
                 if (existingMonthlyProgress.FinancialDetails == null)
                 {
-                    existingMonthlyProgress.FinancialDetails = new FinancialDetails();
+                    existingMonthlyProgress.FinancialDetails = new FinancialDetails
+                    {
+                        MonthlyProgressId = existingMonthlyProgress.Id // ✅ CRITICAL FIX: Set foreign key
+                    };
                 }
                 existingMonthlyProgress.FinancialDetails.Net = request.MonthlyProgress.FinancialAndContractDetails.Net;
                 existingMonthlyProgress.FinancialDetails.ServiceTax = request.MonthlyProgress.FinancialAndContractDetails.ServiceTax;
@@ -72,7 +89,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
             {
                 if (existingMonthlyProgress.ContractAndCost == null)
                 {
-                    existingMonthlyProgress.ContractAndCost = new ContractAndCost();
+                    existingMonthlyProgress.ContractAndCost = new ContractAndCost
+                    {
+                        MonthlyProgressId = existingMonthlyProgress.Id // ✅ CRITICAL FIX: Set foreign key
+                    };
                 }
                 existingMonthlyProgress.ContractAndCost.PriorCumulativeOdc = request.MonthlyProgress.ActualCost.PriorCumulativeOdc;
                 existingMonthlyProgress.ContractAndCost.PriorCumulativeStaff = request.MonthlyProgress.ActualCost.PriorCumulativeStaff;
@@ -94,7 +114,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
             {
                 if (existingMonthlyProgress.CTCEAC == null)
                 {
-                    existingMonthlyProgress.CTCEAC = new CTCEAC();
+                    existingMonthlyProgress.CTCEAC = new CTCEAC
+                    {
+                        MonthlyProgressId = existingMonthlyProgress.Id // ✅ CRITICAL FIX: Set foreign key
+                    };
                 }
                 existingMonthlyProgress.CTCEAC.CtcODC = request.MonthlyProgress.CtcAndEac.CtcODC;
                 existingMonthlyProgress.CTCEAC.CtcStaff = request.MonthlyProgress.CtcAndEac.CtcStaff;
@@ -117,7 +140,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
             {
                 if (existingMonthlyProgress.Schedule == null)
                 {
-                    existingMonthlyProgress.Schedule = new Schedule();
+                    existingMonthlyProgress.Schedule = new Schedule
+                    {
+                        MonthlyProgressId = existingMonthlyProgress.Id // ✅ CRITICAL FIX: Set foreign key
+                    };
                 }
                 existingMonthlyProgress.Schedule.DateOfIssueWOLOI = request.MonthlyProgress.Schedule.DateOfIssueWOLOI;
                 existingMonthlyProgress.Schedule.CompletionDateAsPerContract = request.MonthlyProgress.Schedule.CompletionDateAsPerContract;
@@ -434,7 +460,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
             {
                 if (existingMonthlyProgress.BudgetTable == null)
                 {
-                    existingMonthlyProgress.BudgetTable = new BudgetTable();
+                    existingMonthlyProgress.BudgetTable = new BudgetTable
+                    {
+                        MonthlyProgressId = existingMonthlyProgress.Id // ✅ CRITICAL FIX: Set foreign key
+                    };
                 }
 
                 // Update OriginalBudget
@@ -442,7 +471,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                 {
                     if (existingMonthlyProgress.BudgetTable.OriginalBudget == null)
                     {
-                        existingMonthlyProgress.BudgetTable.OriginalBudget = new OriginalBudget();
+                        existingMonthlyProgress.BudgetTable.OriginalBudget = new OriginalBudget
+                        {
+                            BudgetTableId = existingMonthlyProgress.BudgetTable.Id // ✅ CRITICAL FIX: Set foreign key
+                        };
                     }
                     existingMonthlyProgress.BudgetTable.OriginalBudget.RevenueFee = request.MonthlyProgress.BudgetTable.OriginalBudget.RevenueFee;
                     existingMonthlyProgress.BudgetTable.OriginalBudget.Cost = request.MonthlyProgress.BudgetTable.OriginalBudget.Cost;
@@ -458,7 +490,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                 {
                     if (existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS == null)
                     {
-                        existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS = new CurrentBudgetInMIS();
+                        existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS = new CurrentBudgetInMIS
+                        {
+                            BudgetTableId = existingMonthlyProgress.BudgetTable.Id // ✅ CRITICAL FIX: Set foreign key
+                        };
                     }
                     existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS.RevenueFee = request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS.RevenueFee;
                     existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS.Cost = request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS.Cost;
@@ -474,7 +509,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                 {
                     if (existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts == null)
                     {
-                        existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts = new PercentCompleteOnCosts();
+                        existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts = new PercentCompleteOnCosts
+                        {
+                            BudgetTableId = existingMonthlyProgress.BudgetTable.Id // ✅ CRITICAL FIX: Set foreign key
+                        };
                     }
                     existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts.RevenueFee = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.RevenueFee;
                     existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts.Cost = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.Cost;
@@ -489,9 +527,18 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                 existingMonthlyProgress.BudgetTable = null;
             }
 
+            _logger.LogInformation("Saving updated MonthlyProgress with Id: {MonthlyProgressId}", request.Id);
             await _monthlyProgressRepository.UpdateAsync(existingMonthlyProgress);
+            _logger.LogInformation("Successfully updated MonthlyProgress with Id: {MonthlyProgressId}", request.Id);
 
             return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating MonthlyProgress with Id: {MonthlyProgressId}. Error: {ErrorMessage}", 
+                    request?.Id, ex.Message);
+                throw new ApplicationException($"Failed to update MonthlyProgress: {ex.Message}", ex);
+            }
         }
     }
 }
