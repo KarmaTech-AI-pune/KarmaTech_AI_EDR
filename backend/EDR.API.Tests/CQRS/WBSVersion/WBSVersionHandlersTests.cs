@@ -52,10 +52,14 @@ namespace EDR.API.Tests.CQRS.WBSVersion
         public async Task CreateWBSVersionCommandHandler_CreatesVersion()
         {
             // Arrange
-            // 1. Setup DB with WBS and Header
-            var header = new WBSHeader { Id = 1, ProjectId = 10, TenantId = 1 };
+            // 1. Setup DB with Project, WBS and Header
+            var project = new Project { Id = 10, TenantId = 1, Name = "Test Project" };
+            _context.Projects.Add(project);
+
+            var header = new WBSHeader { Id = 1, ProjectId = 10, TenantId = 1, Project = project };
             _context.WBSHeaders.Add(header);
-            var wbs = new WorkBreakdownStructure { Id = 1, WBSHeaderId = 1, TenantId = 1 };
+
+            var wbs = new WorkBreakdownStructure { Id = 1, WBSHeaderId = 1, TenantId = 1, WBSHeader = header };
             _context.WorkBreakdownStructures.Add(wbs);
             await _context.SaveChangesAsync();
 
