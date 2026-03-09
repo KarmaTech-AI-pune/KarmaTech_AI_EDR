@@ -289,51 +289,79 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   const handleLogWork = async (timeSpent: number, remainingEstimate: number, description: string, modalType?: 'employee' | 'reporter') => {
     if (showIssueDetail) {
-      // If modalType is reporter, timeSpent is treated as the TOTAL actual hours (actual work time spend).
-      // If modalType is employee, timeSpent is added to existing total.
-      const newActual = modalType === 'reporter' ? timeSpent : (showIssueDetail.actualHours || 0) + timeSpent;
-      const addedHours = modalType === 'reporter' ? (timeSpent - (showIssueDetail.actualHours || 0)) : timeSpent;
+      if (modalType === 'reporter') {
+        const newActual = (showIssueDetail.actualHours || 0) + timeSpent;
+        const addedHours = timeSpent;
 
-      // Optimistic update
-      const updatedIssue = {
-        ...showIssueDetail,
-        actualHours: newActual,
-        remainingHours: remainingEstimate
-      };
+        // Optimistic update
+        const updatedIssue = {
+          ...showIssueDetail,
+          actualHours: newActual,
+          remainingHours: remainingEstimate
+        };
 
-      const reporterDisplayName = projectManager?.name && projectManager.name !== 'Unknown'
-        ? projectManager.name
-        : showIssueDetail.reporter?.name || 'Unknown';
+        const reporterDisplayName = projectManager?.name && projectManager.name !== 'Unknown'
+          ? projectManager.name
+          : showIssueDetail.reporter?.name || 'Unknown';
 
-      const logActionText = modalType === 'reporter'
-        ? `Commite by (${reporterDisplayName})`
-        : `logged ${timeSpent}h`;
+        const logActionText = `Commite by (${reporterDisplayName})`;
+        const workLogComment = description.trim()
+          ? `${logActionText}: ${description}`
+          : logActionText;
 
-      const workLogComment = description.trim()
-        ? `${logActionText}: ${description}`
-        : logActionText;
+        const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
 
-      // Comments always represent the assignee's work — use assignee as author regardless of who is submitting
-      const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+        const newComment: Comment = {
+          id: `comment-${Date.now()}`,
+          author: author,
+          text: workLogComment,
+          createdDate: new Date().toISOString().split("T")[0],
+          hoursLogged: 0,
+          description: description
+        };
+        updatedIssue.comments = [...updatedIssue.comments, newComment];
+        onAddComment(showIssueDetail.id, workLogComment);
 
-      const newComment: Comment = {
-        id: `comment-${Date.now()}`,
-        author: author,
-        text: workLogComment,
-        createdDate: new Date().toISOString().split("T")[0]
-      };
-      updatedIssue.comments = [...updatedIssue.comments, newComment];
-      onAddComment(showIssueDetail.id, workLogComment);
+        setShowIssueDetail(updatedIssue);
+        // Update the issue in the main list as well
+        handleUpdateIssueAndState(showIssueDetail.id, {
+          actualHours: newActual,
+          remainingHours: remainingEstimate
+        });
 
-      setShowIssueDetail(updatedIssue);
-      // Update the issue in the main list as well
-      handleUpdateIssueAndState(showIssueDetail.id, {
-        actualHours: newActual,
-        remainingHours: remainingEstimate
-      });
+        // Call the dedicated API for time tracking
+        const apiIssuePayload = {
+          ...updatedIssue,
+          actualHours: addedHours
+        };
+        await updateIssueTimeAPI(apiIssuePayload);
+      } else {
+        // Employee flow: Only history/comment is updated
+        const logActionText = `logged ${timeSpent}h`;
 
-      // Call the dedicated API for time tracking
-      await updateIssueTimeAPI(updatedIssue);
+        const workLogComment = description.trim()
+          ? `${logActionText}: ${description}`
+          : logActionText;
+
+        const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+
+        const newComment: Comment = {
+          id: `comment-${Date.now()}`,
+          author: author,
+          text: workLogComment,
+          createdDate: new Date().toISOString().split("T")[0],
+          hoursLogged: timeSpent,
+          description: description
+        };
+
+        const updatedIssue = {
+          ...showIssueDetail,
+          comments: [...showIssueDetail.comments, newComment]
+        };
+
+        onAddComment(showIssueDetail.id, workLogComment);
+        setShowIssueDetail(updatedIssue);
+      }
     }
   };
 

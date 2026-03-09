@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.MonthlyProgress.Commands;
 using EDR.Application.CQRS.MonthlyProgress.Queries;
+using EDR.Application.CQRS.Dashboard.MonthlyProgress.Query; // Added for Assignee Progress
 using EDR.Application.DTOs;
+using EDR.Application.Dtos.Dashboard; // Added for MonthlyAssigneeProgressDto
 using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
@@ -197,6 +199,16 @@ namespace EDR.API.Controllers
                 _logger.LogError(ex, "Error updating manpower planning {ManpowerPlanningId} for monthly progress {MonthlyProgressId}", manpowerPlanningId, monthlyProgressId);
                 return StatusCode(500, new { message = "An error occurred while updating manpower planning.", error = ex.Message });
             }
+        }
+
+        // GET: api/projects/{projectId}/monthlyprogress/assignee-progress
+        [HttpGet("assignee-progress")]
+        [ProducesResponseType(typeof(List<MonthlyAssigneeProgressDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<MonthlyAssigneeProgressDto>>> GetAssigneeMonthlyProgress(int projectId)
+        {
+            var query = new GetMonthlyProgressQuery { ProjectId = projectId };
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }

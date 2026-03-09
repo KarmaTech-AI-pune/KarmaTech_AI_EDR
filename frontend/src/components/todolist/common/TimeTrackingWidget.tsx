@@ -368,6 +368,17 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                             inputProps={{ min: 0, step: 0.5 }}
                                         />
                                     </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Total Actual Work Hours"
+                                            type="number"
+                                            value={timeSpent + (parseFloat(logTimeSpent as string) || 0)}
+                                            fullWidth
+                                            size="small"
+                                            InputProps={{ readOnly: true }}
+                                            sx={{ bgcolor: 'action.hover' }}
+                                        />
+                                    </Grid>
                                     <Grid item xs={12} sm={8}>
                                         <TextField
                                             label="Task Name"
