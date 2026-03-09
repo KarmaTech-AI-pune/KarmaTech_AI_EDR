@@ -145,19 +145,24 @@ const ManpowerPlanningTab: React.FC = () => {
 
     const balanceTotal = newTotals.plannedTotal - newTotals.consumedTotal;
 
-    setValue("manpowerPlanning.manpowerTotal", {
-      ...newTotals,
-      balanceTotal,
-    });
+    // Use setTimeout to break the infinite loop by deferring setState
+    const timeoutId = setTimeout(() => {
+      setValue("manpowerPlanning.manpowerTotal", {
+        ...newTotals,
+        balanceTotal,
+      }, { shouldValidate: false, shouldDirty: false });
 
-    manpowerEntries.forEach((entry, index) => {
-      const planned = entry.planned || 0;
-      const consumed = entry.consumed || 0;
-      const balance = planned - consumed;
-      if (entry.balance !== balance) {
-        setValue(`manpowerPlanning.manpower.${index}.balance`, balance);
-      }
-    });
+      manpowerEntries.forEach((entry, index) => {
+        const planned = entry.planned || 0;
+        const consumed = entry.consumed || 0;
+        const balance = planned - consumed;
+        if (entry.balance !== balance) {
+          setValue(`manpowerPlanning.manpower.${index}.balance`, balance, { shouldValidate: false, shouldDirty: false });
+        }
+      });
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [manpowerEntries, setValue]);
 
   return (

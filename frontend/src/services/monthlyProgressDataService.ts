@@ -175,7 +175,7 @@ const transformDataForMonthlyProgress = (
   }
 
   if (manpowerResult.status === 'fulfilled' && manpowerResult.value) {
-    const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
+    const getMonthlyHours = (plannedHours: MonthlyHourDto[]) => {
       const currentDate = new Date();
       const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
       const currentYear = currentDate.getFullYear();
@@ -185,11 +185,11 @@ const transformDataForMonthlyProgress = (
       const nextMonth = nextDate.toLocaleString('default', { month: 'long' });
       const nextYear = nextDate.getFullYear();
 
-      const currentMonthData = monthlyHours?.find(item =>
+      const currentMonthData = plannedHours?.find(item =>
         item.month === currentMonth && item.year === currentYear
       );
 
-      const nextMonthData = monthlyHours?.find(item =>
+      const nextMonthData = plannedHours?.find(item =>
         item.month === nextMonth && item.year === nextYear
       );
 
@@ -199,7 +199,7 @@ const transformDataForMonthlyProgress = (
       };
     };
     const manpowerData = manpowerResult.value.resources.map(resource => {
-      const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.monthlyHours);
+      const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.plannedHours);
       return {
         workAssignment: resource.taskTitle,
         assignee: resource.employeeName,

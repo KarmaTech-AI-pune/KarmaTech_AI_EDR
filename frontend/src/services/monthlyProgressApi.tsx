@@ -17,7 +17,7 @@ export interface ManpowerResourceDto {
   costRate: number;
   totalHours: number;
   totalCost: number;
-  monthlyHours: MonthlyHourDto[];
+  plannedHours: MonthlyHourDto[]; // Changed from monthlyHours to plannedHours to match backend
 }
 
 export interface ManpowerResourcesResponse {
