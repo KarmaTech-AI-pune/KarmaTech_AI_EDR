@@ -42,6 +42,8 @@ namespace EDR.Domain.Entities
 
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedOn { get; set; }
+
+        public virtual ICollection<SprintTask> SprintTasks { get; set; } = new List<SprintTask>();
     }
 }
 
