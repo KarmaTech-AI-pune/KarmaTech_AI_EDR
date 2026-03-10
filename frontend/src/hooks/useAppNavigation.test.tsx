@@ -93,7 +93,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
     vi.clearAllMocks();
   });
 
-    const mockProject: Project = { id: '123', name: 'Test Project', description: '', status: ProjectStatus.InProgress, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' } as unknown as Project;
+    const mockProject: Project = { id: '123', name: 'Test Project', status: ProjectStatus.InProgress } as any;
 
     it('should navigate to business development details with project ID if project is provided', () => {
       const { result } = renderHook(() => useAppNavigation());
@@ -119,7 +119,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
     vi.clearAllMocks();
   });
 
-    const mockProject: Project = { id: '456', name: 'Another Project', description: '', status: ProjectStatus.Completed, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' } as unknown as Project;
+    const mockProject: Project = { id: '456', name: 'Another Project', status: ProjectStatus.Completed } as any;
 
     it('should navigate to project details with project ID if project is provided', () => {
       const { result } = renderHook(() => useAppNavigation());
@@ -199,7 +199,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
     vi.clearAllMocks();
   });
 
-    const mockProject: Project = { id: '202', name: 'Project Resources', description: '', status: ProjectStatus.InProgress, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' } as unknown as Project;
+    const mockProject: Project = { id: '202', name: 'Project Resources', status: ProjectStatus.InProgress } as any;
 
     it('should navigate to project resources with project ID if project is provided', () => {
       const { result } = renderHook(() => useAppNavigation());
