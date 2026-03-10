@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using EDR.Application.CQRS.WorkBreakdownStructures.Commands;
 using EDR.Application.Dtos;
@@ -79,6 +79,19 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     wbsHeader.WorkBreakdownStructures.Count);
 
                 // Update existing header
+                bool isCurrentlyApproved = wbsHeader.ApprovalStatus == PMWorkflowStatusEnum.Approved;
+                wbsHeader.Version = CalculateNextVersion(wbsHeader.Version, isCurrentlyApproved);
+
+                if (isCurrentlyApproved)
+                {
+                    _logger.LogInformation("SetWBSCommandHandler: WBS was previously approved. Incrementing major version to {Version} and resetting status to Initial.", wbsHeader.Version);
+                    wbsHeader.ApprovalStatus = PMWorkflowStatusEnum.Initial;
+                }
+                else
+                {
+                    _logger.LogInformation("SetWBSCommandHandler: Incrementing minor version to {Version}.", wbsHeader.Version);
+                }
+
                 wbsHeader.VersionDate = DateTime.UtcNow;
                 wbsHeader.CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
                 _context.WBSHeaders.Update(wbsHeader);
@@ -223,7 +236,8 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             }
 
             // 4. Create WBSVersionHistory and link granular versions
-            await CreateWBSVersionAfterUpdate(wbsHeader);
+            var project = await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == request.ProjectId, cancellationToken);
+            await CreateWBSVersionAfterUpdate(wbsHeader, project);
 
             // Return the updated WBSMasterDto with the newly created data
             // Update the WbsHeaderId in the response to match the created/updated header
@@ -487,7 +501,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
         //     return wbsOption?.ParentId;
         // }
 
-        private async Task CreateWBSVersionAfterUpdate(WBSHeader wbsHeader)
+        private async Task CreateWBSVersionAfterUpdate(WBSHeader wbsHeader, Project project)
         {
             try
             {
@@ -516,6 +530,13 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 _context.WBSVersionHistories.Add(wbsVersionHistory);
                 await _unitOfWork.SaveChangesAsync();
 
+                // Initialize workflow history for the new version
+                if (project != null)
+                {
+                    await InitializeVersionWorkflowHistoryAsync(wbsVersionHistory, project);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
                 wbsHeader.LatestVersionHistoryId = wbsVersionHistory.Id;
                 _context.WBSHeaders.Update(wbsHeader);
                 await _unitOfWork.SaveChangesAsync();
@@ -541,6 +562,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             {
                 var taskVersion = new WBSTaskVersionHistory
                 {
+                    TenantId = _context.TenantId ?? 0,
                     WBSVersionHistoryId = wbsVersionHistoryId,
                     OriginalTaskId = task.Id,
                     Level = task.Level,
@@ -579,6 +601,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     var plannedHourVersion = new WBSTaskPlannedHourVersionHistory
                     {
+                        TenantId = _context.TenantId ?? 0,
                         WBSTaskVersionHistoryId = taskVersion.Id,
                         Year = plannedHour.Year,
                         Month = plannedHour.Month,
@@ -592,6 +615,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     var userAssignmentVersion = new UserWBSTaskVersionHistory
                     {
+                        TenantId = _context.TenantId ?? 0,
                         WBSTaskVersionHistoryId = taskVersion.Id,
                         UserId = userAssignment.UserId,
                         ResourceRoleId = userAssignment.ResourceRoleId
@@ -764,18 +788,26 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
         private async Task<WBSTaskPlannedHourHeader> GetOrCreatePlannedHourHeader(int projectId, TaskType taskType, string version = null!)
         {
             var header = await _context.Set<WBSTaskPlannedHourHeader>()
-                .FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);
+                .Where(h => h.ProjectId == projectId && h.TaskType == taskType)
+                .OrderByDescending(h => h.Id)
+                .FirstOrDefaultAsync();
 
             if (header == null)
             {
                 return await CreateNewHeaderWithHistories(projectId, taskType, version, await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId));
             }
 
+            // If the latest header is approved, we MUST create a new version record
+            if (header.StatusId == (int)PMWorkflowStatusEnum.Approved)
+            {
+                return await CreateNewHeaderWithHistories(projectId, taskType, version, await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId));
+            }
+
+            // Otherwise, keep the SAME header record (to keep workflow IDs stable) 
+            // but update the version label in the database record.
             header.Version = version ?? "1.0";
             _context.Set<WBSTaskPlannedHourHeader>().Update(header);
             await _unitOfWork.SaveChangesAsync();
-
-            await ResetOrAddHistoryEntriesToHeader(header, await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId));
 
             return header;
         }
@@ -945,5 +977,74 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             return histories;
         }
 
+        private string CalculateNextVersion(string currentVersion, bool isApproved)
+        {
+            if (string.IsNullOrEmpty(currentVersion)) return "1.0";
+
+            // Remove 'v' or 'V' prefix if exists
+            string versionStr = currentVersion.Trim();
+            if (versionStr.StartsWith("v", StringComparison.OrdinalIgnoreCase))
+            {
+                versionStr = versionStr.Substring(1);
+            }
+
+            var parts = versionStr.Split('.');
+            int major = 1;
+            int minor = 0;
+
+            if (parts.Length >= 1)
+            {
+                int.TryParse(parts[0], out major);
+            }
+            if (parts.Length >= 2)
+            {
+                int.TryParse(parts[1], out minor);
+            }
+
+            if (isApproved)
+            {
+                return $"{major + 1}.0";
+            }
+            else
+            {
+                return $"{major}.{minor + 1}";
+            }
+        }
+
+        private async Task InitializeVersionWorkflowHistoryAsync(WBSVersionHistory versionHistory, Project project)
+        {
+            var userId = _userContext.GetCurrentUserId();
+            var actionDate = DateTime.UtcNow;
+
+            async Task AddWorkflowHistoryAsync(string assignedToId)
+            {
+                if (!string.IsNullOrEmpty(assignedToId))
+                {
+                    var assignedUserExists = await _context.Users.AnyAsync(u => u.Id == assignedToId);
+                    if (assignedUserExists)
+                    {
+                        var history = new WBSVersionWorkflowHistory
+                        {
+                            WBSVersionHistoryId = versionHistory.Id,
+                            StatusId = (int)PMWorkflowStatusEnum.Initial,
+                            Action = "Initial",
+                            Comments = "WBS status has been initialized",
+                            ActionDate = actionDate,
+                            ActionBy = userId,
+                            AssignedToId = assignedToId,
+                            TenantId = versionHistory.TenantId
+                        };
+                        _context.WBSVersionWorkflowHistories.Add(history);
+                    }
+                }
+            }
+
+            if (project != null)
+            {
+                await AddWorkflowHistoryAsync(project.ProjectManagerId);
+                await AddWorkflowHistoryAsync(project.SeniorProjectManagerId);
+                await AddWorkflowHistoryAsync(project.RegionalManagerId);
+            }
+        }
     }
 }
