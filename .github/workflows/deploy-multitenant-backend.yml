@@ -8,13 +8,6 @@ on:
       - 'Dockerfile.backend-only'
       - 'aws-ecs-task-definition-backend.json'
       - '.github/workflows/deploy-multitenant-backend.yml'
-  pull_request:
-    branches: [ master ]
-    paths:
-      - 'backend/**'
-      - 'Dockerfile.backend-only'
-      - 'aws-ecs-task-definition-backend.json'
-      - '.github/workflows/deploy-multitenant-backend.yml'
   workflow_dispatch:
     inputs:
       environment:
