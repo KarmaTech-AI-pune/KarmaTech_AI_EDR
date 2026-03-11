@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectItem } from '../ProjectItem';
@@ -7,7 +6,7 @@ import { authApi } from '../../../services/authApi';
 import { getUsersByRole } from '../../../services/userApi';
 import { PermissionType } from '../../../models';
 import { useAppNavigation } from '../../../hooks/useAppNavigation';
-import { ProjectStatus } from '../../../types';
+import { ProjectStatus } from '../../../types/index';
 
 // Mock Dependencies
 vi.mock('../../../services/projectApi', () => ({
