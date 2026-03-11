@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using EDR.Application.Dtos;
 using EDR.Application.Services.IContract;
@@ -103,6 +103,40 @@ namespace EDR.Application.Services
             _context.WBSHistories.Add(history);
             wbsHeader.StatusId = (int)status;
             _context.WBSTaskPlannedHourHeaders.Update(wbsHeader);
+
+            // Sync with the main WBSHeader for versioning logic
+            var mainHeader = await _context.WBSHeaders
+                .FirstOrDefaultAsync(h => h.ProjectId == wbsHeader.ProjectId && h.IsActive, cancellationToken);
+            if (mainHeader != null)
+            {
+                mainHeader.ApprovalStatus = status;
+                _context.WBSHeaders.Update(mainHeader);
+
+                // Create a WBSVersionWorkflowHistory entry for the latest version if it exists
+                var latestVersion = await _context.WBSVersionHistories
+                    .Where(v => v.WBSHeaderId == mainHeader.Id && v.IsLatest)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (latestVersion != null)
+                {
+                    var versionHistory = new WBSVersionWorkflowHistory
+                    {
+                        WBSVersionHistoryId = latestVersion.Id,
+                        StatusId = (int)status,
+                        Action = context.Action,
+                        Comments = context.Comments ?? $"WBS {status.ToString()} action",
+                        ActionDate = DateTime.UtcNow,
+                        ActionBy = currentUserId,
+                        AssignedToId = context.AssignedToId,
+                        TenantId = latestVersion.TenantId
+                    };
+                    _context.WBSVersionWorkflowHistories.Add(versionHistory);
+
+                    // Also sync the version status
+                    latestVersion.StatusId = (int)status;
+                    _context.WBSVersionHistories.Update(latestVersion);
+                }
+            }
 
             // Save changes to the database
             await _context.SaveChangesAsync(cancellationToken);

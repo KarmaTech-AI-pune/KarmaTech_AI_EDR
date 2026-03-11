@@ -84,7 +84,10 @@ describe('projectApi', () => {
         estimatedProjectFee: 0,
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
-        feeType: ''
+        feeType: '',
+        fundingStream: 'Mock Stream',
+        contractType: 'Mock Contract',
+        programId: 1
       } as unknown as Omit<Project, 'id'>
 
       const result = await projectApi.create(newProject)
@@ -172,7 +175,10 @@ describe('projectApi', () => {
         estimatedProjectFee: 0,
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
-        feeType: ''
+        feeType: '',
+        fundingStream: 'Mock Stream',
+        contractType: 'Mock Contract',
+        programId: 1
       } as unknown as Project)
       
       expect(result).toBeNull()
@@ -246,6 +252,9 @@ describe('projectApi', () => {
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
         feeType: '',
+        fundingStream: 'Mock Stream',
+        contractType: 'Mock Contract',
+        programId: 1,
       } as unknown as Omit<Project, 'id'>
 
       await expect(projectApi.create(completeProject)).resolves.not.toThrow()

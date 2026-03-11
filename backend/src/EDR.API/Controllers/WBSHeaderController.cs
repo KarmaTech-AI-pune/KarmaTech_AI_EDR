@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +43,9 @@ namespace EDR.API.Controllers
             var header = await _context.Set<WBSTaskPlannedHourHeader>()
                 .Include(h => h.WBSHistories)
                 .ThenInclude(h => h.Status)
-                .FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);
+                .Where(h => h.ProjectId == projectId && h.TaskType == taskType)
+                .OrderByDescending(h => h.Id)
+                .FirstOrDefaultAsync();
 
             if (header == null)
             {
@@ -66,7 +68,10 @@ namespace EDR.API.Controllers
         {
             var header = await _context.Set<WBSTaskPlannedHourHeader>()
                 .Include(h => h.WBSHistories.OrderByDescending(h => h.ActionDate).Where(h => !h.IsDeleted))
-                .ThenInclude(h => h.Status).FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);
+                .ThenInclude(h => h.Status)
+                .Where(h => h.ProjectId == projectId && h.TaskType == taskType)
+                .OrderByDescending(h => h.Id)
+                .FirstOrDefaultAsync();
 
             if (header == null)
             {
