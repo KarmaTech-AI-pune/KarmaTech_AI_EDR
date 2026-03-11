@@ -51,6 +51,17 @@ import {
 import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/releaseNotesApi';
 
 const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
+  '1.3.1': {
+    version: '1.3.1',
+    releaseDate: '2026-03-11',
+    environment: 'production',
+    features: [],
+    bugFixes: [
+      { id: 301, changeType: 'BugFix', description: 'Resolved TypeScript compilation errors across multiple components.', commitSha: 'df09c73' },
+    ],
+    improvements: [],
+    breakingChanges: [],
+  },
   '1.3.0': {
     version: '1.3.0',
     releaseDate: '2026-03-04',
