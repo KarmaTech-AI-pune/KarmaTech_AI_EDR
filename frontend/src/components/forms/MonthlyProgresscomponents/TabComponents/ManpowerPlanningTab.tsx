@@ -87,8 +87,10 @@ const EditableTableCell: React.FC<{
 const tableColumns = [
   { name: "workAssignment", label: "Work Assignment", placeholder: "Work Assignment", isReadOnly: true },
   { name: "assignee", label: "Assignee", placeholder: "Assignee", isReadOnly: true, minWidth: 150 },
+  { name: "rate", label: "Rate", placeholder: "Rate", type: "number", align: "center", isReadOnly: true, minWidth: 100 },
   { name: "planned", label: "Planned", placeholder: "Planned", type: "number", align: "center", isReadOnly: true },
   { name: "consumed", label: "Consumed", placeholder: "Consumed", type: "number", align: "center" },
+  { name: "payment", label: "Payment", placeholder: "Payment", type: "number", align: "center", isReadOnly: true, minWidth: 120 },
   { name: "balance", label: "Balance", placeholder: "Balance", type: "number", align: "center", isReadOnly: true },
   { name: "nextMonthPlanning", label: "Next Month Planning", placeholder: "Next Month", type: "number", align: "center", isReadOnly: true },
   { name: "manpowerComments", label: "Comments", placeholder: "Comments" },
@@ -112,6 +114,7 @@ const ManpowerPlanningTab: React.FC = () => {
       return {
         plannedTotal: 0,
         consumedTotal: 0,
+        paymentTotal: 0,
         balanceTotal: 0,
         nextMonthPlanningTotal: 0
       };
@@ -119,12 +122,14 @@ const ManpowerPlanningTab: React.FC = () => {
 
     const plannedTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.planned || 0), 0);
     const consumedTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.consumed || 0), 0);
+    const paymentTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.payment || 0), 0);
     const balanceTotal = plannedTotal - consumedTotal;
     const nextMonthPlanningTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.nextMonthPlanning || 0), 0);
 
     return {
       plannedTotal,
       consumedTotal,
+      paymentTotal,
       balanceTotal,
       nextMonthPlanningTotal
     };
@@ -137,10 +142,11 @@ const ManpowerPlanningTab: React.FC = () => {
       (acc, entry) => {
         acc.plannedTotal += entry.planned || 0;
         acc.consumedTotal += entry.consumed || 0;
+        acc.paymentTotal += entry.payment || 0;
         acc.nextMonthPlanningTotal += entry.nextMonthPlanning || 0;
         return acc;
       },
-      { plannedTotal: 0, consumedTotal: 0, nextMonthPlanningTotal: 0 }
+      { plannedTotal: 0, consumedTotal: 0, paymentTotal: 0, nextMonthPlanningTotal: 0 }
     );
 
     const balanceTotal = newTotals.plannedTotal - newTotals.consumedTotal;
@@ -155,9 +161,15 @@ const ManpowerPlanningTab: React.FC = () => {
       manpowerEntries.forEach((entry, index) => {
         const planned = entry.planned || 0;
         const consumed = entry.consumed || 0;
+        const rate = entry.rate || 0;
         const balance = planned - consumed;
+        const payment = rate * consumed;
+        
         if (entry.balance !== balance) {
           setValue(`manpowerPlanning.manpower.${index}.balance`, balance, { shouldValidate: false, shouldDirty: false });
+        }
+        if (entry.payment !== payment) {
+          setValue(`manpowerPlanning.manpower.${index}.payment`, payment, { shouldValidate: false, shouldDirty: false });
         }
       });
     }, 0);
@@ -213,6 +225,7 @@ const ManpowerPlanningTab: React.FC = () => {
                   <Typography variant="subtitle2">TOTAL</Typography>
                 </TableCell>
                 <TableCell></TableCell>
+                <TableCell></TableCell>
                 <TableCell align="center">
                   <Typography variant="subtitle2">
                     {totals.plannedTotal}
@@ -221,6 +234,11 @@ const ManpowerPlanningTab: React.FC = () => {
                 <TableCell align="center">
                   <Typography variant="subtitle2">
                     {totals.consumedTotal}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="subtitle2" color="primary">
+                    {totals.paymentTotal.toFixed(2)}
                   </Typography>
                 </TableCell>
                 <TableCell align="center">
@@ -233,7 +251,6 @@ const ManpowerPlanningTab: React.FC = () => {
                     {totals.nextMonthPlanningTotal}
                   </Typography>
                 </TableCell>
-                <TableCell></TableCell>
                 <TableCell></TableCell>
               </TableRow>
             </TableBody>

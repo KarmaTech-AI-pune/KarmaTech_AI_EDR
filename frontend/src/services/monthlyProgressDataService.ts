@@ -272,6 +272,7 @@ const transformDataForMonthlyProgress = (
       
       console.log('📋 Entry:', {
         name: resource.employeeName,
+        rate: resource.costRate,
         planned: currentMonthHours,
         consumed: actualHours,
         balance: currentMonthHours - actualHours
@@ -280,8 +281,10 @@ const transformDataForMonthlyProgress = (
       return {
         workAssignment: resource.taskTitle,
         assignee: resource.employeeName,
+        rate: resource.costRate, // Add employee rate
         planned: currentMonthHours,
         consumed: actualHours,
+        payment: (resource.costRate && actualHours) ? resource.costRate * actualHours : null, // Calculate payment
         balance: currentMonthHours - actualHours,
         nextMonthPlanning: nextMonthHours,
         manpowerComments: ""
@@ -290,6 +293,7 @@ const transformDataForMonthlyProgress = (
 
     const plannedTotal = manpowerData.reduce((sum, entry) => sum + (entry.planned || 0), 0);
     const consumedTotal = manpowerData.reduce((sum, entry) => sum + (entry.consumed || 0), 0);
+    const paymentTotal = manpowerData.reduce((sum, entry) => sum + (entry.payment || 0), 0);
     const balanceTotal = plannedTotal - consumedTotal;
     const nextMonthPlanningTotal = manpowerData.reduce((sum, entry) => sum + (entry.nextMonthPlanning || 0), 0);
 
@@ -306,6 +310,7 @@ const transformDataForMonthlyProgress = (
       transformedData.manpowerPlanning.manpowerTotal = {
         plannedTotal,
         consumedTotal,
+        paymentTotal,
         balanceTotal,
         nextMonthPlanningTotal,
       };

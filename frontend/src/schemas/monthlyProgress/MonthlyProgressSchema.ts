@@ -111,8 +111,10 @@ export const BudgetTableSchema = z.object({
 export const manpowerSchema = z.object({
   workAssignment: z.string().nullable(),
   assignee: z.string().nullable(),
+  rate: z.number().nullable(), // Employee rate
   planned: z.number().nullable(),
   consumed: z.number().nullable(),
+  payment: z.number().nullable(), // Calculated: rate × consumed
   balance: z.number().nullable(),
   nextMonthPlanning: z.number().nullable(),
   manpowerComments: z.string().nullable(),
@@ -123,6 +125,7 @@ export const manpowerPlanningSchema = z.object({
   manpowerTotal: z.object({
     plannedTotal: z.number().nullable(),
     consumedTotal: z.number().nullable(),
+    paymentTotal: z.number().nullable(),
     balanceTotal: z.number().nullable(),
     nextMonthPlanningTotal: z.number().nullable(),
   }),
