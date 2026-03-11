@@ -70,6 +70,23 @@ export const MonthlyProgressAPI = {
   },
 
   /**
+   * Get assignee progress with actual hours for a project
+   * @param projectId Project ID
+   * @returns Promise with assignee progress data
+   */
+  getAssigneeProgress: async (projectId: string): Promise<any[]> => {
+    try {
+      const response = await axiosInstance.get(`/api/projects/${projectId}/monthlyprogress/assignee-progress`);
+      console.log('✅ Assignee progress API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching assignee progress for project ${projectId}:`, error);
+      // Return empty array if API fails - don't block the entire form
+      return [];
+    }
+  },
+
+  /**
    * Submit monthly progress form data
    * @param projectId Project ID
    * @param formData Monthly progress form data
