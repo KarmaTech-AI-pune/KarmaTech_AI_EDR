@@ -115,7 +115,7 @@ public class AccountCreationEmailNotificationHandler : INotificationHandler<Acco
 
             var message = new EmailMessage
             {
-                To = "ankursramapure@gmail.com",
+                To = "info@karmatech-ai.com",
                 Subject = subject,
                 Body = body,
                 IsHtml = true

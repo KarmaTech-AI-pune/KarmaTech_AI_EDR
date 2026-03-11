@@ -541,9 +541,23 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 _context.WBSHeaders.Update(wbsHeader);
                 await _unitOfWork.SaveChangesAsync();
 
-                foreach (var wbsGroup in wbsHeader.WorkBreakdownStructures)
+                // Deduplicate groups by ID before processing
+                var uniqueGroups = wbsHeader.WorkBreakdownStructures
+                    .Where(g => g.Id > 0)
+                    .GroupBy(g => g.Id)
+                    .Select(g => g.First())
+                    .ToList();
+
+                foreach (var wbsGroup in uniqueGroups)
                 {
-                    await CopyTasksToVersion(wbsGroup.Tasks.Where(t => !t.IsDeleted).ToList(), wbsVersionHistory.Id);
+                    // Deduplicate tasks by ID before copying
+                    var uniqueTasks = wbsGroup.Tasks
+                        .Where(t => !t.IsDeleted && t.Id > 0)
+                        .GroupBy(t => t.Id)
+                        .Select(t => t.First())
+                        .ToList();
+
+                    await CopyTasksToVersion(uniqueTasks, wbsVersionHistory.Id, wbsHeader.Version, wbsHeader.ProjectId);
                 }
 
                 _logger.LogInformation($"Created WBS version history {nextVersionForEdit} for WBSHeader {wbsHeader.Id} after update");
@@ -554,7 +568,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             }
         }
 
-        private async Task CopyTasksToVersion(List<WBSTask> tasks, int wbsVersionHistoryId)
+        private async Task CopyTasksToVersion(List<WBSTask> tasks, int wbsVersionHistoryId, string version, int projectId)
         {
             var taskMap = new Dictionary<int, int>();
 
@@ -597,7 +611,21 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             {
                 var taskVersion = await _wbsVersionRepository.GetTaskVersionByIdAsync(taskMap[task.Id]);
 
-                foreach (var plannedHour in task.PlannedHours)
+                // Get the correct planned hour header for this task's type and version
+                var plannedHourHeader = await _context.Set<WBSTaskPlannedHourHeader>()
+                    .Where(h => h.ProjectId == projectId && h.TaskType == task.TaskType && h.Version == version)
+                    .OrderByDescending(h => h.Id)
+                    .FirstOrDefaultAsync();
+
+                var hoursToCopy = task.PlannedHours;
+                if (plannedHourHeader != null)
+                {
+                    hoursToCopy = task.PlannedHours
+                        .Where(ph => ph.WBSTaskPlannedHourHeaderId == plannedHourHeader.Id)
+                        .ToList();
+                }
+
+                foreach (var plannedHour in hoursToCopy)
                 {
                     var plannedHourVersion = new WBSTaskPlannedHourVersionHistory
                     {

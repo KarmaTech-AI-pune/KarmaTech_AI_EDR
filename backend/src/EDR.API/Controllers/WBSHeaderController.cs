@@ -15,7 +15,6 @@ namespace EDR.API.Controllers
     [ApiController]
     [Route("api/projects/{projectId}/wbs/header")]
     [Authorize]
-    [ApiExplorerSettings(GroupName = "v1")]
     public class WBSHeaderController : ControllerBase
     {
         private readonly ProjectManagementContext _context;
