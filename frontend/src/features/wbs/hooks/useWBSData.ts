@@ -124,8 +124,8 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
       const formTypeValue = formType === 'odc' ? 1 : 0; // 0 = Manpower, 1 = ODC
 
       let l1Options: WBSOption[] = [];
-      let newLevel2OptionsMap: { [key: string]: WBSOption[] } = {};
-      let newLevel3OptionsMap: { [key: string]: WBSOption[] } = {};
+      const newLevel2OptionsMap: { [key: string]: WBSOption[] } = {};
+      const newLevel3OptionsMap: { [key: string]: WBSOption[] } = {};
 
       // Load WBS options (level 1 and 2)
       try {

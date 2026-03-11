@@ -137,7 +137,7 @@ export const UserProfile: React.FC = () => {
       }
     };
     fetch2FAStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user?.id]);
 
   const handlePasswordChange = (field: keyof PasswordChangeData) => (

@@ -72,7 +72,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
     }
 
     try {     
-         let projectResponse = await projectApi.getById(projectId.toString());
+         const projectResponse = await projectApi.getById(projectId.toString());
          if (decision === 'approve') {
            // Approve and final the result
            await pmWorkflowApi.approvedByRDOrRM({
