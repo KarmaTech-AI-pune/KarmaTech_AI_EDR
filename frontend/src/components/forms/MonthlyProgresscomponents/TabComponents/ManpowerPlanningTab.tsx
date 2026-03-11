@@ -158,6 +158,9 @@ const ManpowerPlanningTab: React.FC = () => {
         balanceTotal,
       }, { shouldValidate: false, shouldDirty: false });
 
+      // Update actualCost.actualStaff with the total payment
+      setValue("actualCost.actualStaff", newTotals.paymentTotal, { shouldValidate: false, shouldDirty: false });
+
       manpowerEntries.forEach((entry, index) => {
         const planned = entry.planned || 0;
         const consumed = entry.consumed || 0;
