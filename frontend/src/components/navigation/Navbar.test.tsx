@@ -136,7 +136,7 @@ describe('Navbar Component', () => {
     renderWithContext();
 
     // Check for logo image
-    const logoImage = screen.getAllByAltText('EDREI ISO 9000');
+    const logoImage = screen.getAllByAltText('KarmaTech AI');
     expect(logoImage.length).toBeGreaterThan(0); // Should have at least one logo (mobile or desktop)
   });
 
@@ -313,7 +313,7 @@ describe('Navbar Component', () => {
     renderWithContext();
 
     // Find and click the logo
-    const logoImages = screen.getAllByAltText('EDREI ISO 9000');
+    const logoImages = screen.getAllByAltText('KarmaTech AI');
     fireEvent.click(logoImages[0]); // Click the first logo (could be mobile or desktop)
 
     // Verify navigation to Dashboard (note: component uses Link, so setScreenState might not be called)
