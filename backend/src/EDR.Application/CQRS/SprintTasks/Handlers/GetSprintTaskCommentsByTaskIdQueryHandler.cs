@@ -31,6 +31,7 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
 
             List<SprintTaskCommentDto> commentDtos = new();
             decimal totalLoggedHours = 0;
+            decimal totalWorkedStoryPoints = 0;
 
             foreach (var c in dbComments)
             {
@@ -42,8 +43,14 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
                     CreatedBy = c.CreatedBy,
                     CreatedDate = c.CreatedDate,
                     UpdatedBy = c.UpdatedBy,
-                    UpdatedDate = c.UpdatedDate
+                    UpdatedDate = c.UpdatedDate,
+                    WorkedStoryPoint = c.WorkedStoryPoint
                 };
+
+                if (c.WorkedStoryPoint.HasValue)
+                {
+                    totalWorkedStoryPoints += c.WorkedStoryPoint.Value;
+                }
 
                 string text = c.CommentText ?? "";
                 var loggedMatch = LoggedHoursRegex.Match(text);
@@ -86,7 +93,8 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
             return new SprintTaskCommentsWithTotalDto
             {
                 Comments = commentDtos,
-                TotalLoggedHours = totalLoggedHours
+                TotalLoggedHours = totalLoggedHours,
+                TotalWorkedStoryPoints = totalWorkedStoryPoints
             };
         }
     }

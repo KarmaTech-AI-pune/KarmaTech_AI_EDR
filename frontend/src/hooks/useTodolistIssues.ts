@@ -359,11 +359,12 @@ export const useTodolistIssues = () => {
         text: c.commentText,
         hoursLogged: c.hoursLogged,
         description: c.description,
+        workedStoryPoints: c.workedStoryPoint,
         createdDate: c.createdDate.split('T')[0]
       }));
 
       setIssues(prevIssues => prevIssues.map(issue =>
-        issue.id === issueId ? { ...issue, comments: transformedComments, totalLoggedHours: response.totalLoggedHours } : issue
+        issue.id === issueId ? { ...issue, comments: transformedComments, totalLoggedHours: response.totalLoggedHours, allWorkStoryPoints: response.totalWorkedStoryPoints } : issue
       ));
     } catch (error) {
       console.error('Failed to fetch task comments:', error);
@@ -417,7 +418,7 @@ export const useTodolistIssues = () => {
     }
   };
 
-  const addComment = async (issueId: string, commentText: string) => {
+  const addComment = async (issueId: string, commentText: string, workedStoryPoint?: number) => {
     const issue = issues.find(i => i.id === issueId);
     const author = issue?.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
 
@@ -427,6 +428,7 @@ export const useTodolistIssues = () => {
       author: author,
       text: commentText,
       createdDate: new Date().toISOString().split('T')[0],
+      workedStoryPoints: workedStoryPoint
     };
 
     setIssues(prevIssues =>
@@ -448,6 +450,7 @@ export const useTodolistIssues = () => {
         {
           commentText,
           createdBy: author.name,
+          workedStoryPoint: workedStoryPoint
         }
       );
       // Wait for comments and total logged hours to be refreshed from server
@@ -461,20 +464,10 @@ export const useTodolistIssues = () => {
   const addSubtaskComment = async (subtaskId: string, commentText: string) => {
     // Find the parent task and the subtask itself
     let parentTaskId: string | null = null;
-    let subtaskAssignee = teamMembers[0]; // default fallback
-
     for (const issue of issues) {
       const subtask = issue.subtasks.find(s => s.id === subtaskId);
       if (subtask) {
         parentTaskId = issue.id;
-        // Use the subtask's assignee if set, otherwise fall back to teamMembers[0]
-        if (subtask.assignee) {
-          subtaskAssignee = {
-            id: subtask.assignee.id,
-            name: subtask.assignee.name,
-            avatar: subtask.assignee.avatar,
-          };
-        }
         break;
       }
     }

@@ -13,6 +13,7 @@ namespace EDR.Application.Dtos
         public DateTime? UpdatedDate { get; set; }
         public decimal HoursLogged { get; set; }
         public string? Description { get; set; }
+        public decimal? WorkedStoryPoint { get; set; }
     }
 }
 
