@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.WorkBreakdownStructures.Queries;
 using EDR.Application.Dtos;
@@ -51,7 +51,11 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     ApprovedAt = version.ApprovedAt,
                     ApprovedBy = version.ApprovedBy,
                     ApprovedByName = version.ApprovedByUser?.UserName ?? version.ApprovedBy,
-                    Tasks = taskVersions.Select(t => MapTaskVersionToDto(t)).ToList(),
+                    Tasks = taskVersions
+                        .GroupBy(t => t.OriginalTaskId)
+                        .Select(g => g.OrderByDescending(t => t.PlannedHours?.Count ?? 0).First())
+                        .Select(t => MapTaskVersionToDto(t))
+                        .ToList(),
                     WorkflowHistory = workflowHistory.Select(h => new WBSVersionWorkflowHistoryDto
                     {
                         Id = h.Id,
@@ -81,37 +85,40 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
 
         private WBSTaskVersionDto MapTaskVersionToDto(WBSTaskVersionHistory taskVersion)
         {
-            var totalHours = taskVersion.PlannedHours?.Sum(ph => ph.PlannedHours) ?? 0;
-            // Note: Cost calculation would need to be implemented based on business logic
-            var totalCost = 0m; // Placeholder - would need cost rate from elsewhere
+            var assignment = taskVersion.UserAssignments?.FirstOrDefault();
+            var totalHours = (decimal)(assignment?.TotalHours ?? 0);
+            var totalCost = assignment?.TotalCost ?? 0m;
+            var costRate = assignment?.CostRate ?? 0m;
 
             return new WBSTaskVersionDto
             {
                 Id = taskVersion.Id,
                 WBSVersionHistoryId = taskVersion.WBSVersionHistoryId,
                 OriginalTaskId = taskVersion.OriginalTaskId,
+                ParentId = taskVersion.ParentId,
                 Level = taskVersion.Level,
                 Title = taskVersion.Title,
                 Description = taskVersion.Description,
                 DisplayOrder = taskVersion.DisplayOrder,
                 EstimatedBudget = taskVersion.EstimatedBudget,
+                WBSOptionId = taskVersion.WBSOptionId,
                 StartDate = taskVersion.StartDate ?? DateTime.MinValue,
                 EndDate = taskVersion.EndDate ?? DateTime.MinValue,
                 TaskType = taskVersion.TaskType,
-                AssignedUserId = taskVersion.UserAssignments?.FirstOrDefault()?.UserId,
-                AssignedUserName = taskVersion.UserAssignments?.FirstOrDefault()?.User?.UserName,
-                CostRate = 0, // Placeholder - would need to get from user assignment or other source
-                ResourceName = null, // Not available in version history
-                ResourceUnit = null, // Not available in version history
-                ResourceRoleId = taskVersion.UserAssignments?.FirstOrDefault()?.ResourceRoleId,
-                ResourceRoleName = taskVersion.UserAssignments?.FirstOrDefault()?.ResourceRole?.Name,
+                AssignedUserId = assignment?.UserId,
+                AssignedUserName = assignment?.User?.UserName,
+                CostRate = costRate,
+                ResourceName = assignment?.Name, 
+                ResourceUnit = assignment?.Unit, 
+                ResourceRoleId = assignment?.ResourceRoleId,
+                ResourceRoleName = assignment?.ResourceRole?.Name,
                 PlannedHours = taskVersion.PlannedHours?.Select(ph => new PlannedHourDto
                 {
                     Year = int.Parse(ph.Year),
                     Month = ph.Month,
                     PlannedHours = ph.PlannedHours
                 }).ToList() ?? new System.Collections.Generic.List<PlannedHourDto>(),
-                TotalHours = (decimal)totalHours,
+                TotalHours = totalHours,
                 TotalCost = totalCost
             };
         }

@@ -87,3 +87,20 @@ export interface IWBSFormInputs {
   parentId: number | null; // Parent ID (numeric, matching backend)
   level: number; // Level of the WBS option being added/edited
 }
+
+export interface WBSVersion {
+  id: number;
+  projectId: number;
+  version: string;
+  comments: string;
+  isActive: boolean;
+  isLatest: boolean;
+  createdAt: string;
+  createdBy: string;
+  status: string;
+  statusId: number;
+}
+
+export interface WBSVersionDetails extends WBSVersion {
+  tasks: WBSRowData[];
+}

@@ -10,7 +10,7 @@ import {
     ProjectClosureForm,
     FormsOverview,
     MonthlyReports,
-  } from '../../components/forms';
+} from '../../components/forms';
 import { useParams } from 'react-router-dom';
 import { FormWrapper } from '../../components/forms/FormWrapper';
 import NotFound from '../NotFound';
@@ -42,59 +42,59 @@ const ProjectForms: React.FC = () => {
         }
 
         switch (formId) {
-        case "wbs":
-            switch (subFormId) {
-                case "manpower":
-                    return <WorkBreakdownStructureForm formType="manpower" />;
-                case "odc":
-                    return <WorkBreakdownStructureForm formType="odc" />;
-                case "todo-list":
-                    return <TodoList />;
-                default:
-                    return <FormsOverview onFormSelect={() => {}} />;
-            }
-        
-        case "job-start":
-            return(
-        <FeatureGate featureName={"job-start"} >
-          <JobStartForm />
-        </FeatureGate>
-            );
+            case "wbs":
+                switch (subFormId) {
+                    case "manpower":
+                        return <WorkBreakdownStructureForm formType="manpower" />;
+                    case "odc":
+                        return <WorkBreakdownStructureForm formType="odc" />;
+                    case "todo-list":
+                        return <TodoList />;
+                    default:
+                        return <FormsOverview onFormSelect={() => { }} />;
+                }
 
-        case "input-register":
-            return <InputRegisterForm />;
-            
-        case "correspondence":
-            return <CorrespondenceForm />;
-            
-        case "check&review":
-            return <CheckReviewForm />;
+            case "job-start":
+                return (
+                    <FeatureGate featureName={"Job Start Form"} >
+                        <JobStartForm />
+                    </FeatureGate>
+                );
 
-        case "change-control":
-            return <ChangeControlForm />;
+            case "input-register":
+                return <InputRegisterForm />;
 
-        case "progress-review":
-            return <MonthlyProgressForm />;
+            case "correspondence":
+                return <CorrespondenceForm />;
 
-        case "closure":
-            return <ProjectClosureForm />;
+            case "check&review":
+                return <CheckReviewForm />;
 
-        case "monthly-reports":
-            return <MonthlyReports />;
+            case "change-control":
+                return <ChangeControlForm />;
 
-        case "cashflow":
-            return <Cashflow />;
+            case "progress-review":
+                return <MonthlyProgressForm />;
 
-        default:
-        return <FormsOverview onFormSelect={() => {}} />;
+            case "closure":
+                return <ProjectClosureForm />;
+
+            case "monthly-reports":
+                return <MonthlyReports />;
+
+            case "cashflow":
+                return <Cashflow />;
+
+            default:
+                return <FormsOverview onFormSelect={() => { }} />;
+        }
     }
-}
 
-  return (
-    <FormWrapper>
-      {renderForm()}
-    </FormWrapper>
-  );
+    return (
+        <FormWrapper>
+            {renderForm()}
+        </FormWrapper>
+    );
 };
 
 export default ProjectForms;
