@@ -61,7 +61,8 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
                 CreatedBy = request.CreatedBy,
                 CreatedDate = DateTime.UtcNow,
                 TenantId = _context.TenantId ?? 0,
-                TotalLoggedHours = total // Point-in-time total
+                TotalLoggedHours = total, // Point-in-time total
+                WorkedStoryPoint = request.WorkedStoryPoint
             };
 
             _context.SprintTaskComments.Add(comment);

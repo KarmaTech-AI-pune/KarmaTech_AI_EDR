@@ -8,6 +8,7 @@ namespace EDR.Application.CQRS.SprintTasks.Commands
         public int TaskId { get; set; }
         public string CommentText { get; set; }
         public string CreatedBy { get; set; }
+        public decimal? WorkedStoryPoint { get; set; }
     }
 }
 

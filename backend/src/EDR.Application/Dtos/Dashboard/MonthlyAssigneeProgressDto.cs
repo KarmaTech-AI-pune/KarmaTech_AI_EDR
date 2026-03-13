@@ -10,5 +10,6 @@ namespace EDR.Application.Dtos.Dashboard
         public decimal EstimatedHours { get; set; }
         public decimal ActualHours { get; set; }
         public decimal RemainingHours { get; set; }
+        public decimal EmployeeLoggedHours { get; set; }
     }
 }
