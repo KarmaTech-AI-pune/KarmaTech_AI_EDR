@@ -150,14 +150,24 @@ const WBSVersionHistoryDialog: React.FC<WBSVersionHistoryDialogProps> = ({
                                   View
                                 </Button>
                               )
-                            ) : (version.isLatest || version.status === 'Approved') ? (
+                            ) : version.isLatest ? (
                               onActivateVersion && (
                                 <Button
                                   size="small"
                                   variant="contained"
                                   onClick={() => onActivateVersion(version.version)}
                                 >
-                                  Activate
+                                  Update
+                                </Button>
+                              )
+                            ) : version.status === 'Approved' ? (
+                              onSelectVersion && (
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  onClick={() => onSelectVersion(version.version)}
+                                >
+                                  View
                                 </Button>
                               )
                             ) : null}
