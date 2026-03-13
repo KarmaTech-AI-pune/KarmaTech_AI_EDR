@@ -79,8 +79,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                     {
                         WorkAssignment = mp.WorkAssignment,
                         Assignee = mp.Assignee,
+                        Rate = mp.Rate ?? 0m,
                         Planned = mp.Planned ?? 0m,
                         Consumed = mp.Consumed ?? 0m,
+                        Payment = mp.Payment ?? 0m,
                         Balance = mp.Balance ?? 0m,
                         NextMonthPlanning = mp.NextMonthPlanning ?? 0m,
                         ManpowerComments = mp.ManpowerComments

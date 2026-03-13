@@ -184,8 +184,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                         {
                             WorkAssignment = manpowerDto.WorkAssignment,
                             Assignee = manpowerDto.Assignee,
+                            Rate = manpowerDto.Rate ?? 0,
                             Planned = manpowerDto.Planned ?? 0,
                             Consumed = manpowerDto.Consumed ?? 0,
+                            Payment = manpowerDto.Payment ?? 0,
                             Balance = manpowerDto.Balance ?? 0,
                             NextMonthPlanning = manpowerDto.NextMonthPlanning ?? 0,
                             ManpowerComments = manpowerDto.ManpowerComments
@@ -195,8 +197,10 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                     {
                         // Update existing entry
                         existingEntry.Assignee = manpowerDto.Assignee;
+                        existingEntry.Rate = manpowerDto.Rate ?? existingEntry.Rate;
                         existingEntry.Planned = manpowerDto.Planned ?? existingEntry.Planned;
                         existingEntry.Consumed = manpowerDto.Consumed ?? existingEntry.Consumed;
+                        existingEntry.Payment = manpowerDto.Payment ?? existingEntry.Payment;
                         existingEntry.Balance = manpowerDto.Balance ?? existingEntry.Balance;
                         existingEntry.NextMonthPlanning = manpowerDto.NextMonthPlanning ?? existingEntry.NextMonthPlanning;
                         existingEntry.ManpowerComments = manpowerDto.ManpowerComments;
