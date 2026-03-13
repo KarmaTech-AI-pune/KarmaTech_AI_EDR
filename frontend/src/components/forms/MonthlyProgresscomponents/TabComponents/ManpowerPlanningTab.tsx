@@ -49,11 +49,15 @@ const EditableTableCell: React.FC<{
             size="small"
             type={type}
             placeholder={placeholder}
-            value={field.value ?? ''}
+            value={field.value ?? 0}
             onChange={(e) => {
               const value = e.target.value;
               if (type === 'number') {
-                field.onChange(value ? Number(value) : null);
+                if (value === '' || value === null || value === undefined) {
+                  field.onChange(0);
+                } else {
+                  field.onChange(Number(value));
+                }
               } else {
                 field.onChange(value);
               }
@@ -63,19 +67,32 @@ const EditableTableCell: React.FC<{
             helperText={error && typeof error === 'object' && 'message' in error ? error.message : ''}
             sx={{
               ...textFieldStyle,
+              width: '100%',
+              '& .MuiOutlinedInput-root': {
+                padding: '4px 8px',
+                height: '36px',
+                fontSize: '0.875rem',
+              },
+              '& .MuiOutlinedInput-input': {
+                padding: '8px 4px',
+                textAlign: align === 'center' ? 'center' : 'left',
+              },
               ...(isReadOnly && {
                 '& .MuiOutlinedInput-root': {
-                  ...(textFieldStyle?.['& .MuiOutlinedInput-root']
-                    ? textFieldStyle['& .MuiOutlinedInput-root']
-                    : {}),
                   backgroundColor: '#f9f9f9',
+                  cursor: 'default',
                 },
               }),
             }}
-            InputProps={{
-              readOnly: isReadOnly,
+            slotProps={{
+              input: {
+                readOnly: isReadOnly,
+              },
+              htmlInput: {
+                min: 0,
+                step: "any"
+              }
             }}
-            inputProps={{ min: 0, step: "any" }}
           />
         )}
       />
@@ -85,15 +102,17 @@ const EditableTableCell: React.FC<{
 
 // Column Configuration
 const tableColumns = [
-  { name: "workAssignment", label: "Work Assignment", placeholder: "Work Assignment", isReadOnly: true },
+  { name: "workAssignment", label: "Work Assignment", placeholder: "Work Assignment", isReadOnly: true, minWidth: 180 },
   { name: "assignee", label: "Assignee", placeholder: "Assignee", isReadOnly: true, minWidth: 150 },
   { name: "rate", label: "Rate", placeholder: "Rate", type: "number", align: "center", isReadOnly: true, minWidth: 100 },
-  { name: "planned", label: "Planned", placeholder: "Planned", type: "number", align: "center", isReadOnly: true },
-  { name: "consumed", label: "Consumed", placeholder: "Consumed", type: "number", align: "center" },
+  { name: "planned", label: "Planned", placeholder: "Planned", type: "number", align: "center", isReadOnly: true, minWidth: 110 },
+  { name: "consumed", label: "Consumed", placeholder: "Consumed", type: "number", align: "center", minWidth: 110 },
+  { name: "approved", label: "Approved", placeholder: "Approved", type: "number", align: "center", minWidth: 110 },
+  { name: "extraCost", label: "Extra Cost", placeholder: "Extra Cost", type: "number", align: "center", minWidth: 120 },
   { name: "payment", label: "Payment", placeholder: "Payment", type: "number", align: "center", isReadOnly: true, minWidth: 120 },
-  { name: "balance", label: "Balance", placeholder: "Balance", type: "number", align: "center", isReadOnly: true },
-  { name: "nextMonthPlanning", label: "Next Month Planning", placeholder: "Next Month", type: "number", align: "center", isReadOnly: true },
-  { name: "manpowerComments", label: "Comments", placeholder: "Comments" },
+  { name: "balance", label: "Balance", placeholder: "Balance", type: "number", align: "center", isReadOnly: true, minWidth: 110 },
+  { name: "nextMonthPlanning", label: "Next Month Planning", placeholder: "Next Month", type: "number", align: "center", isReadOnly: true, minWidth: 140 },
+  { name: "manpowerComments", label: "Comments", placeholder: "Comments", minWidth: 150 },
 ];
 
 const ManpowerPlanningTab: React.FC = () => {
@@ -190,9 +209,22 @@ const ManpowerPlanningTab: React.FC = () => {
         </Box>
 
         <TableContainer>
-          <Table sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
+          <Table sx={{ 
+            '& .MuiTableCell-root': { 
+              border: 'none',
+              padding: '8px 4px',
+              verticalAlign: ''
+            }
+          }}>
             <TableHead>
-              <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 600, backgroundColor: '#f5f5f5', border: 'none' } }}>
+              <TableRow sx={{ 
+                '& .MuiTableCell-head': { 
+                  fontWeight: 600, 
+                  backgroundColor: '#f5f5f5', 
+                  border: 'none',
+                  padding: '12px 4px'
+                } 
+              }}>
                 {tableColumns.map(col => (
                   <TableCell key={col.name} align={(col.align || 'left') as any} sx={{ minWidth: col.minWidth }}>
                     {col.label}
@@ -202,7 +234,15 @@ const ManpowerPlanningTab: React.FC = () => {
             </TableHead>
             <TableBody>
               {fields.map((field, index) => (
-                <TableRow key={field.id} sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
+                <TableRow key={field.id} sx={{ 
+                  '& .MuiTableCell-root': { 
+                    border: 'none',
+                    padding: '8px 4px'
+                  },
+                  '&:hover': {
+                    backgroundColor: '#fafafa'
+                  }
+                }}>
                   {tableColumns.map(col => (
                     <EditableTableCell
                       key={col.name}
@@ -221,40 +261,43 @@ const ManpowerPlanningTab: React.FC = () => {
                 backgroundColor: '#f5f5f5',
                 '& .MuiTableCell-root': {
                   fontWeight: 600,
-                  border: 'none'
+                  border: 'none',
+                  padding: '12px 4px'
                 }
               }}>
-                <TableCell>
+                <TableCell sx={{ minWidth: 180 }}>
                   <Typography variant="subtitle2">TOTAL</Typography>
                 </TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell align="center">
+                <TableCell sx={{ minWidth: 150 }}></TableCell>
+                <TableCell sx={{ minWidth: 100 }}></TableCell>
+                <TableCell align="center" sx={{ minWidth: 110 }}>
                   <Typography variant="subtitle2">
                     {totals.plannedTotal}
                   </Typography>
                 </TableCell>
-                <TableCell align="center">
+                <TableCell align="center" sx={{ minWidth: 110 }}>
                   <Typography variant="subtitle2">
                     {totals.consumedTotal}
                   </Typography>
                 </TableCell>
-                <TableCell align="center">
+                <TableCell sx={{ minWidth: 110 }}></TableCell>
+                <TableCell sx={{ minWidth: 120 }}></TableCell>
+                <TableCell align="center" sx={{ minWidth: 120 }}>
                   <Typography variant="subtitle2" color="primary">
                     {totals.paymentTotal.toFixed(2)}
                   </Typography>
                 </TableCell>
-                <TableCell align="center">
+                <TableCell align="center" sx={{ minWidth: 110 }}>
                   <Typography variant="subtitle2" color={totals.balanceTotal < 0 ? 'error' : 'inherit'}>
                     {totals.balanceTotal}
                   </Typography>
                 </TableCell>
-                <TableCell align="center">
+                <TableCell align="center" sx={{ minWidth: 140 }}>
                   <Typography variant="subtitle2">
                     {totals.nextMonthPlanningTotal}
                   </Typography>
                 </TableCell>
-                <TableCell></TableCell>
+                <TableCell sx={{ minWidth: 150 }}></TableCell>
               </TableRow>
             </TableBody>
           </Table>

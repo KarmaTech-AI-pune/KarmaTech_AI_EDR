@@ -91,6 +91,8 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                         Rate = mp.Rate,
                         Planned = mp.Planned,
                         Consumed = mp.Consumed,
+                        Approved = mp.Approved,
+                        ExtraCost = mp.ExtraCost,
                         Payment = mp.Payment,
                         Balance = mp.Balance,
                         NextMonthPlanning = mp.NextMonthPlanning,

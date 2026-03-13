@@ -187,6 +187,8 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                             Rate = manpowerDto.Rate ?? 0,
                             Planned = manpowerDto.Planned ?? 0,
                             Consumed = manpowerDto.Consumed ?? 0,
+                            Approved = manpowerDto.Approved ?? 0,
+                            ExtraCost = manpowerDto.ExtraCost ?? 0,
                             Payment = manpowerDto.Payment ?? 0,
                             Balance = manpowerDto.Balance ?? 0,
                             NextMonthPlanning = manpowerDto.NextMonthPlanning ?? 0,
@@ -200,6 +202,8 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                         existingEntry.Rate = manpowerDto.Rate ?? existingEntry.Rate;
                         existingEntry.Planned = manpowerDto.Planned ?? existingEntry.Planned;
                         existingEntry.Consumed = manpowerDto.Consumed ?? existingEntry.Consumed;
+                        existingEntry.Approved = manpowerDto.Approved ?? existingEntry.Approved;
+                        existingEntry.ExtraCost = manpowerDto.ExtraCost ?? existingEntry.ExtraCost;
                         existingEntry.Payment = manpowerDto.Payment ?? existingEntry.Payment;
                         existingEntry.Balance = manpowerDto.Balance ?? existingEntry.Balance;
                         existingEntry.NextMonthPlanning = manpowerDto.NextMonthPlanning ?? existingEntry.NextMonthPlanning;

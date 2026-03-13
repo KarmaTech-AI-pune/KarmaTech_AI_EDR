@@ -281,10 +281,12 @@ const transformDataForMonthlyProgress = (
       return {
         workAssignment: resource.taskTitle,
         assignee: resource.employeeName,
-        rate: resource.costRate, // Add employee rate
+        rate: resource.costRate || 0,
         planned: currentMonthHours,
         consumed: actualHours,
-        payment: (resource.costRate && actualHours) ? resource.costRate * actualHours : null, // Calculate payment
+        approved: 0, // Default to 0
+        extraCost: 0, // Default to 0
+        payment: (resource.costRate && actualHours) ? resource.costRate * actualHours : 0,
         balance: currentMonthHours - actualHours,
         nextMonthPlanning: nextMonthHours,
         manpowerComments: ""

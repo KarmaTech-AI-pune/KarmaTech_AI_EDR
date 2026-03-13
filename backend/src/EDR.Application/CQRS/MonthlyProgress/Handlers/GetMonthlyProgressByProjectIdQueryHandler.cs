@@ -81,6 +81,8 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                         Rate = mpe.Rate,
                         Planned = mpe.Planned,
                         Consumed = mpe.Consumed,
+                        Approved = mpe.Approved,
+                        ExtraCost = mpe.ExtraCost,
                         Payment = mpe.Payment,
                         Balance = mpe.Balance,
                         NextMonthPlanning = mpe.NextMonthPlanning,
