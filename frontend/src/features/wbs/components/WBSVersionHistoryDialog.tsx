@@ -132,7 +132,7 @@ const WBSVersionHistoryDialog: React.FC<WBSVersionHistoryDialogProps> = ({
                           sx={{ fontWeight: 500 }}
                         />
                       </TableCell>
-                      <TableCell>{version.createdBy}</TableCell>
+                      <TableCell>{version.createdByName || version.createdBy}</TableCell>
                       <TableCell>
                         {new Date(version.createdAt).toLocaleString()}
                       </TableCell>
