@@ -115,6 +115,7 @@ export const manpowerSchema = z.object({
   planned: z.number().nullable(),
   consumed: z.number().nullable().default(0),
   approved: z.number().nullable().default(0),
+  extraHours: z.number().nullable().default(0),
   extraCost: z.number().nullable().default(0),
   payment: z.number().nullable(),
   balance: z.number().nullable(),
@@ -127,6 +128,8 @@ export const manpowerPlanningSchema = z.object({
   manpowerTotal: z.object({
     plannedTotal: z.number().nullable(),
     consumedTotal: z.number().nullable(),
+    approvedTotal: z.number().nullable(),
+    extraHoursTotal: z.number().nullable(),
     paymentTotal: z.number().nullable(),
     balanceTotal: z.number().nullable(),
     nextMonthPlanningTotal: z.number().nullable(),

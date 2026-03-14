@@ -217,11 +217,14 @@ const transformDataForMonthlyProgress = (
         nextMonthHours: nextMonthData?.plannedHours || 0
       };
     };
-
-    // Get actual hours from assignee progress API based on selected month/year
-    const getActualHours = (employeeName: string): number => {
+    const manpowerData = manpowerResult.value.resources.map(resource => {
+      const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.plannedHours);
+      
+      // Get assignee progress data for this employee
+      let consumedHours = 0; // employeeLoggedHours
+      let approvedHours = 0; // actualHours
+      
       if (assigneeProgressResult.status === 'fulfilled' && assigneeProgressResult.value) {
-        // Use selected month/year if provided, otherwise use current date
         const targetDate = selectedYear && selectedMonth 
           ? new Date(selectedYear, selectedMonth - 1, 1)
           : new Date();
@@ -230,52 +233,30 @@ const transformDataForMonthlyProgress = (
         const targetYear = targetDate.getFullYear();
         const targetMonthYear = `${targetMonth} ${targetYear}`;
         
-        console.log('🔍 Looking for:', { employeeName, targetMonthYear });
-        console.log('📊 Available data:', assigneeProgressResult.value);
-        
         const normalizeString = (str: string) => 
           str?.trim().toLowerCase().replace(/\s+/g, ' ') || '';
         
-        const normalizedEmployeeName = normalizeString(employeeName);
+        const normalizedEmployeeName = normalizeString(resource.employeeName);
         
         const match = assigneeProgressResult.value.find(ap => {
           const nameMatch = normalizeString(ap.assigneeName) === normalizedEmployeeName;
           const monthMatch = normalizeString(ap.month) === normalizeString(targetMonthYear);
-          
-          console.log('🔎 Compare:', {
-            apiName: ap.assigneeName,
-            employeeName,
-            nameMatch,
-            apiMonth: ap.month,
-            targetMonth: targetMonthYear,
-            monthMatch,
-            actualHours: ap.actualHours
-          });
-          
           return nameMatch && monthMatch;
         });
         
         if (match) {
-          console.log('✅ Match found!', match.actualHours);
-          return match.actualHours;
+          consumedHours = match.employeeLoggedHours; // Logged hours
+          approvedHours = match.actualHours; // Actual hours
         }
-        console.log('❌ No match');
-      } else {
-        console.log('⚠️ No assignee progress data');
       }
-      return 0;
-    };
-
-    const manpowerData = manpowerResult.value.resources.map(resource => {
-      const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.plannedHours);
-      const actualHours = getActualHours(resource.employeeName);
       
       console.log('📋 Entry:', {
         name: resource.employeeName,
         rate: resource.costRate,
         planned: currentMonthHours,
-        consumed: actualHours,
-        balance: currentMonthHours - actualHours
+        consumed: consumedHours,
+        approved: approvedHours,
+        balance: currentMonthHours - consumedHours
       });
       
       return {
@@ -283,11 +264,12 @@ const transformDataForMonthlyProgress = (
         assignee: resource.employeeName,
         rate: resource.costRate || 0,
         planned: currentMonthHours,
-        consumed: actualHours,
-        approved: 0, // Default to 0
+        consumed: consumedHours,
+        approved: approvedHours,
+        balance: currentMonthHours - approvedHours,
+        payment: (resource.costRate && consumedHours) ? resource.costRate * consumedHours : 0,
+        extraHours: 0, // Default to 0
         extraCost: 0, // Default to 0
-        payment: (resource.costRate && actualHours) ? resource.costRate * actualHours : 0,
-        balance: currentMonthHours - actualHours,
         nextMonthPlanning: nextMonthHours,
         manpowerComments: ""
       };

@@ -108,9 +108,10 @@ const tableColumns = [
   { name: "planned", label: "Planned", placeholder: "Planned", type: "number", align: "center", isReadOnly: true, minWidth: 110 },
   { name: "consumed", label: "Consumed", placeholder: "Consumed", type: "number", align: "center", minWidth: 110 },
   { name: "approved", label: "Approved", placeholder: "Approved", type: "number", align: "center", minWidth: 110 },
-  { name: "extraCost", label: "Extra Cost", placeholder: "Extra Cost", type: "number", align: "center", minWidth: 120 },
-  { name: "payment", label: "Payment", placeholder: "Payment", type: "number", align: "center", isReadOnly: true, minWidth: 120 },
   { name: "balance", label: "Balance", placeholder: "Balance", type: "number", align: "center", isReadOnly: true, minWidth: 110 },
+  { name: "payment", label: "Payment", placeholder: "Payment", type: "number", align: "center", isReadOnly: true, minWidth: 120 },
+  { name: "extraHours", label: "Extra Hours", placeholder: "Extra Hours", type: "number", align: "center", minWidth: 120 },
+  { name: "extraCost", label: "Extra Cost", placeholder: "Extra Cost", type: "number", align: "center", minWidth: 120 },
   { name: "nextMonthPlanning", label: "Next Month Planning", placeholder: "Next Month", type: "number", align: "center", isReadOnly: true, minWidth: 140 },
   { name: "manpowerComments", label: "Comments", placeholder: "Comments", minWidth: 150 },
 ];
@@ -133,23 +134,32 @@ const ManpowerPlanningTab: React.FC = () => {
       return {
         plannedTotal: 0,
         consumedTotal: 0,
-        paymentTotal: 0,
+        approvedTotal: 0,
         balanceTotal: 0,
+        paymentTotal: 0,
+        extraHoursTotal: 0,
+        extraCostTotal: 0,
         nextMonthPlanningTotal: 0
       };
     }
 
     const plannedTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.planned || 0), 0);
     const consumedTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.consumed || 0), 0);
+    const approvedTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.approved || 0), 0);
     const paymentTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.payment || 0), 0);
-    const balanceTotal = plannedTotal - consumedTotal;
+    const extraHoursTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.extraHours || 0), 0);
+    const extraCostTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.extraCost || 0), 0);
+    const balanceTotal = plannedTotal - approvedTotal;
     const nextMonthPlanningTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.nextMonthPlanning || 0), 0);
 
     return {
       plannedTotal,
       consumedTotal,
-      paymentTotal,
+      approvedTotal,
       balanceTotal,
+      paymentTotal,
+      extraHoursTotal,
+      extraCostTotal,
       nextMonthPlanningTotal
     };
   }, [manpowerEntries]);
@@ -161,14 +171,16 @@ const ManpowerPlanningTab: React.FC = () => {
       (acc, entry) => {
         acc.plannedTotal += entry.planned || 0;
         acc.consumedTotal += entry.consumed || 0;
+        acc.approvedTotal += entry.approved || 0;
         acc.paymentTotal += entry.payment || 0;
+        acc.extraHoursTotal += entry.extraHours || 0;
         acc.nextMonthPlanningTotal += entry.nextMonthPlanning || 0;
         return acc;
       },
-      { plannedTotal: 0, consumedTotal: 0, paymentTotal: 0, nextMonthPlanningTotal: 0 }
+      { plannedTotal: 0, consumedTotal: 0, approvedTotal: 0, paymentTotal: 0, extraHoursTotal: 0, nextMonthPlanningTotal: 0 }
     );
 
-    const balanceTotal = newTotals.plannedTotal - newTotals.consumedTotal;
+    const balanceTotal = newTotals.plannedTotal - newTotals.approvedTotal;
 
     // Use setTimeout to break the infinite loop by deferring setState
     const timeoutId = setTimeout(() => {
@@ -182,9 +194,10 @@ const ManpowerPlanningTab: React.FC = () => {
 
       manpowerEntries.forEach((entry, index) => {
         const planned = entry.planned || 0;
-        const consumed = entry.consumed || 0;
+        const approved = entry.approved || 0;
         const rate = entry.rate || 0;
-        const balance = planned - consumed;
+        const consumed = entry.consumed || 0;
+        const balance = planned - approved;
         const payment = rate * consumed;
         
         if (entry.balance !== balance) {
@@ -280,16 +293,29 @@ const ManpowerPlanningTab: React.FC = () => {
                     {totals.consumedTotal}
                   </Typography>
                 </TableCell>
-                <TableCell sx={{ minWidth: 110 }}></TableCell>
-                <TableCell sx={{ minWidth: 120 }}></TableCell>
-                <TableCell align="center" sx={{ minWidth: 120 }}>
-                  <Typography variant="subtitle2" color="primary">
-                    {totals.paymentTotal.toFixed(2)}
+                <TableCell align="center" sx={{ minWidth: 110 }}>
+                  <Typography variant="subtitle2">
+                    {totals.approvedTotal}
                   </Typography>
                 </TableCell>
                 <TableCell align="center" sx={{ minWidth: 110 }}>
                   <Typography variant="subtitle2" color={totals.balanceTotal < 0 ? 'error' : 'inherit'}>
                     {totals.balanceTotal}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center" sx={{ minWidth: 120 }}>
+                  <Typography variant="subtitle2" color="primary">
+                    {totals.paymentTotal.toFixed(2)}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center" sx={{ minWidth: 120 }}>
+                  <Typography variant="subtitle2">
+                    {totals.extraHoursTotal}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center" sx={{ minWidth: 120 }}>
+                  <Typography variant="subtitle2">
+                    {totals.extraCostTotal.toFixed(2)}
                   </Typography>
                 </TableCell>
                 <TableCell align="center" sx={{ minWidth: 140 }}>
