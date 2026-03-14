@@ -10,7 +10,7 @@ import {
     ProjectClosureForm,
     FormsOverview,
     MonthlyReports,
-  } from '../../components/forms';
+} from '../../components/forms';
 import { useParams } from 'react-router-dom';
 import { FormWrapper } from '../../components/forms/FormWrapper';
 import NotFound from '../NotFound';
@@ -61,40 +61,40 @@ const ProjectForms: React.FC = () => {
         </FeatureGate>
             );
 
-        case "input-register":
-            return <InputRegisterForm />;
-            
-        case "correspondence":
-            return <CorrespondenceForm />;
-            
-        case "check&review":
-            return <CheckReviewForm />;
+            case "input-register":
+                return <InputRegisterForm />;
 
-        case "change-control":
-            return <ChangeControlForm />;
+            case "correspondence":
+                return <CorrespondenceForm />;
 
-        case "progress-review":
-            return <MonthlyProgressForm />;
+            case "check&review":
+                return <CheckReviewForm />;
 
-        case "closure":
-            return <ProjectClosureForm />;
+            case "change-control":
+                return <ChangeControlForm />;
 
-        case "monthly-reports":
-            return <MonthlyReports />;
+            case "progress-review":
+                return <MonthlyProgressForm />;
 
-        case "cashflow":
-            return <Cashflow />;
+            case "closure":
+                return <ProjectClosureForm />;
 
-        default:
-        return <FormsOverview onFormSelect={() => {}} />;
+            case "monthly-reports":
+                return <MonthlyReports />;
+
+            case "cashflow":
+                return <Cashflow />;
+
+            default:
+                return <FormsOverview onFormSelect={() => { }} />;
+        }
     }
-}
 
-  return (
-    <FormWrapper>
-      {renderForm()}
-    </FormWrapper>
-  );
+    return (
+        <FormWrapper>
+            {renderForm()}
+        </FormWrapper>
+    );
 };
 
 export default ProjectForms;

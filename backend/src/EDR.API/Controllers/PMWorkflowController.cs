@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EDR.Application.CQRS.PMWorkflow.Commands;
@@ -13,7 +13,6 @@ namespace EDR.API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    [ApiExplorerSettings(GroupName = "v1")]
     public class PMWorkflowController : ControllerBase
     {
         private readonly IMediator _mediator;

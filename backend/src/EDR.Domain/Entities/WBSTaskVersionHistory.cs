@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -42,6 +42,9 @@ namespace EDR.Domain.Entities
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal EstimatedBudget { get; set; }
+
+        public int? ParentId { get; set; }
+        public int WBSOptionId { get; set; }
 
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

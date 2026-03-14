@@ -4683,6 +4683,9 @@ namespace EDR.Domain.Migrations
                     b.Property<int>("OriginalTaskId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp without time zone");
 
@@ -4696,6 +4699,9 @@ namespace EDR.Domain.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<int>("WBSOptionId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("WBSVersionHistoryId")
                         .HasColumnType("integer");

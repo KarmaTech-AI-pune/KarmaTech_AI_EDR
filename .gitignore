@@ -317,3 +317,11 @@ ramya aws discussion pt 2.mp4
 ramya aws discussion.mp4
 ramya aws discussion.zip
 
+test-results/backend-Unit.trx
+recent_changes.txt
+backend/EDR.Domain.Tests/test-results/backend-Integration.trx
+backend/EDR.Domain.Tests/test-results/backend-Regression.trx
+backend/EDR.Domain.Tests/test-results/backend-Unit.trx
+backend/EDR.API.Tests/test-results/backend-Integration.trx
+backend/EDR.API.Tests/test-results/backend-Regression.trx
+backend/EDR.API.Tests/test-results/backend-Unit.trx

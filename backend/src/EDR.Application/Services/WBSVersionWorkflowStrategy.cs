@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using EDR.Application.Dtos;
 using EDR.Application.Services.IContract;
@@ -29,7 +29,10 @@ namespace EDR.Application.Services
 
         public async Task<PMWorkflowDto> ExecuteAsync(WorkflowActionContext context, CancellationToken cancellationToken)
         {
-            var wbsVersion = await _wbsVersionRepository.GetByIdAsync(context.EntityId);
+            var wbsVersion = await _context.WBSVersionHistories
+                .Include(v => v.WBSHeader)
+                .FirstOrDefaultAsync(v => v.Id == context.EntityId, cancellationToken);
+
             if (wbsVersion == null)
                 throw new Exception($"WBS Version with ID {context.EntityId} not found");
 
@@ -85,6 +88,38 @@ namespace EDR.Application.Services
 
             // Update the version status
             wbsVersion.StatusId = (int)status;
+
+            // Sync WBSHeader status
+            if (wbsVersion.WBSHeader != null)
+            {
+                wbsVersion.WBSHeader.ApprovalStatus = status;
+                _context.WBSHeaders.Update(wbsVersion.WBSHeader);
+
+                // Bidirectional sync: Also update WBSTaskPlannedHourHeaders and their histories
+                var projectId = wbsVersion.WBSHeader.ProjectId;
+                var plannedHourHeaders = await _context.Set<WBSTaskPlannedHourHeader>()
+                    .Where(h => h.ProjectId == projectId)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var phHeader in plannedHourHeaders)
+                {
+                    phHeader.StatusId = (int)status;
+                    _context.Set<WBSTaskPlannedHourHeader>().Update(phHeader);
+
+                    // Add to WBSHistory for backward compatibility
+                    var phHistory = new WBSHistory
+                    {
+                        WBSTaskPlannedHourHeaderId = phHeader.Id,
+                        StatusId = (int)status,
+                        Action = context.Action,
+                        Comments = context.Comments ?? $"WBS Version {status.ToString()} action (Sync)",
+                        ActionDate = DateTime.UtcNow,
+                        ActionBy = currentUserId,
+                        AssignedToId = context.AssignedToId
+                    };
+                    _context.WBSHistories.Add(phHistory);
+                }
+            }
 
             // If approved, set approval metadata
             if (status == PMWorkflowStatusEnum.Approved)
