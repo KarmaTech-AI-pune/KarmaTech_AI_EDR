@@ -97,8 +97,10 @@ export interface WBSVersion {
   isLatest: boolean;
   createdAt: string;
   createdBy: string;
+  createdByName?: string;
   status: string;
   statusId: number;
+  approvedByName?: string;
 }
 
 export interface WBSVersionDetails extends WBSVersion {

@@ -586,7 +586,9 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     EstimatedBudget = task.EstimatedBudget,
                     StartDate = task.StartDate,
                     EndDate = task.EndDate,
-                    TaskType = task.TaskType
+                    TaskType = task.TaskType,
+                    ParentId = task.ParentId,
+                    WBSOptionId = task.WBSOptionId
                 };
 
                 await _wbsVersionRepository.CreateTaskVersionAsync(taskVersion);
@@ -646,7 +648,12 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                         TenantId = _context.TenantId ?? 0,
                         WBSTaskVersionHistoryId = taskVersion.Id,
                         UserId = userAssignment.UserId,
-                        ResourceRoleId = userAssignment.ResourceRoleId
+                        ResourceRoleId = userAssignment.ResourceRoleId,
+                        CostRate = userAssignment.CostRate,
+                        TotalHours = userAssignment.TotalHours,
+                        TotalCost = userAssignment.TotalCost,
+                        Name = userAssignment.Name,
+                        Unit = userAssignment.Unit
                     };
                     await _wbsVersionRepository.CreateUserAssignmentVersionAsync(userAssignmentVersion);
                 }

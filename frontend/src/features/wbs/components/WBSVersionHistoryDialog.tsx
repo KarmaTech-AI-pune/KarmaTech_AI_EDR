@@ -132,7 +132,7 @@ const WBSVersionHistoryDialog: React.FC<WBSVersionHistoryDialogProps> = ({
                           sx={{ fontWeight: 500 }}
                         />
                       </TableCell>
-                      <TableCell>{version.createdBy}</TableCell>
+                      <TableCell>{version.createdByName || version.createdBy}</TableCell>
                       <TableCell>
                         {new Date(version.createdAt).toLocaleString()}
                       </TableCell>
@@ -150,14 +150,24 @@ const WBSVersionHistoryDialog: React.FC<WBSVersionHistoryDialogProps> = ({
                                   View
                                 </Button>
                               )
-                            ) : (version.isLatest || version.status === 'Approved') ? (
+                            ) : version.isLatest ? (
                               onActivateVersion && (
                                 <Button
                                   size="small"
                                   variant="contained"
                                   onClick={() => onActivateVersion(version.version)}
                                 >
-                                  Activate
+                                  Update
+                                </Button>
+                              )
+                            ) : version.status === 'Approved' ? (
+                              onSelectVersion && (
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  onClick={() => onSelectVersion(version.version)}
+                                >
+                                  View
                                 </Button>
                               )
                             ) : null}
