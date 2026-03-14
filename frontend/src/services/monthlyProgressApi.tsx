@@ -20,6 +20,16 @@ export interface ManpowerResourceDto {
   plannedHours: MonthlyHourDto[]; // Changed from monthlyHours to plannedHours to match backend
 }
 
+export interface AssigneeProgressDto {
+  assigneeId: string | null;
+  assigneeName: string;
+  month: string;
+  estimatedHours: number;
+  actualHours: number;
+  remainingHours: number;
+  employeeLoggedHours: number;
+}
+
 export interface ManpowerResourcesResponse {
   projectId: number;
   resources: ManpowerResourceDto[];

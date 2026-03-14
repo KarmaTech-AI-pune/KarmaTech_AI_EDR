@@ -37,6 +37,7 @@ interface AssigneeProgressDto {
   estimatedHours: number;
   actualHours: number;
   remainingHours: number;
+  employeeLoggedHours: number;
 }
 
 const transformDataForMonthlyProgress = (
@@ -108,7 +109,10 @@ const transformDataForMonthlyProgress = (
       manpowerTotal: {
         plannedTotal: 0,
         consumedTotal: 0,
+        approvedTotal: 0,
         balanceTotal: 0,
+        paymentTotal: 0,
+        extraHoursTotal: 0,
         nextMonthPlanningTotal: 0,
       },
     },
@@ -294,8 +298,10 @@ const transformDataForMonthlyProgress = (
       transformedData.manpowerPlanning.manpowerTotal = {
         plannedTotal,
         consumedTotal,
-        paymentTotal,
+        approvedTotal: manpowerData.reduce((sum, entry) => sum + (entry.approved || 0), 0),
         balanceTotal,
+        paymentTotal,
+        extraHoursTotal: manpowerData.reduce((sum, entry) => sum + ((entry.consumed || 0) - (entry.approved || 0)), 0),
         nextMonthPlanningTotal,
       };
     }
