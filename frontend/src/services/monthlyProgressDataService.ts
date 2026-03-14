@@ -268,8 +268,8 @@ const transformDataForMonthlyProgress = (
         approved: approvedHours,
         balance: currentMonthHours - approvedHours,
         payment: (resource.costRate && consumedHours) ? resource.costRate * consumedHours : 0,
-        extraHours: 0, // Default to 0
-        extraCost: 0, // Default to 0
+        extraHours: consumedHours - approvedHours,
+        extraCost: (consumedHours - approvedHours) * (resource.costRate || 0),
         nextMonthPlanning: nextMonthHours,
         manpowerComments: ""
       };

@@ -110,8 +110,8 @@ const tableColumns = [
   { name: "approved", label: "Approved", placeholder: "Approved", type: "number", align: "center", minWidth: 110 },
   { name: "balance", label: "Balance", placeholder: "Balance", type: "number", align: "center", isReadOnly: true, minWidth: 110 },
   { name: "payment", label: "Payment", placeholder: "Payment", type: "number", align: "center", isReadOnly: true, minWidth: 120 },
-  { name: "extraHours", label: "Extra Hours", placeholder: "Extra Hours", type: "number", align: "center", minWidth: 120 },
-  { name: "extraCost", label: "Extra Cost", placeholder: "Extra Cost", type: "number", align: "center", minWidth: 120 },
+  { name: "extraHours", label: "Extra Hours", placeholder: "Extra Hours", type: "number", align: "center", isReadOnly: true, minWidth: 120 },
+  { name: "extraCost", label: "Extra Cost", placeholder: "Extra Cost", type: "number", align: "center", isReadOnly: true, minWidth: 120 },
   { name: "nextMonthPlanning", label: "Next Month Planning", placeholder: "Next Month", type: "number", align: "center", isReadOnly: true, minWidth: 140 },
   { name: "manpowerComments", label: "Comments", placeholder: "Comments", minWidth: 150 },
 ];
@@ -173,11 +173,14 @@ const ManpowerPlanningTab: React.FC = () => {
         acc.consumedTotal += entry.consumed || 0;
         acc.approvedTotal += entry.approved || 0;
         acc.paymentTotal += entry.payment || 0;
-        acc.extraHoursTotal += entry.extraHours || 0;
+        acc.extraHoursTotal += (entry.consumed || 0) - (entry.approved || 0);
+        const extraHours = (entry.consumed || 0) - (entry.approved || 0);
+        const extraCost = extraHours * (entry.rate || 0);
+        acc.extraCostTotal += extraCost;
         acc.nextMonthPlanningTotal += entry.nextMonthPlanning || 0;
         return acc;
       },
-      { plannedTotal: 0, consumedTotal: 0, approvedTotal: 0, paymentTotal: 0, extraHoursTotal: 0, nextMonthPlanningTotal: 0 }
+      { plannedTotal: 0, consumedTotal: 0, approvedTotal: 0, paymentTotal: 0, extraHoursTotal: 0, extraCostTotal: 0, nextMonthPlanningTotal: 0 }
     );
 
     const balanceTotal = newTotals.plannedTotal - newTotals.approvedTotal;
@@ -195,16 +198,24 @@ const ManpowerPlanningTab: React.FC = () => {
       manpowerEntries.forEach((entry, index) => {
         const planned = entry.planned || 0;
         const approved = entry.approved || 0;
-        const rate = entry.rate || 0;
         const consumed = entry.consumed || 0;
+        const rate = entry.rate || 0;
         const balance = planned - approved;
         const payment = rate * consumed;
+        const extraHours = consumed - approved;
+        const extraCost = extraHours * rate;
         
         if (entry.balance !== balance) {
           setValue(`manpowerPlanning.manpower.${index}.balance`, balance, { shouldValidate: false, shouldDirty: false });
         }
         if (entry.payment !== payment) {
           setValue(`manpowerPlanning.manpower.${index}.payment`, payment, { shouldValidate: false, shouldDirty: false });
+        }
+        if (entry.extraHours !== extraHours) {
+          setValue(`manpowerPlanning.manpower.${index}.extraHours`, extraHours, { shouldValidate: false, shouldDirty: false });
+        }
+        if (entry.extraCost !== extraCost) {
+          setValue(`manpowerPlanning.manpower.${index}.extraCost`, extraCost, { shouldValidate: false, shouldDirty: false });
         }
       });
     }, 0);
