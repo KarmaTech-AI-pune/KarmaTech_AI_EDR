@@ -17,7 +17,7 @@ export interface SubscriptionPlan {
   isActive: boolean;
   stripePriceId?: string;
   features: Feature[];
-  tenants?: any[]; // Tenant objects
+  tenants?: number; // Tenant objects
 }
 
 export interface PlanFeatures {

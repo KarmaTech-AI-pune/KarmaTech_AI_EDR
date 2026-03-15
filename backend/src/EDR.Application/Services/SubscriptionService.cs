@@ -6,8 +6,6 @@ using EDR.Application.Services.IContract;
 using EDR.Application.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System;
 
 namespace EDR.Application.Services
 {
@@ -344,33 +342,33 @@ namespace EDR.Application.Services
         public async Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync()
         {
             var plans = await _projectManagementContext.SubscriptionPlans
-                .Include(sp => sp.SubscriptionPlanFeatures)
-                .ThenInclude(spf => spf.Feature)
                 .Where(p => p.IsActive)
+                .Select(plan => new SubscriptionPlanDto
+                {
+                    Id = plan.Id,
+                    Name = plan.Name,
+                    Description = plan.Description,
+                    MonthlyPrice = plan.MonthlyPrice,
+                    YearlyPrice = plan.YearlyPrice,
+                    MaxUsers = plan.MaxUsers,
+                    MaxProjects = plan.MaxProjects,
+                    MaxStorageGB = plan.MaxStorageGB,
+                    IsActive = plan.IsActive,
+                    StripePriceId = plan.StripePriceId,
+                    Tenants = plan.Tenants.Count(),   
+                    Features = plan.SubscriptionPlanFeatures
+                        .Where(spf => spf.Feature.IsActive)
+                        .Select(spf => new FeatureDto
+                        {
+                            Id = spf.Feature.Id,
+                            Name = spf.Feature.Name,
+                            Description = spf.Feature.Description,
+                            IsActive = spf.Feature.IsActive
+                        }).ToList()
+                })
                 .ToListAsync();
 
-            return plans.Select(plan => new SubscriptionPlanDto
-            {
-                Id = plan.Id,
-                Name = plan.Name,
-                Description = plan.Description,
-                MonthlyPrice = plan.MonthlyPrice,
-                YearlyPrice = plan.YearlyPrice,
-                MaxUsers = plan.MaxUsers,
-                MaxProjects = plan.MaxProjects,
-                MaxStorageGB = plan.MaxStorageGB,
-                IsActive = plan.IsActive,
-                StripePriceId = plan.StripePriceId,
-                Features = plan.SubscriptionPlanFeatures?
-                    .Where(spf => spf.Feature.IsActive)
-                    .Select(spf => new FeatureDto
-                    {
-                        Id = spf.Feature.Id,
-                        Name = spf.Feature.Name,
-                        Description = spf.Feature.Description,
-                        IsActive = spf.Feature.IsActive
-                    }).ToList() ?? new List<FeatureDto>()
-            });
+            return plans;
         }
 
         public async Task<PlanByNameResponseDto?> GetPlanByNameAsync(string planName)
