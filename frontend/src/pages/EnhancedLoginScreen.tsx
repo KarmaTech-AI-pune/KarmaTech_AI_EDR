@@ -16,9 +16,13 @@ import {
     MenuItem,
     Chip,
     Divider,
-    CircularProgress
+    CircularProgress,
+    IconButton,
+    InputAdornment
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { enhancedAuthApi } from '../services/enhancedAuthApi';
+
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
@@ -60,6 +64,8 @@ export const EnhancedLoginScreen: React.FC = () => {
     const [isLoadingTenants, setIsLoadingTenants] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+
     
     const { setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
     const navigation = useAppNavigation();
@@ -182,6 +188,15 @@ export const EnhancedLoginScreen: React.FC = () => {
         }
     };
 
+    const handleClickShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+    };
+
+
     return (
         <Box
             display="flex"
@@ -270,13 +285,30 @@ export const EnhancedLoginScreen: React.FC = () => {
                             <TextField
                                 fullWidth
                                 label="Password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 variant="outlined"
                                 margin="normal"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 sx={{ mb: 3 }}
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    onClick={handleClickShowPassword}
+                                                    onMouseDown={handleMouseDownPassword}
+                                                    edge="end"
+                                                >
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
                             />
+
                             <Button
                                 type="submit"
                                 fullWidth
@@ -432,13 +464,30 @@ export const EnhancedLoginScreen: React.FC = () => {
                             <TextField
                                 fullWidth
                                 label="Password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 variant="outlined"
                                 margin="normal"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 sx={{ mb: 3 }}
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    onClick={handleClickShowPassword}
+                                                    onMouseDown={handleMouseDownPassword}
+                                                    edge="end"
+                                                >
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
                             />
+
                             <Button
                                 type="submit"
                                 fullWidth
