@@ -67,7 +67,7 @@ describe('enhancedAuthApi', () => {
         email: 'test@example.com',
         'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': 'Enhanced User',
         'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': 'Manager',
-        Permissions: 'DashboardView, ProjectEdit',
+        Permissions: 'VIEW_PROJECT, EDIT_PROJECT',
         Features: 'featureA, featureB',
         IsSuperAdmin: 'true',
         UserType: 'SuperAdmin',
@@ -94,7 +94,7 @@ describe('enhancedAuthApi', () => {
       expect(user?.tenantDomain).toBe('admin.localhost');
       expect(user?.features).toEqual(['featureA', 'featureB']);
       expect(user?.tenantContext).toBe('admin');
-      expect(user?.roleDetails?.permissions).toContain('DashboardView');
+      expect(user?.roleDetails?.permissions).toContain('VIEW_PROJECT');
     });
 
     it('handles failures from server', async () => {

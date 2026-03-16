@@ -117,8 +117,8 @@ export const useWBSData = ({ formType, selectedVersion }: UseWBSDataProps) => {
       const formTypeValue = formType === 'odc' ? 1 : 0;
 
       let l1Options: WBSOption[] = [];
-      let newLevel2OptionsMap: { [key: string]: WBSOption[] } = {};
-      let newLevel3OptionsMap: { [key: string]: WBSOption[] } = {};
+      const newLevel2OptionsMap: { [key: string]: WBSOption[] } = {};
+      const newLevel3OptionsMap: { [key: string]: WBSOption[] } = {};
 
       try {
         const fetchedL1Options = await WBSOptionsAPI.getLevel1Options(formTypeValue);

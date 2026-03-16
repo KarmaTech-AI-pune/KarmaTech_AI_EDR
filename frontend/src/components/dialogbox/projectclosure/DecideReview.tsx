@@ -72,7 +72,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     }
 
     try {        
-             let projectResponse = await projectApi.getById(projectId.toString());
+             const projectResponse = await projectApi.getById(projectId.toString());
           if (decision === 'approve') {
             // Send to approval to RM or RD
           await pmWorkflowApi.sendToApproval({
