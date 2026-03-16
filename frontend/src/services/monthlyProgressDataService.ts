@@ -4,7 +4,7 @@ import { projectApi } from './projectApi';
 import { MonthlyProgressSchemaType } from '../schemas/monthlyProgress/MonthlyProgressSchema';
 import { addCalculation, percentageCalculation } from '../utils/calculations';
 import { MonthlyProgressAPI, ManpowerResourcesResponse, MonthlyHourDto } from './monthlyProgressApi';
-import { formatDateForInput } from '../utils/dateUtils';
+import { formatDateToDDMMYYYY } from '../utils/dateUtils';
 
 // Define types for the expected API responses for better type safety
 interface JobStartData {
@@ -183,10 +183,10 @@ const transformDataForMonthlyProgress = (
       }
     }
     if (transformedData.schedule) {
-      transformedData.schedule.dateOfIssueWOLOI = formatDateForInput(project.startDate) || null;
-      transformedData.schedule.completionDateAsPerContract = formatDateForInput(project.endDate) || null;
-      transformedData.schedule.completionDateAsPerExtension = formatDateForInput(project.endDate) || null;
-      transformedData.schedule.expectedCompletionDate = formatDateForInput(project.endDate) || null;
+      transformedData.schedule.dateOfIssueWOLOI = formatDateToDDMMYYYY(project.startDate) || null;
+      transformedData.schedule.completionDateAsPerContract = formatDateToDDMMYYYY(project.endDate) || null;
+      transformedData.schedule.completionDateAsPerExtension = formatDateToDDMMYYYY(project.endDate) || null;
+      transformedData.schedule.expectedCompletionDate = formatDateToDDMMYYYY(project.endDate) || null;
     }
   }
 
@@ -402,10 +402,10 @@ export const getMonthlyProgressData = async (
       // Format schedule dates before merging
       const formattedSchedule = monthlyProgressData.schedule ? {
         ...monthlyProgressData.schedule,
-        dateOfIssueWOLOI: formatDateForInput(monthlyProgressData.schedule.dateOfIssueWOLOI) || null,
-        completionDateAsPerContract: formatDateForInput(monthlyProgressData.schedule.completionDateAsPerContract) || null,
-        completionDateAsPerExtension: formatDateForInput(monthlyProgressData.schedule.completionDateAsPerExtension) || null,
-        expectedCompletionDate: formatDateForInput(monthlyProgressData.schedule.expectedCompletionDate) || null,
+        dateOfIssueWOLOI: formatDateToDDMMYYYY(monthlyProgressData.schedule.dateOfIssueWOLOI) || null,
+        completionDateAsPerContract: formatDateToDDMMYYYY(monthlyProgressData.schedule.completionDateAsPerContract) || null,
+        completionDateAsPerExtension: formatDateToDDMMYYYY(monthlyProgressData.schedule.completionDateAsPerExtension) || null,
+        expectedCompletionDate: formatDateToDDMMYYYY(monthlyProgressData.schedule.expectedCompletionDate) || null,
       } : undefined;
 
       return {
