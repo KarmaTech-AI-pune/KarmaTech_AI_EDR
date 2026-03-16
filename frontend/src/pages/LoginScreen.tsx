@@ -26,7 +26,7 @@ import ReleaseNotesModal from '../components/ReleaseNotesModal';
 import { releaseNotesApi } from '../services/releaseNotesApi';
 import { versionApi } from '../services/versionApi';
 
-const MANUAL_VERSION_OVERRIDE = '1.3.0'; // Set this to e.g. '1.5.0' to force a version display
+const MANUAL_VERSION_OVERRIDE = '1.3.1'; // Set this to e.g. '1.5.0' to force a version display
 
 export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');

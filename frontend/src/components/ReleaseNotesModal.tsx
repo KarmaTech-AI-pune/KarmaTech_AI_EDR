@@ -51,6 +51,19 @@ import {
 import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/releaseNotesApi';
 
 const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
+  '1.3.1': {
+    version: '1.3.1',
+    releaseDate: '2026-03-16',
+    environment: 'production',
+    features: [
+      { id: 301, changeType: 'Feature', description: 'Created SQL script for Postgresql for restoring and back up of data from source database to current database', commitSha: 'manual' },
+    ],
+    bugFixes: [
+      { id: 302, changeType: 'BugFix', description: 'Resolved a bug in monthly progress form that was preventing the Monthly progress report from being saved', commitSha: 'manual' },
+    ],
+    improvements: [],
+    breakingChanges: [],
+  },
   '1.3.0': {
     version: '1.3.0',
     releaseDate: '2026-03-04',
