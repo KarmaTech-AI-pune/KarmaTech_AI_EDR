@@ -3,6 +3,7 @@ import { axiosInstance } from './axiosConfig';
 export interface AddSubtaskCommentRequest {
     commentText: string;
     createdBy: string;
+    workedStoryPoint?: number;
 }
 
 export interface TaskCommentResponse {
@@ -15,11 +16,13 @@ export interface TaskCommentResponse {
     updatedDate?: string;
     hoursLogged: number;
     description?: string;
+    workedStoryPoint?: number;
 }
 
 export interface TaskCommentsWithTotalResponse {
     comments: TaskCommentResponse[];
     totalLoggedHours: number;
+    totalWorkedStoryPoints: number;
 }
 
 export interface SubtaskCommentResponse {

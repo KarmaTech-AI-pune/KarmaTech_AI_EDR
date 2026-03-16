@@ -16,6 +16,8 @@ export interface Subtask {
   reporter: TeamMember;
   issueType: "Sub-task";
   storyPoints?: number;
+  allWorkStoryPoints?: number;
+  workedStoryPoints?: number;
   attachments?: number;
   comments: Comment[];
   createdDate: string;
@@ -28,6 +30,7 @@ export interface Comment {
   text: string;
   hoursLogged?: number;
   description?: string;
+  workedStoryPoints?: number;
   createdDate: string;
 }
 
@@ -43,6 +46,8 @@ export interface Issue {
   reporter: TeamMember;
   status: "To Do" | "In Progress" | "Review" | "Done";
   storyPoints: number;
+  allWorkStoryPoints?: number;
+  workedStoryPoints?: number;
   estimatedHours?: number;   // Original Estimate
   remainingHours?: number;   // Remaining Estimate
   actualHours?: number;      // Time Spent

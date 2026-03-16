@@ -221,6 +221,7 @@ export const useWBSData = ({ formType, selectedVersion }: UseWBSDataProps) => {
 
           const allTransformedRows: WBSRowData[] = uniqueTasks.map((task: any) => {
             const transformedPlannedHours: PlannedHours = {};
+            
             if (task.plannedHours && Array.isArray(task.plannedHours)) {
               task.plannedHours.forEach((monthEntry: any) => {
                 if (monthEntry?.year && monthEntry?.month) {
@@ -231,6 +232,11 @@ export const useWBSData = ({ formType, selectedVersion }: UseWBSDataProps) => {
               });
             } else if (task.plannedHours) {
               Object.assign(transformedPlannedHours, task.plannedHours);
+            }
+            
+            // Debug: Log only if plannedHours exist
+            if (Object.keys(transformedPlannedHours).length > 0) {
+              console.log(`Task ${task.id} transformed plannedHours:`, transformedPlannedHours);
             }
 
             const isOdcTask = task.taskType === TaskType.ODC;

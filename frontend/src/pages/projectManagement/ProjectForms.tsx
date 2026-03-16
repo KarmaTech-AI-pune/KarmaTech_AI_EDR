@@ -42,24 +42,24 @@ const ProjectForms: React.FC = () => {
         }
 
         switch (formId) {
-            case "wbs":
-                switch (subFormId) {
-                    case "manpower":
-                        return <WorkBreakdownStructureForm formType="manpower" />;
-                    case "odc":
-                        return <WorkBreakdownStructureForm formType="odc" />;
-                    case "todo-list":
-                        return <TodoList />;
-                    default:
-                        return <FormsOverview onFormSelect={() => { }} />;
-                }
-
-            case "job-start":
-                return (
-                    <FeatureGate featureName={"Job Start Form"} >
-                        <JobStartForm />
-                    </FeatureGate>
-                );
+        case "wbs":
+            switch (subFormId) {
+                case "manpower":
+                    return <WorkBreakdownStructureForm formType="manpower" />;
+                case "odc":
+                    return <WorkBreakdownStructureForm formType="odc" />;
+                case "todo-list":
+                    return <TodoList />;
+                default:
+                    return <FormsOverview onFormSelect={() => {}} />;
+            }
+        
+        case "job-start":
+            return(
+        <FeatureGate featureName={"Job Start Form"} >
+          <JobStartForm />
+        </FeatureGate>
+            );
 
             case "input-register":
                 return <InputRegisterForm />;

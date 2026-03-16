@@ -38,7 +38,7 @@ interface IssueDetailModalProps {
   onCreateSubtask: (parentIssueId: string, subtaskData: NewSubtaskFormState) => void;
   onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
   onDeleteSubtask: (subtaskId: string) => void;
-  onAddComment: (issueId: string, commentText: string) => void;
+  onAddComment: (issueId: string, commentText: string, workedSP?: number) => void;
   onUpdateComment: (issueId: string, commentId: string, text: string) => void;
   onDeleteComment: (issueId: string, commentId: string) => void;
   onAddSubtaskComment: (subtaskId: string, commentText: string) => void;
@@ -185,7 +185,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         ...prev,
         comments: [...prev.comments, newComment]
       } : null);
-      onAddComment(showIssueDetail.id, newCommentText);
+      onAddComment(showIssueDetail.id, newCommentText, 0);
       setNewCommentText("");
     }
   };
@@ -287,52 +287,84 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
 
 
-  const handleLogWork = async (timeSpent: number, remainingEstimate: number, description: string, modalType?: 'employee' | 'reporter') => {
+  const handleLogWork = async (timeSpent: number, remainingEstimate: number, description: string, modalType?: 'employee' | 'reporter', workedSP?: number) => {
     if (showIssueDetail) {
-      // If modalType is reporter, timeSpent is treated as the TOTAL actual hours (actual work time spend).
-      // If modalType is employee, timeSpent is added to existing total.
-      const newActual = modalType === 'reporter' ? timeSpent : (showIssueDetail.actualHours || 0) + timeSpent;
+      if (modalType === 'reporter') {
+        const newActual = (showIssueDetail.actualHours || 0) + timeSpent;
+        const addedHours = timeSpent;
 
-      // Optimistic update
-      const updatedIssue = {
-        ...showIssueDetail,
-        actualHours: newActual,
-        remainingHours: remainingEstimate
-      };
+        // Optimistic update
+        const updatedIssue = {
+          ...showIssueDetail,
+          actualHours: newActual,
+          remainingHours: remainingEstimate,
+          allWorkStoryPoints: (showIssueDetail.allWorkStoryPoints || 0) + (workedSP || 0)
+        };
 
-      const reporterDisplayName = projectManager?.name && projectManager.name !== 'Unknown'
-        ? projectManager.name
-        : showIssueDetail.reporter?.name || 'Unknown';
+        const reporterDisplayName = projectManager?.name && projectManager.name !== 'Unknown'
+          ? projectManager.name
+          : showIssueDetail.reporter?.name || 'Unknown';
 
-      const logActionText = modalType === 'reporter'
-        ? `Commite by (${reporterDisplayName})`
-        : `logged ${timeSpent}h`;
+        const logActionText = `Commite by (${reporterDisplayName})`;
+        const workLogComment = description.trim()
+          ? `${logActionText}: ${description}`
+          : logActionText;
 
-      const workLogComment = description.trim()
-        ? `${logActionText}: ${description}`
-        : logActionText;
+        const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
 
-      // Comments always represent the assignee's work — use assignee as author regardless of who is submitting
-      const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+        const newComment: Comment = {
+          id: `comment-${Date.now()}`,
+          author: author,
+          text: workLogComment,
+          createdDate: new Date().toISOString().split("T")[0],
+          hoursLogged: 0,
+          description: description,
+          workedStoryPoints: workedSP
+        };
+        updatedIssue.comments = [...updatedIssue.comments, newComment];
+        onAddComment(showIssueDetail.id, workLogComment, workedSP);
 
-      const newComment: Comment = {
-        id: `comment-${Date.now()}`,
-        author: author,
-        text: workLogComment,
-        createdDate: new Date().toISOString().split("T")[0]
-      };
-      updatedIssue.comments = [...updatedIssue.comments, newComment];
-      onAddComment(showIssueDetail.id, workLogComment);
+        setShowIssueDetail(updatedIssue);
+        // Update the issue in the main list as well
+        handleUpdateIssueAndState(showIssueDetail.id, {
+          actualHours: newActual,
+          remainingHours: remainingEstimate,
+          allWorkStoryPoints: (showIssueDetail.allWorkStoryPoints || 0) + (workedSP || 0)
+        });
 
-      setShowIssueDetail(updatedIssue);
-      // Update the issue in the main list as well
-      handleUpdateIssueAndState(showIssueDetail.id, {
-        actualHours: newActual,
-        remainingHours: remainingEstimate
-      });
+        // Call the dedicated API for time tracking
+        const apiIssuePayload = {
+          ...updatedIssue,
+          actualHours: addedHours
+        };
+        await updateIssueTimeAPI(apiIssuePayload);
+      } else {
+        // Employee flow: Only history/comment is updated
+        const logActionText = `logged ${timeSpent}h`;
 
-      // Call the dedicated API for time tracking
-      await updateIssueTimeAPI(updatedIssue);
+        const workLogComment = description.trim()
+          ? `${logActionText}: ${description}`
+          : logActionText;
+
+        const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+
+        const newComment: Comment = {
+          id: `comment-${Date.now()}`,
+          author: author,
+          text: workLogComment,
+          createdDate: new Date().toISOString().split("T")[0],
+          hoursLogged: timeSpent,
+          description: description
+        };
+
+        const updatedIssue = {
+          ...showIssueDetail,
+          comments: [...showIssueDetail.comments, newComment]
+        };
+
+        onAddComment(showIssueDetail.id, workLogComment, 0);
+        setShowIssueDetail(updatedIssue);
+      }
     }
   };
 
@@ -602,13 +634,15 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             <TimeTrackingWidget
               status={showIssueDetail.status}
               storyPoints={showIssueDetail.storyPoints}
+              allWorkStoryPoints={showIssueDetail.allWorkStoryPoints}
+              workedStoryPoints={showIssueDetail.workedStoryPoints}
               taskName={showIssueDetail.summary}
               reporterName={projectManager?.name || showIssueDetail.reporter?.name}
               originalEstimate={showIssueDetail.estimatedHours || 0}
               remainingEstimate={showIssueDetail.remainingHours || 0}
               timeSpent={showIssueDetail.actualHours || 0}
               employeeLoggedHours={showIssueDetail.totalLoggedHours || 0}
-              onLogWork={(time, rem, desc, modalType) => handleLogWork(time, rem, desc, modalType)}
+              onLogWork={(time, rem, desc, modalType, _allWorkSP, workedSP) => handleLogWork(time, rem, desc, modalType, workedSP)}
               recentLogs={recentWorkLogs}
             />
           </Box>

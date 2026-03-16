@@ -27,10 +27,12 @@ interface TimeTrackingWidgetProps {
     originalEstimate: number; // in hours
     remainingEstimate: number; // in hours
     timeSpent: number; // in hours
-    onLogWork: (timeSpent: number, remainingEstimate: number, description: string, modalType: 'employee' | 'reporter') => void;
+    onLogWork: (timeSpent: number, remainingEstimate: number, description: string, modalType: 'employee' | 'reporter', allWorkSP?: number, workedSP?: number) => void;
     recentLogs?: WorkLogEntry[];
     status?: string;
     storyPoints?: number;
+    allWorkStoryPoints?: number;
+    workedStoryPoints?: number;
     employeeLoggedHours?: number;
 }
 
@@ -44,11 +46,15 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
     recentLogs,
     status,
     storyPoints,
+    allWorkStoryPoints = 0,
+    workedStoryPoints = 0,
     employeeLoggedHours = 0,
 }) => {
     const [logWorkModalType, setLogWorkModalType] = useState<'employee' | 'reporter' | null>(null);
     const [logTimeSpent, setLogTimeSpent] = useState('');
     const [logRemainingEstimate, setLogRemainingEstimate] = useState(remainingEstimate.toString());
+    const [logAllWorkStoryPoints, setLogAllWorkStoryPoints] = useState(allWorkStoryPoints.toString());
+    const [logWorkedStoryPoints, setLogWorkedStoryPoints] = useState(workedStoryPoints.toString());
     const [logDescription, setLogDescription] = useState('');
 
     // Calculate progress percentage
@@ -67,10 +73,15 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
     const handleLogWork = () => {
         const timeSpentVal = parseFloat(logTimeSpent);
         const remainingVal = logWorkModalType === 'employee' ? remainingEstimate : parseFloat(logRemainingEstimate);
+        const allWorkSPVal = parseFloat(logAllWorkStoryPoints);
+        const workedSPVal = parseFloat(logWorkedStoryPoints);
 
         if (!isNaN(timeSpentVal)) {
             if (logWorkModalType) {
-                onLogWork(timeSpentVal, remainingVal, logDescription, logWorkModalType);
+                // We'll pass them in description text or we should update onLogWork signature. 
+                // For now, keeping the same signature, passing extra args won't hurt if we extend it, but let's just pass them if we update the interface.
+                // Wait, it's better to update the props interface to accept these.
+                onLogWork(timeSpentVal, remainingVal, logDescription, logWorkModalType, !isNaN(allWorkSPVal) ? allWorkSPVal : 0, !isNaN(workedSPVal) ? workedSPVal : 0);
             }
             setLogWorkModalType(null);
             setLogTimeSpent('');
@@ -138,6 +149,8 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                         onClick={() => {
                             setLogWorkModalType('reporter');
                             setLogRemainingEstimate(remainingEstimate.toString());
+                            setLogAllWorkStoryPoints(allWorkStoryPoints.toString());
+                            setLogWorkedStoryPoints(workedStoryPoints.toString());
                             setLogTimeSpent('');
                         }}
                     >
@@ -345,6 +358,28 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                             sx={{ bgcolor: 'action.hover' }}
                                         />
                                     </Grid>
+                                    <Grid item xs={12} sm={4}>
+                                        <TextField
+                                            label="Working Story Point"
+                                            type="number"
+                                            value={allWorkStoryPoints + (parseFloat(logWorkedStoryPoints as string) || 0)}
+                                            fullWidth
+                                            size="small"
+                                            InputProps={{ readOnly: true }}
+                                            sx={{ bgcolor: 'action.hover' }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={4}>
+                                        <TextField
+                                            label="Reported Story Point"
+                                            type="number"
+                                            value={logWorkedStoryPoints}
+                                            onChange={(e) => setLogWorkedStoryPoints(e.target.value)}
+                                            fullWidth
+                                            size="small"
+                                            inputProps={{ min: 0, step: 0.5 }}
+                                        />
+                                    </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
                                             label="Actual work time spent (hours)"
@@ -366,6 +401,17 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                             autoFocus
                                             size="small"
                                             inputProps={{ min: 0, step: 0.5 }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Total Actual Work Hours"
+                                            type="number"
+                                            value={timeSpent + (parseFloat(logTimeSpent as string) || 0)}
+                                            fullWidth
+                                            size="small"
+                                            InputProps={{ readOnly: true }}
+                                            sx={{ bgcolor: 'action.hover' }}
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={8}>

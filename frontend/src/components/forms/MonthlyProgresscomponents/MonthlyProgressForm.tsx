@@ -63,41 +63,41 @@ const tabs = [
   },
   {
     id: "2",
+    label: "Manpower Planning",
+    component: <ManpowerPlanningTab />,
+    inputs: ["manpowerPlanning"],
+  },
+  {
+    id: "3",
     label: "Actual Cost",
     component: <ActualCost />,
     inputs: ["actualCost"],
   },
   {
-    id: "3",
+    id: "4",
     label: "CTC & EAC",
     component: <CostToCompleteAndEAC/>,
     inputs: ["ctcAndEac"]
   },
   {
-    id: "4",
+    id: "5",
     label: "Schedule",
     component: <ScheduleTab />,
     inputs: ["schedule"],
   },
   {
-    id: "5",
+    id: "6",
     label: "Progress Review Deliverables",
     component: <ProgressReviewDeliverables />,
     inputs: ["progressDeliverable"],
   },
   {
-    id: "6",
+    id: "7",
     label: "Budget Revenue",
     component: <BudgetRevenueTab/>,
     inputs: [
      "budgetTable"
     ],
-  },
-  {
-    id: "7",
-    label: "Manpower Planning",
-    component: <ManpowerPlanningTab />,
-    inputs: ["manpowerPlanning"],
   },
   {
     id: "8",

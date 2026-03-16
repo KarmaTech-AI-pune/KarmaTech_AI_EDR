@@ -76,78 +76,119 @@ namespace EDR.Application.CQRS.Cashflow.Handlers
                 var jobStartForm = await _context.JobStartForms
                     .FirstOrDefaultAsync(j => j.ProjectId == request.ProjectId, cancellationToken);
 
-                // Get payment milestones from ProgressDeliverables (Monthly Progress form)
-                // Include the MonthlyProgress to get the Month and Year
-                var progressDeliverablesWithMonth = await _context.MonthlyProgresses
-                    .Where(mp => mp.ProjectId == request.ProjectId)
-                    .SelectMany(mp => mp.ProgressDeliverables.Select(pd => new 
-                    {
-                        Deliverable = pd,
-                        Month = mp.Month,
-                        Year = mp.Year
-                    }))
-                    .Where(x => x.Deliverable.PaymentDue.HasValue && x.Deliverable.PaymentDue.Value > 0)
+                // Get payment milestones from PaymentSchedule (Payment Milestone table)
+                var paymentMilestones = await _context.PaymentMilestones
+                    .Where(pm => pm.ProjectId == request.ProjectId)
                     .ToListAsync(cancellationToken);
 
                 // Log payment milestones for debugging
                 Console.WriteLine($"=== REVENUE CALCULATION DEBUG START ===");
                 Console.WriteLine($"Project ID: {request.ProjectId}");
-                Console.WriteLine($"Found {progressDeliverablesWithMonth.Count} progress deliverables with payments");
+                Console.WriteLine($"Total payment milestones in DB: {paymentMilestones.Count}");
+                Console.WriteLine($"Payment milestones with AmountINR > 0: {paymentMilestones.Count(pm => pm.AmountINR > 0)}");
                 
-                if (progressDeliverablesWithMonth.Count == 0)
+                if (paymentMilestones.Count == 0)
                 {
-                    Console.WriteLine($"WARNING: No progress deliverables with payments found for project {request.ProjectId}");
+                    Console.WriteLine($"WARNING: No payment milestones found for project {request.ProjectId}");
                     Console.WriteLine($"Revenue will be 0 for all months");
                 }
-                
-                foreach (var item in progressDeliverablesWithMonth)
+                else
                 {
-                    Console.WriteLine($"Progress Deliverable Details:");
-                    Console.WriteLine($"  - ID: {item.Deliverable.Id}");
-                    Console.WriteLine($"  - Milestone: {item.Deliverable.Milestone}");
-                    Console.WriteLine($"  - Payment Due: {item.Deliverable.PaymentDue}");
-                    Console.WriteLine($"  - Monthly Progress Month: {item.Month}");
-                    Console.WriteLine($"  - Monthly Progress Year: {item.Year}");
+                    Console.WriteLine($"Found {paymentMilestones.Count} payment milestones:");
+                }
+                
+                foreach (var milestone in paymentMilestones)
+                {
+                    Console.WriteLine($"Payment Milestone Details:");
+                    Console.WriteLine($"  - ID: {milestone.Id}");
+                    Console.WriteLine($"  - Description: {milestone.Description}");
+                    Console.WriteLine($"  - Amount INR: {milestone.AmountINR}");
+                    Console.WriteLine($"  - Due Date (raw): '{milestone.DueDate}'");
+                    Console.WriteLine($"  - Due Date IsNullOrEmpty: {string.IsNullOrEmpty(milestone.DueDate)}");
+                    Console.WriteLine($"  - Percentage: {milestone.Percentage}");
                 }
 
                 // Create a dictionary for milestone revenue by month
                 var revenueByMonth = new Dictionary<string, decimal>();
-                foreach (var item in progressDeliverablesWithMonth)
+                foreach (var milestone in paymentMilestones)
                 {
-                    Console.WriteLine($"Processing deliverable: {item.Deliverable.Milestone}");
-                    Console.WriteLine($"  - Month: {item.Month}, Year: {item.Year}");
-                    Console.WriteLine($"  - Payment Due: {item.Deliverable.PaymentDue}");
+                    Console.WriteLine($"\nProcessing milestone: {milestone.Description}");
+                    Console.WriteLine($"  - Due Date: '{milestone.DueDate}'");
+                    Console.WriteLine($"  - Amount INR: {milestone.AmountINR}");
                     
-                    if (item.Deliverable.PaymentDue.HasValue && item.Deliverable.PaymentDue.Value > 0)
+                    // Skip if amount is 0 or negative
+                    if (milestone.AmountINR <= 0)
                     {
-                        try
+                        Console.WriteLine($"  - SKIPPED: Amount INR is 0 or negative");
+                        continue;
+                    }
+                    
+                    // Skip if DueDate is null or empty
+                    if (string.IsNullOrEmpty(milestone.DueDate))
+                    {
+                        Console.WriteLine($"  - SKIPPED: DueDate is null or empty");
+                        continue;
+                    }
+                    
+                    try
+                    {
+                        // Try to parse DueDate - support multiple formats
+                        DateTime dueDate;
+                        bool parsed = DateTime.TryParse(milestone.DueDate, out dueDate);
+                        
+                        if (!parsed)
                         {
-                            // Create date from MonthlyProgress Month and Year
-                            var monthDate = new DateTime(item.Year, item.Month, 1);
-                            string milestoneMonth = monthDate.ToString("MMM-yy"); // "Mar-26"
+                            // Try parsing with specific formats
+                            string[] formats = { 
+                                "yyyy-MM-dd", 
+                                "MM/dd/yyyy", 
+                                "dd/MM/yyyy",
+                                "yyyy/MM/dd",
+                                "MMM-yy",
+                                "MMM-yyyy"
+                            };
                             
+                            foreach (var format in formats)
+                            {
+                                if (DateTime.TryParseExact(milestone.DueDate, format, 
+                                    System.Globalization.CultureInfo.InvariantCulture, 
+                                    System.Globalization.DateTimeStyles.None, out dueDate))
+                                {
+                                    parsed = true;
+                                    Console.WriteLine($"  - Parsed with format: {format}");
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (parsed)
+                        {
+                            string milestoneMonth = dueDate.ToString("MMM-yy"); // "Mar-24"
+                            
+                            Console.WriteLine($"  - Parsed Date: {dueDate:yyyy-MM-dd}");
                             Console.WriteLine($"  - Formatted month: {milestoneMonth}");
                             
                             if (revenueByMonth.ContainsKey(milestoneMonth))
                             {
-                                revenueByMonth[milestoneMonth] += item.Deliverable.PaymentDue.Value;
+                                revenueByMonth[milestoneMonth] += milestone.AmountINR;
                                 Console.WriteLine($"  - Added to existing month. New total: {revenueByMonth[milestoneMonth]}");
                             }
                             else
                             {
-                                revenueByMonth[milestoneMonth] = item.Deliverable.PaymentDue.Value;
+                                revenueByMonth[milestoneMonth] = milestone.AmountINR;
                                 Console.WriteLine($"  - Created new month entry. Total: {revenueByMonth[milestoneMonth]}");
                             }
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            Console.WriteLine($"  - ERROR processing deliverable: {ex.Message}");
-                            continue;
+                            Console.WriteLine($"  - ERROR: Could not parse DueDate: '{milestone.DueDate}' with any known format");
                         }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Console.WriteLine($"  - SKIPPED: Payment Due is null or 0");
+                        Console.WriteLine($"  - ERROR processing milestone: {ex.Message}");
+                        Console.WriteLine($"  - Stack trace: {ex.StackTrace}");
+                        continue;
                     }
                 }
                 

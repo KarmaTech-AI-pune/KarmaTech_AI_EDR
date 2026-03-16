@@ -17,7 +17,17 @@ export interface ManpowerResourceDto {
   costRate: number;
   totalHours: number;
   totalCost: number;
-  monthlyHours: MonthlyHourDto[];
+  plannedHours: MonthlyHourDto[]; // Changed from monthlyHours to plannedHours to match backend
+}
+
+export interface AssigneeProgressDto {
+  assigneeId: string | null;
+  assigneeName: string;
+  month: string;
+  estimatedHours: number;
+  actualHours: number;
+  remainingHours: number;
+  employeeLoggedHours: number;
 }
 
 export interface ManpowerResourcesResponse {
@@ -66,6 +76,23 @@ export const MonthlyProgressAPI = {
     } catch (error) {
       console.error(`Error fetching manpower resources for project ${projectId}:`, error);
       throw new Error(`Failed to load manpower resources for project ${projectId}.`);
+    }
+  },
+
+  /**
+   * Get assignee progress with actual hours for a project
+   * @param projectId Project ID
+   * @returns Promise with assignee progress data
+   */
+  getAssigneeProgress: async (projectId: string): Promise<any[]> => {
+    try {
+      const response = await axiosInstance.get(`/api/projects/${projectId}/monthlyprogress/assignee-progress`);
+      console.log('✅ Assignee progress API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching assignee progress for project ${projectId}:`, error);
+      // Return empty array if API fails - don't block the entire form
+      return [];
     }
   },
 
