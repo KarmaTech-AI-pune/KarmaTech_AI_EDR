@@ -104,15 +104,43 @@ export const MonthlyProgressAPI = {
    */
   submitMonthlyProgress: async (projectId: string, formData: any) => {
     const { year, month, ...data } = formData;
+    
+    // Convert DD-MM-YYYY dates to YYYY-MM-DD for backend
+    const convertDatesToBackendFormat = (obj: any): any => {
+      if (!obj) return obj;
+      
+      if (typeof obj === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(obj)) {
+        // Convert DD-MM-YYYY to YYYY-MM-DD
+        const [day, monthPart, yearPart] = obj.split('-');
+        return `${yearPart}-${monthPart}-${day}`;
+      }
+      
+      if (Array.isArray(obj)) {
+        return obj.map(item => convertDatesToBackendFormat(item));
+      }
+      
+      if (typeof obj === 'object') {
+        const converted: any = {};
+        for (const key in obj) {
+          converted[key] = convertDatesToBackendFormat(obj[key]);
+        }
+        return converted;
+      }
+      
+      return obj;
+    };
+    
+    const convertedData = convertDatesToBackendFormat(data);
+    
     try {
-      const response = await axiosInstance.put(`/api/projects/${projectId}/monthlyprogress/year/${year}/month/${month}`, data);
+      const response = await axiosInstance.put(`/api/projects/${projectId}/monthlyprogress/year/${year}/month/${month}`, convertedData);
       return response.data;
     } catch (error: any) {
       if (error.response && error.response.status === 404) {
         // 404 is expected for the first save of a month, proceed to create
         console.log(`Monthly progress for ${month}/${year} not found (404), creating new record...`);
         try {
-          const response = await axiosInstance.post(`/api/projects/${projectId}/monthlyprogress`, { ...data, year, month });
+          const response = await axiosInstance.post(`/api/projects/${projectId}/monthlyprogress`, { ...convertedData, year, month });
           return response.data;
         } catch (createError) {
           console.error(`Error creating monthly progress for project ${projectId}:`, createError);

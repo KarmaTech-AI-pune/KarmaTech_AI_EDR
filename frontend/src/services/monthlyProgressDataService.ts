@@ -3,7 +3,7 @@ import { WBSStructureAPI } from '../features/wbs/services/wbsApi';
 import { projectApi } from './projectApi';
 import { MonthlyProgressSchemaType } from '../schemas/monthlyProgress/MonthlyProgressSchema';
 import { addCalculation, percentageCalculation } from '../utils/calculations';
-import { MonthlyProgressAPI, ManpowerResourcesResponse, MonthlyHourDto } from './monthlyProgressApi';
+import { MonthlyProgressAPI, ManpowerResourcesResponse } from './monthlyProgressApi';
 import { formatDateToDDMMYYYY } from '../utils/dateUtils';
 
 // Define types for the expected API responses for better type safety
@@ -153,13 +153,27 @@ const transformDataForMonthlyProgress = (
 
   // Process WBS data if the promise was fulfilled
   if (wbsResult.status === 'fulfilled' && wbsResult.value) {
-    const wbsData = wbsResult.value.tasks || [];
-    const budgetOdcs = wbsData
-      .filter(row => row.taskType === 1)
-      .reduce((sum, row) => sum + (row.totalCost || 0), 0);
-    const budgetStaff = wbsData
-      .filter(row => row.taskType === 0)
-      .reduce((sum, row) => sum + (row.totalCost || 0), 0);
+    let budgetOdcs = 0;
+    let budgetStaff = 0;
+
+    if (wbsResult.value.workBreakdownStructures) {
+      wbsResult.value.workBreakdownStructures.forEach(structure => {
+        if (structure.tasks) {
+          structure.tasks.forEach((row: any) => {
+            if (row.taskType === 1) budgetOdcs += (row.totalCost || 0);
+            if (row.taskType === 0) budgetStaff += (row.totalCost || 0);
+          });
+        }
+      });
+    } else if (wbsResult.value.tasks) {
+      // Fallback in case it's flat
+      budgetOdcs = wbsResult.value.tasks
+        .filter((row: any) => row.taskType === 1)
+        .reduce((sum: number, row: any) => sum + (row.totalCost || 0), 0);
+      budgetStaff = wbsResult.value.tasks
+        .filter((row: any) => row.taskType === 0)
+        .reduce((sum: number, row: any) => sum + (row.totalCost || 0), 0);
+    }
 
     if (transformedData.financialAndContractDetails) {
       transformedData.financialAndContractDetails.budgetOdcs = budgetOdcs;
@@ -194,7 +208,7 @@ const transformDataForMonthlyProgress = (
     console.log('🚀 Processing manpower data...');
     console.log('📅 Selected month/year:', { selectedMonth, selectedYear });
     
-    const getMonthlyHours = (plannedHours: MonthlyHourDto[]) => {
+    const getMonthlyHours = (plannedHours: any[]) => {
       // Use selected month/year if provided, otherwise use current date
       const targetDate = selectedYear && selectedMonth 
         ? new Date(selectedYear, selectedMonth - 1, 1)
@@ -221,8 +235,20 @@ const transformDataForMonthlyProgress = (
         nextMonthHours: nextMonthData?.plannedHours || 0
       };
     };
-    const manpowerData = manpowerResult.value.resources.map(resource => {
-      const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.plannedHours);
+
+    // Extract all manpower tasks (taskType === 0) from the WBS structures array
+    let allManpowerTasks: any[] = [];
+    if (wbsResult.status === 'fulfilled' && wbsResult.value && wbsResult.value.workBreakdownStructures) {
+      wbsResult.value.workBreakdownStructures.forEach(structure => {
+        if (structure.tasks && Array.isArray(structure.tasks)) {
+           const staffTasks = structure.tasks.filter((t: any) => t.taskType === 0 && t.assignedUserName);
+           allManpowerTasks = [...allManpowerTasks, ...staffTasks];
+        }
+      });
+    }
+
+    const manpowerData = allManpowerTasks.map(resource => {
+      const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.plannedHours || []);
       
       // Get assignee progress data for this employee
       let consumedHours = 0; // employeeLoggedHours
@@ -240,7 +266,7 @@ const transformDataForMonthlyProgress = (
         const normalizeString = (str: string) => 
           str?.trim().toLowerCase().replace(/\s+/g, ' ') || '';
         
-        const normalizedEmployeeName = normalizeString(resource.employeeName);
+        const normalizedEmployeeName = normalizeString(resource.assignedUserName);
         
         const match = assigneeProgressResult.value.find(ap => {
           const nameMatch = normalizeString(ap.assigneeName) === normalizedEmployeeName;
@@ -255,7 +281,7 @@ const transformDataForMonthlyProgress = (
       }
       
       console.log('📋 Entry:', {
-        name: resource.employeeName,
+        name: resource.assignedUserName,
         rate: resource.costRate,
         planned: currentMonthHours,
         consumed: consumedHours,
@@ -264,8 +290,8 @@ const transformDataForMonthlyProgress = (
       });
       
       return {
-        workAssignment: resource.taskTitle,
-        assignee: resource.employeeName,
+        workAssignment: resource.title || resource.wbsOptionLabel,
+        assignee: resource.assignedUserName,
         rate: resource.costRate || 0,
         planned: currentMonthHours,
         consumed: consumedHours,
