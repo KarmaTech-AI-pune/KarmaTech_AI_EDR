@@ -270,16 +270,21 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 task.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
             }
 
+            // Map to keep track of ALL tasks being processed in this batch (existing and new)
+            // Using dto.Id as key. For new tasks (Id <= 0), we'll use a temporary mapping.
+            var taskLookup = new Dictionary<int, WBSTask>();
+            int tempIdCounter = -1;
+
             foreach (var dto in taskDtos)
             {
                 WBSTask taskEntity;
-                bool isNewTask = dto.Id <= 0; // Assuming 0 or negative means new
+                bool isNewTask = dto.Id <= 0;
 
                 if (!isNewTask && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
                 {
                     // Update existing task
-                    taskEntity.TenantId = wbsHeader.TenantId; // Ensure TenantId is set
-                    taskEntity.WorkBreakdownStructureId = wbsGroupEntity.Id; // Ensure foreign key is set
+                    taskEntity.TenantId = wbsHeader.TenantId;
+                    taskEntity.WorkBreakdownStructureId = wbsGroupEntity.Id;
                     taskEntity.WBSOptionId = dto.WBSOptionId;
                     taskEntity.Title = dto.Title;
                     taskEntity.Description = dto.Description;
@@ -291,30 +296,27 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskEntity.TaskType = dto.TaskType;
                     taskEntity.UpdatedAt = DateTime.UtcNow;
                     taskEntity.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
-                    taskEntity.IsDeleted = false; // Ensure it's not marked as deleted
+                    taskEntity.IsDeleted = false;
 
-                    // Handle WBS Option Label - Only set WBSOptionLabel, don't overwrite the title
+                    // Handle WBS Option Label
                     if (dto.WBSOptionId > 0)
                     {
                         var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId);
                         if (wbsOption != null)
                         {
-                            // Only set the WBSOptionLabel, preserve the original title
                             dto.WBSOptionLabel = wbsOption.Label;
                         }
                     }
 
-                    await UpdateUserAssignment(taskEntity, dto);
-                    await UpdatePlannedHours(taskEntity, dto, wbsHeader.Version, wbsHeader.ProjectId);
+                    taskLookup.Add(dto.Id, taskEntity);
                 }
                 else
                 {
                     // Create new task
                     taskEntity = new WBSTask
                     {
-                        TenantId = wbsHeader.TenantId, // IMPORTANT: Set TenantId for tenant isolation
-                        WorkBreakdownStructure = wbsGroupEntity,
-                        WorkBreakdownStructureId = wbsGroupEntity.Id, // IMPORTANT: Set foreign key explicitly
+                        TenantId = wbsHeader.TenantId,
+                        WorkBreakdownStructureId = wbsGroupEntity.Id,
                         Description = dto.Description,
                         Level = dto.Level,
                         DisplayOrder = dto.DisplayOrder,
@@ -328,94 +330,72 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                         UserWBSTasks = new List<UserWBSTask>(),
                         PlannedHours = new List<WBSTaskPlannedHour>(),
                         WBSOptionId = dto.WBSOptionId,
-                        Title = dto.Title,
-                        // ParentId will be set in the second pass after all tasks are created and have IDs.
-                        // We use dto.ParentId which directly references another WBS task's ID - not a WBS option ID
-                        // The actual WBS task ID will be resolved in the lookup dictionary
-                        ParentId = null // Placeholder, will be set in the second pass
+                        Title = dto.Title
                     };
 
-                    // Handle WBS Option Label - Only set WBSOptionLabel, don't overwrite the title
+                    // Handle WBS Option Label
                     if (dto.WBSOptionId > 0)
                     {
                         var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId);
                         if (wbsOption != null)
                         {
-                            // Only set the WBSOptionLabel, preserve the original title
                             dto.WBSOptionLabel = wbsOption.Label;
                         }
                     }
 
                     _context.WBSTasks.Add(taskEntity);
                     wbsGroupEntity.Tasks.Add(taskEntity);
-
-                    // Store task and DTO for second pass to resolve ParentId
+                    
+                    int key = dto.Id > 0 ? dto.Id : tempIdCounter--;
+                    taskLookup.Add(key, taskEntity);
+                    
+                    // Mark as needing child data (User assignments, etc.)
                     newTasksNeedingChildData.Add((taskEntity, dto));
                 }
 
                 allTasks.Add(taskEntity);
             }
 
-            // Second Pass: Resolve ParentIds for newly created tasks
-            // Create a map of task DTO ID to task entity for easy lookup.
-            // Use original DTO IDs (including 0 for new tasks) as keys, with a temporary counter for uniqueness.
-            var taskLookup = new Dictionary<int, WBSTask>();
-            int tempIdCounter = -1;
-
-            // Populate the lookup map from the newTasksNeedingChildData list.
-            foreach (var (taskEntity, dto) in newTasksNeedingChildData)
+            // Second Pass: Resolve Parent relationships and update child data (User assignments, etc.)
+            // This works for new tasks too because EF Core will resolve the IDs during SaveChanges
+            tempIdCounter = -1;
+            foreach (var dto in taskDtos)
             {
-                // Generate a unique key for new tasks (dto.Id <= 0) by decrementing the counter *before* use.
-                int keyForLookup = dto.Id > 0 ? dto.Id : tempIdCounter;
-                
-                if (!taskLookup.ContainsKey(keyForLookup))
+                int key = dto.Id > 0 ? dto.Id : tempIdCounter--;
+                if (taskLookup.TryGetValue(key, out var taskEntity))
                 {
-                    taskLookup.Add(keyForLookup, taskEntity);
-                }
-                else
-                {
-                    // This should not happen with the corrected logic, but as a safeguard:
-                    _logger.LogWarning("Duplicate key {Key} generated for task lookup in SetWBSCommandHandler. Skipping.", keyForLookup);
-                }
-                
-                // Decrement counter for the next new task.
-                if (dto.Id <= 0) tempIdCounter--;
-            }
-
-            // Now, resolve ParentIds using the created map.
-            foreach (var (taskEntity, dto) in newTasksNeedingChildData)
-            {
-                if (dto.ParentId.HasValue && dto.ParentId.Value > 0)
-                {
-                    // Try to find the parent using the parent DTO ID.
-                    if (taskLookup.TryGetValue(dto.ParentId.Value, out var parentTaskEntity))
+                    // 1. Resolve Parent relationships via navigation property
+                    if (dto.ParentId.HasValue && dto.ParentId.Value > 0)
                     {
-                        _logger.LogInformation("SetWBSCommandHandler: Resolving ParentId for Task DTO ID {TaskDtoId} (Original ID: {OriginalTaskId}). Parent DTO ID: {ParentDtoId}. Assigning ParentId: {ParentEntityId}",
-                            taskEntity.Id, dto.Id, dto.ParentId.Value, parentTaskEntity.Id);
-                        taskEntity.ParentId = parentTaskEntity.Id;
+                        if (taskLookup.TryGetValue(dto.ParentId.Value, out var parentTaskEntity))
+                        {
+                            _logger.LogInformation("SetWBSCommandHandler: Resolving Parent relationship via navigation property for Task {TaskTitle}. Parent: {ParentTitle}",
+                                taskEntity.Title, parentTaskEntity.Title);
+                            taskEntity.Parent = parentTaskEntity;
+                            taskEntity.ParentId = null; // Let EF Core handle the ID assignment
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Parent task with DTO ID {ParentDtoId} not found for task {TaskTitle}.",
+                                dto.ParentId.Value, taskEntity.Title);
+                            taskEntity.Parent = null;
+                            taskEntity.ParentId = null;
+                        }
                     }
                     else
                     {
-                        _logger.LogWarning("Parent task with DTO ID {ParentDtoId} not found for task with DTO ID {TaskDtoId}. ParentId will not be set.",
-                            dto.ParentId.Value, dto.Id);
+                        taskEntity.Parent = null;
+                        taskEntity.ParentId = null;
                     }
-                }
-                else
-                {
-                    // If ParentId is null in DTO, we'll infer it based on task level and position in sequence
-                    taskEntity.ParentId = null; // Default to null, we'll set it below if needed
-                }
-            }
 
-            // Update UserWBSTasks and PlannedHours for newly created tasks (they now have IDs)
-            _logger.LogInformation("SetWBSCommandHandler: Updating UserWBSTasks and PlannedHours for {Count} new tasks", newTasksNeedingChildData.Count);
-            foreach (var (task, dto) in newTasksNeedingChildData)
-            {
-                await UpdateUserAssignment(task, dto);
-                await UpdatePlannedHours(task, dto, wbsHeader.Version, wbsHeader.ProjectId);
+                    // 2. Update UserWBSTasks and PlannedHours for ALL tasks (existing and new)
+                    // This ensures roles, users, and hours are correctly updated even for existing records.
+                    await UpdateUserAssignment(taskEntity, dto);
+                    await UpdatePlannedHours(taskEntity, dto, wbsHeader.Version, wbsHeader.ProjectId);
+                }
             }
             
-            // Third Pass: Infer parent-child relationships based on task level and position for those with null ParentId
+            // Third Pass: Infer parent-child relationships based on task level and position for those with null Parent
             await InferParentChildRelationships(allTasks);
         }
 
@@ -447,6 +427,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     case WBSTaskLevel.Level1:
                         // Level 1 tasks are top-level, no parent needed
+                        task.Parent = null;
                         task.ParentId = null;
                         break;
                     
@@ -454,9 +435,10 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                         // Level 2 tasks should be children of the most recent Level 1 task
                         if (latestTaskByLevel.TryGetValue(WBSTaskLevel.Level1, out var parentLevel1))
                         {
-                            task.ParentId = parentLevel1.Id;
-                            _logger.LogInformation("SetWBSCommandHandler: Setting Level 2 task {TaskId} parent to Level 1 task {ParentId}", 
-                                task.Id, parentLevel1.Id);
+                            task.Parent = parentLevel1;
+                            task.ParentId = null;
+                            _logger.LogInformation("SetWBSCommandHandler: Setting Level 2 task {TaskTitle} parent to Level 1 task {ParentTitle}", 
+                                task.Title, parentLevel1.Title);
                         }
                         break;
                     
@@ -464,9 +446,10 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                         // Level 3 tasks should be children of the most recent Level 2 task
                         if (latestTaskByLevel.TryGetValue(WBSTaskLevel.Level2, out var parentLevel2))
                         {
-                            task.ParentId = parentLevel2.Id;
-                            _logger.LogInformation("SetWBSCommandHandler: Setting Level 3 task {TaskId} parent to Level 2 task {ParentId}", 
-                                task.Id, parentLevel2.Id);
+                            task.Parent = parentLevel2;
+                            task.ParentId = null;
+                            _logger.LogInformation("SetWBSCommandHandler: Setting Level 3 task {TaskTitle} parent to Level 2 task {ParentTitle}", 
+                                task.Title, parentLevel2.Title);
                         }
                         break;
                     
@@ -477,9 +460,10 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                             Enum.IsDefined(typeof(WBSTaskLevel), previousLevel) && 
                             latestTaskByLevel.TryGetValue((WBSTaskLevel)previousLevel, out var parentTask))
                         {
-                            task.ParentId = parentTask.Id;
-                            _logger.LogInformation("SetWBSCommandHandler: Setting Level {Level} task {TaskId} parent to Level {ParentLevel} task {ParentId}", 
-                                (int)task.Level, task.Id, previousLevel, parentTask.Id);
+                            task.Parent = parentTask;
+                            task.ParentId = null;
+                            _logger.LogInformation("SetWBSCommandHandler: Setting Level {Level} task {TaskTitle} parent to Level {ParentLevel} task {ParentTitle}", 
+                                (int)task.Level, task.Title, previousLevel, parentTask.Title);
                         }
                         break;
                 }
