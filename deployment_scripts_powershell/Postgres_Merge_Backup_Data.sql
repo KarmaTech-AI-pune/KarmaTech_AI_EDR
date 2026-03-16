@@ -81,11 +81,24 @@ BEGIN
           AND table_type = 'BASE TABLE'
           AND LOWER(table_name) NOT IN ('tenantdatabases', 'spatial_ref_sys', '__efmigrationshistory')
         ORDER BY
-            CASE
-                WHEN LOWER(table_name) = 'tenants'            THEN 0
-                WHEN LOWER(table_name) = 'subscriptionplans'  THEN 1
-                WHEN LOWER(table_name) = 'aspnetroles'        THEN 2
-                WHEN LOWER(table_name) = 'aspnetusers'        THEN 3
+            CASE LOWER(table_name)
+                -- Core / Master tables first
+                WHEN 'tenants'                  THEN 0
+                WHEN 'subscriptionplans'         THEN 1
+                WHEN 'programs'                  THEN 2
+                -- Roles MUST come before Users (FK dependency)
+                WHEN 'aspnetroles'               THEN 3
+                -- Users MUST come before UserRoles, UserClaims, UserTokens
+                WHEN 'aspnetusers'               THEN 4
+                -- Role + User dependent tables
+                WHEN 'aspnetroleclaims'          THEN 5
+                WHEN 'aspnetuserroles'           THEN 6
+                WHEN 'aspnetuserclaims'          THEN 7
+                WHEN 'aspnetuserlogins'          THEN 7
+                WHEN 'aspnetusertokens'          THEN 7
+                -- Tenant-User mapping (needs both Tenants and Users)
+                WHEN 'tenantusers'               THEN 8
+                -- All other tables after
                 ELSE 10
             END, table_name
     LOOP
@@ -137,29 +150,31 @@ BEGIN
         IF v_common_columns IS NOT NULL THEN
             v_dblink_query := format('SELECT %s FROM %I.%I', v_common_columns, v_schema_name, v_actual_table_name);
 
-            -- Build INSERT with TenantId injection
+            -- For tables WITH TenantId: Delete existing rows for this tenant first,
+            -- then insert fresh from source. This avoids all PK/unique conflicts.
             IF v_has_tenant_id THEN
+                BEGIN
+                    EXECUTE format('DELETE FROM %I.%I WHERE %I = %L',
+                        v_schema_name, v_actual_table_name, v_target_tenant_col, v_target_tenant_id);
+                EXCEPTION WHEN OTHERS THEN
+                    -- Ignore delete errors (FK constraints etc.)
+                    NULL;
+                END;
+
                 v_sql := format(
-                    'INSERT INTO %I.%I (%s, %I) SELECT %s, %L FROM dblink(''source_conn'', %L) AS s(%s)',
+                    'INSERT INTO %I.%I (%s, %I) SELECT %s, %L FROM dblink(''source_conn'', %L) AS s(%s) ON CONFLICT DO NOTHING',
                     v_schema_name, v_actual_table_name,
                     v_common_columns, v_target_tenant_col,
                     v_common_columns, v_target_tenant_id,
                     v_dblink_query, v_dblink_types
                 );
             ELSE
+                -- For tables WITHOUT TenantId (global/shared tables): just skip conflicts
                 v_sql := format(
-                    'INSERT INTO %I.%I (%s) SELECT %s FROM dblink(''source_conn'', %L) AS s(%s)',
+                    'INSERT INTO %I.%I (%s) SELECT %s FROM dblink(''source_conn'', %L) AS s(%s) ON CONFLICT DO NOTHING',
                     v_schema_name, v_actual_table_name,
                     v_common_columns, v_common_columns,
                     v_dblink_query, v_dblink_types
-                );
-            END IF;
-
-            -- Add existence guard (by PK only, matching T-SQL behavior - NO TenantId in check)
-            IF v_pk_join_condition IS NOT NULL THEN
-                v_sql := v_sql || format(
-                    ' WHERE NOT EXISTS (SELECT 1 FROM %I.%I t WHERE %s)',
-                    v_schema_name, v_actual_table_name, v_pk_join_condition
                 );
             END IF;
 
@@ -168,12 +183,16 @@ BEGIN
                 GET DIAGNOSTICS v_rows_inserted = ROW_COUNT;
                 IF v_rows_inserted > 0 THEN
                     RAISE NOTICE 'Table %: % rows merged.', v_actual_table_name, v_rows_inserted;
+                ELSE
+                    RAISE NOTICE 'Table %: No new rows.', v_actual_table_name;
                 END IF;
             EXCEPTION WHEN OTHERS THEN
-                RAISE WARNING 'Table %: Skipped - %', v_actual_table_name, SQLERRM;
+                RAISE WARNING 'Table %: Error - %', v_actual_table_name, SQLERRM;
             END;
         END IF;
     END LOOP;
+
+
 
     -- Step 3: Cleanup connection and restore FK constraints
     PERFORM dblink_disconnect('source_conn');
