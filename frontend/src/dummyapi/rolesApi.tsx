@@ -2,7 +2,7 @@ import { Role, PermissionType, RoleDefinition } from '../models';
 import { ROLES as INITIAL_ROLES } from './database/dummyRoles';
 
 // Create mutable copy of roles
-let MUTABLE_ROLES: Record<string, RoleDefinition> = { ...INITIAL_ROLES };
+const MUTABLE_ROLES: Record<string, RoleDefinition> = { ...INITIAL_ROLES };
 
 export const rolesApi = {
   getAllRoles: (): RoleDefinition[] => {

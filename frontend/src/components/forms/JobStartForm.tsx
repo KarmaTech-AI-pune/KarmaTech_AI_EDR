@@ -120,8 +120,8 @@ const JobStartForm: React.FC = () => {
 
         // First, try to fetch existing JobStartForm data
         let existingFormData = null;
-        let existingResources: Record<string, any> = {};
-        let existingCustomRows: Record<string, any> = {};
+        const existingResources: Record<string, any> = {};
+        const existingCustomRows: Record<string, any> = {};
         let fetchedProject: Project | null = null; // To store fetched project data
 
         try {

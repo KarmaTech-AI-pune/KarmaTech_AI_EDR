@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace EDR.Application.DTOs
 {
@@ -17,6 +16,7 @@ namespace EDR.Application.DTOs
         public bool IsActive { get; set; }
         public string StripePriceId { get; set; }
         public List<FeatureDto> Features { get; set; } = new List<FeatureDto>();
+        public int Tenants { get; set; }
     }
 
     public class SubscriptionPlansResponseDto

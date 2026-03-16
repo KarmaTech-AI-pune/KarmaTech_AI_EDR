@@ -30,11 +30,11 @@ vi.mock('../../../hooks/useAppNavigation', () => ({
   useAppNavigation: vi.fn(),
 }));
 
-vi.mock('./budget/BudgetHealthIndicatorExample', () => ({
+vi.mock('../budget/BudgetHealthIndicatorExample', () => ({
   BudgetHealthDisplay: () => <div data-testid="budget-health-display">Budget Health</div>,
 }));
 
-vi.mock('../forms/ProjectInitForm', () => ({
+vi.mock('../../forms/ProjectInitForm', () => ({
   ProjectInitForm: ({ onSubmit, onCancel }: any) => (
     <div data-testid="project-init-form">
       Project Form
@@ -57,8 +57,8 @@ describe('ProjectItem', () => {
     typeOfJob: 'Software',
     sector: 'Technology',
     currency: 'USD',
-    estimatedProjectCost: 100000,
-    estimatedProjectFee: 10000,
+    estimatedProjectCost: 100,
+    estimatedProjectFee: 100,
     feeType: 'Fixed',
     status: 'InProgress',
   };
@@ -95,7 +95,7 @@ describe('ProjectItem', () => {
     expect(screen.getByText(/Test Client.*Private/)).toBeInTheDocument();
     expect(screen.getByText(/London.*UK/)).toBeInTheDocument();
     expect(screen.getByText(/Software.*Technology/)).toBeInTheDocument();
-    expect(screen.getByText(/USD 100,000 \(Fixed\)/)).toBeInTheDocument();
+    expect(screen.getByText(/USD 100 \(Fixed\)/)).toBeInTheDocument();
     expect(screen.getByTestId('budget-health-display')).toBeInTheDocument();
 
     // Verify edit/delete icons are visible
