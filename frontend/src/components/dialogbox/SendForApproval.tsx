@@ -47,10 +47,10 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
         setApprovers(regionalDirectors);
 
         if(opportunityId){
-          let res =  await opportunityApi.getById(opportunityId);
+          const res =  await opportunityApi.getById(opportunityId);
           if(res.approvalManagerId)
           {
-            let directorUser = await getUserById(res.approvalManagerId)
+            const directorUser = await getUserById(res.approvalManagerId)
             if(directorUser)
             {
               setDirector(directorUser.name)

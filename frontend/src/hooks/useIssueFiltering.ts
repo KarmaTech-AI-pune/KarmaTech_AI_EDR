@@ -20,9 +20,10 @@ export const useIssueFiltering = (issues: Issue[]) => {
         switch (filter) {
           case 'Only My Issues':
             return issue.assignee?.id === 'john'; // Current user
-          case 'Recently Updated':
+          case 'Recently Updated': {
             const daysSinceUpdate = Math.floor((new Date().getTime() - new Date(issue.updatedDate).getTime()) / (1000 * 60 * 60 * 24));
             return daysSinceUpdate <= 7;
+          }
           case 'Done Issues':
             return issue.status === 'Done';
           default:

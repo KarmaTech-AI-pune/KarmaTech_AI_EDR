@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿import { test, expect } from '@playwright/test';
-=======
 import { test, expect } from '@playwright/test';
->>>>>>> origin/feature/Add-postgresql
 
 /**
  * DEMO: Project Budget Health Indicator Feature
@@ -109,15 +105,9 @@ test.describe('Budget Health Indicator Demo', () => {
     
     console.log('WHERE IS THE FEATURE?\n');
     console.log('  BACKEND:');
-<<<<<<< HEAD
     console.log('  - backend/src/EDR.Application/CQRS/Projects/Queries/GetBudgetHealthQuery.cs');
     console.log('  - backend/src/EDR.Application/CQRS/Projects/Handlers/GetBudgetHealthQueryHandler.cs');
     console.log('  - backend/src/EDR.Application/Dtos/BudgetHealthDto.cs');
-=======
-    console.log('  - backend/src/NJS.Application/CQRS/Projects/Queries/GetBudgetHealthQuery.cs');
-    console.log('  - backend/src/NJS.Application/CQRS/Projects/Handlers/GetBudgetHealthQueryHandler.cs');
-    console.log('  - backend/src/NJS.Application/Dtos/BudgetHealthDto.cs');
->>>>>>> origin/feature/Add-postgresql
     console.log('');
     console.log('  FRONTEND:');
     console.log('  - frontend/src/components/Projects/BudgetHealthIndicator.tsx');
@@ -140,7 +130,3 @@ test.describe('Budget Health Indicator Demo', () => {
     expect(true).toBe(true);
   });
 });
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/feature/Add-postgresql

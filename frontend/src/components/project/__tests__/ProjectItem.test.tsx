@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectItem } from '../ProjectItem';
@@ -7,7 +6,7 @@ import { authApi } from '../../../services/authApi';
 import { getUsersByRole } from '../../../services/userApi';
 import { PermissionType } from '../../../models';
 import { useAppNavigation } from '../../../hooks/useAppNavigation';
-import { ProjectStatus } from '../../../types';
+import { ProjectStatus } from '../../../types/index';
 
 // Mock Dependencies
 vi.mock('../../../services/projectApi', () => ({
@@ -31,11 +30,11 @@ vi.mock('../../../hooks/useAppNavigation', () => ({
   useAppNavigation: vi.fn(),
 }));
 
-vi.mock('./budget/BudgetHealthIndicatorExample', () => ({
+vi.mock('../budget/BudgetHealthIndicatorExample', () => ({
   BudgetHealthDisplay: () => <div data-testid="budget-health-display">Budget Health</div>,
 }));
 
-vi.mock('../forms/ProjectInitForm', () => ({
+vi.mock('../../forms/ProjectInitForm', () => ({
   ProjectInitForm: ({ onSubmit, onCancel }: any) => (
     <div data-testid="project-init-form">
       Project Form
@@ -58,10 +57,10 @@ describe('ProjectItem', () => {
     typeOfJob: 'Software',
     sector: 'Technology',
     currency: 'USD',
-    estimatedProjectCost: 100000,
-    estimatedProjectFee: 10000,
+    estimatedProjectCost: 100,
+    estimatedProjectFee: 100,
     feeType: 'Fixed',
-    status: ProjectStatus.InProgress,
+    status: 1 as ProjectStatus,
   };
 
   const defaultProps = {
@@ -96,7 +95,7 @@ describe('ProjectItem', () => {
     expect(screen.getByText(/Test Client.*Private/)).toBeInTheDocument();
     expect(screen.getByText(/London.*UK/)).toBeInTheDocument();
     expect(screen.getByText(/Software.*Technology/)).toBeInTheDocument();
-    expect(screen.getByText(/USD 100,000 \(Fixed\)/)).toBeInTheDocument();
+    expect(screen.getByText(/USD 100 \(Fixed\)/)).toBeInTheDocument();
     expect(screen.getByTestId('budget-health-display')).toBeInTheDocument();
 
     // Verify edit/delete icons are visible

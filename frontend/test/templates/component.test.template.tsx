@@ -2,20 +2,20 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom'; // for extend expect with dom matchers
-import { {{componentName}} } from '../../src/components/{{componentName}}';
+import { ComponentNamePlaceholder } from '../../src/components/ComponentNamePlaceholder';
 
-describe('{{componentName}} Component', () => {
+describe('ComponentNamePlaceholder Component', () => {
   beforeEach(() => {
     // any setup before each test
   });
 
   describe('Rendering', () => {
     it('renders without errors', () => {
-      render(<{{componentName}} />);
+      render(<ComponentNamePlaceholder />);
     });
 
     it('displays expected elements', () => {
-      render(<{{componentName}} />);
+      render(<ComponentNamePlaceholder />);
       // Example:
       // expect(screen.getByText('Expected Text')).toBeInTheDocument();
     });
@@ -23,7 +23,7 @@ describe('{{componentName}} Component', () => {
 
   describe('Interactions', () => {
     it('handles user input correctly', () => {
-      render(<{{componentName}} />);
+      render(<ComponentNamePlaceholder />);
       // Example:
       // const inputElement = screen.getByRole('textbox');
       // fireEvent.change(inputElement, { target: { value: 'test input' } });
@@ -31,7 +31,7 @@ describe('{{componentName}} Component', () => {
     });
 
     it('updates state on user action', () => {
-      render(<{{componentName}} />);
+      render(<ComponentNamePlaceholder />);
       // Example:
       // fireEvent.click(screen.getByRole('button'));
       // expect(component state to be updated);
@@ -40,13 +40,13 @@ describe('{{componentName}} Component', () => {
 
   describe('Integration', () => {
     it('interacts with context correctly', () => {
-      render(<{{componentName}} />);
+      render(<ComponentNamePlaceholder />);
       // Example:
       // expect(context value to be used);
     });
 
     it('calls API methods correctly', () => {
-      render(<{{componentName}} />);
+      render(<ComponentNamePlaceholder />);
       // Example:
       // expect(apiMockFunction).toHaveBeenCalled();
     });
