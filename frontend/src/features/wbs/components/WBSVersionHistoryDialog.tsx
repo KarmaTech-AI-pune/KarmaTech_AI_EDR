@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -50,24 +50,6 @@ const WBSVersionHistoryDialog: React.FC<WBSVersionHistoryDialogProps> = ({
         return 'default';
     }
   };
-
-  // Find the latest approved version string
-  const latestApprovedVersion = useMemo(() => {
-    const approvedVersions = versions
-      .filter(v => v.status === 'Approved')
-      .sort((a, b) => {
-        // Simple version comparison for strings like "1.0", "2.1", etc.
-        const vA = a.version.split('.').map(Number);
-        const vB = b.version.split('.').map(Number);
-        for (let i = 0; i < Math.max(vA.length, vB.length); i++) {
-          const numA = vA[i] || 0;
-          const numB = vB[i] || 0;
-          if (numA !== numB) return numB - numA; // Sort descending
-        }
-        return 0;
-      });
-    return approvedVersions.length > 0 ? approvedVersions[0].version : null;
-  }, [versions]);
 
 
   return (

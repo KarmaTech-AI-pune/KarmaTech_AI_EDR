@@ -7,14 +7,32 @@ import { ProjectFormData } from '../types';
 export const projectApi = {
   createProject: async (projectData: ProjectFormData) => {
     try {
+      // Helper function to convert DD-MM-YYYY to ISO format
+      const convertToISO = (dateStr: string | null | undefined): string | null => {
+        if (!dateStr) return null;
+        
+        // If it's DD-MM-YYYY format, convert to YYYY-MM-DD first
+        if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+          const [day, month, year] = dateStr.split('-');
+          dateStr = `${year}-${month}-${day}`;
+        }
+        
+        // Now convert to ISO format
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+          return null;
+        }
+        return date.toISOString();
+      };
+
       const formattedData = {
         ...projectData,
         projectNo: parseInt(projectData.projectNo, 10),
         estimatedProjectCost: Number(projectData.estimatedProjectCost),
         estimatedProjectFee: Number(projectData.estimatedProjectFee || 0),
         percentage: Number((projectData as any).percentage || 0),
-        startDate: projectData.startDate ? new Date(projectData.startDate).toISOString() : null,
-        endDate: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
+        startDate: convertToISO(projectData.startDate as any),
+        endDate: convertToISO(projectData.endDate as any),
         opportunityTrackingId: projectData.opportunityTrackingId || 0,
         programId: (projectData as any).programId || 0, // Ensure programId is included
       };
@@ -59,6 +77,32 @@ export const projectApi = {
 
   update: async (projectId: string, projectData: Project, budgetReason?: string) => {
     try {
+      // Helper function to convert DD-MM-YYYY to ISO format
+      const convertToISO = (dateStr: string | Date | null | undefined): string | null => {
+        if (!dateStr) return null;
+        
+        // If it's a Date object, convert to ISO
+        if (dateStr instanceof Date) {
+          if (isNaN(dateStr.getTime())) {
+            return null;
+          }
+          return dateStr.toISOString();
+        }
+        
+        // If it's DD-MM-YYYY format, convert to YYYY-MM-DD first
+        if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+          const [day, month, year] = dateStr.split('-');
+          dateStr = `${year}-${month}-${day}`;
+        }
+        
+        // Now convert to ISO format
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+          return null;
+        }
+        return date.toISOString();
+      };
+
       // Make sure we're sending the correct data format to the backend
       const formattedData = {
         id: parseInt(projectId),
@@ -80,8 +124,8 @@ export const projectApi = {
         percentage: Number(projectData.percentage || 0),
         priority: projectData.priority || '',  // Ensure priority is never null
         currency: projectData.currency || 'INR',
-        startDate: projectData.startDate ? new Date(projectData.startDate) : null, // Convert to proper date format
-        endDate: projectData.endDate ? new Date(projectData.endDate) : null, // Convert to proper date format
+        startDate: convertToISO(projectData.startDate), // Convert to proper ISO format
+        endDate: convertToISO(projectData.endDate), // Convert to proper ISO format
         status: projectData.status,
         progress: 0, // Add missing required field
         letterOfAcceptance: projectData.letterOfAcceptance,
