@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import ProjectManagement from './ProjectManagement';
+import ProjectClosure from './ProjectClosure';
 
 // Mock dependencies
 vi.mock('../hooks/useTenantContext', () => ({
@@ -13,41 +13,40 @@ vi.mock('../hooks/useTenantContext', () => ({
 
 vi.mock('../services/projectApi', () => ({
   projectApi: {
-    getAllProjects: vi.fn()
+    getProjectsForClosure: vi.fn()
   }
 }));
 
-describe('ProjectManagement Page', () => {
+describe('ProjectClosure Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('Rendering', () => {
-    it('should render project management page', async () => {
+    it('should render project closure page', async () => {
       const { projectApi } = await import('../services/projectApi');
-      vi.mocked(projectApi.getAllProjects).mockResolvedValue([]);
+      vi.mocked(projectApi.getProjectsForClosure).mockResolvedValue([]);
 
       render(
         <BrowserRouter>
-          <ProjectManagement />
+          <ProjectClosure />
         </BrowserRouter>
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/project/i)).toBeInTheDocument();
+        expect(screen.getByText(/closure/i)).toBeInTheDocument();
       });
     });
 
-    it('should display projects list', async () => {
+    it('should display projects for closure', async () => {
       const { projectApi } = await import('../services/projectApi');
-      vi.mocked(projectApi.getAllProjects).mockResolvedValue([
-        { id: 1, name: 'Project 1', status: 'Active' },
-        { id: 2, name: 'Project 2', status: 'Planning' }
+      vi.mocked(projectApi.getProjectsForClosure).mockResolvedValue([
+        { id: 1, name: 'Project 1', status: 'Completed' }
       ] as any);
 
       render(
         <BrowserRouter>
-          <ProjectManagement />
+          <ProjectClosure />
         </BrowserRouter>
       );
 
@@ -58,48 +57,48 @@ describe('ProjectManagement Page', () => {
   });
 
   describe('Data Loading', () => {
-    it('should load projects on mount', async () => {
+    it('should load projects for closure on mount', async () => {
       const { projectApi } = await import('../services/projectApi');
-      vi.mocked(projectApi.getAllProjects).mockResolvedValue([]);
+      vi.mocked(projectApi.getProjectsForClosure).mockResolvedValue([]);
 
       render(
         <BrowserRouter>
-          <ProjectManagement />
+          <ProjectClosure />
         </BrowserRouter>
       );
 
       await waitFor(() => {
-        expect(vi.mocked(projectApi.getAllProjects)).toHaveBeenCalled();
+        expect(vi.mocked(projectApi.getProjectsForClosure)).toHaveBeenCalled();
       });
     });
 
     it('should handle empty projects list', async () => {
       const { projectApi } = await import('../services/projectApi');
-      vi.mocked(projectApi.getAllProjects).mockResolvedValue([]);
+      vi.mocked(projectApi.getProjectsForClosure).mockResolvedValue([]);
 
       render(
         <BrowserRouter>
-          <ProjectManagement />
+          <ProjectClosure />
         </BrowserRouter>
       );
 
       await waitFor(() => {
-        expect(vi.mocked(projectApi.getAllProjects)).toHaveBeenCalled();
+        expect(vi.mocked(projectApi.getProjectsForClosure)).toHaveBeenCalled();
       });
     });
 
     it('should handle API errors', async () => {
       const { projectApi } = await import('../services/projectApi');
-      vi.mocked(projectApi.getAllProjects).mockRejectedValue(new Error('API Error'));
+      vi.mocked(projectApi.getProjectsForClosure).mockRejectedValue(new Error('API Error'));
 
       render(
         <BrowserRouter>
-          <ProjectManagement />
+          <ProjectClosure />
         </BrowserRouter>
       );
 
       await waitFor(() => {
-        expect(vi.mocked(projectApi.getAllProjects)).toHaveBeenCalled();
+        expect(vi.mocked(projectApi.getProjectsForClosure)).toHaveBeenCalled();
       });
     });
   });
@@ -107,16 +106,16 @@ describe('ProjectManagement Page', () => {
   describe('Accessibility', () => {
     it('should have proper heading hierarchy', async () => {
       const { projectApi } = await import('../services/projectApi');
-      vi.mocked(projectApi.getAllProjects).mockResolvedValue([]);
+      vi.mocked(projectApi.getProjectsForClosure).mockResolvedValue([]);
 
       render(
         <BrowserRouter>
-          <ProjectManagement />
+          <ProjectClosure />
         </BrowserRouter>
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/project/i)).toBeInTheDocument();
+        expect(screen.getByText(/closure/i)).toBeInTheDocument();
       });
     });
   });
@@ -124,36 +123,16 @@ describe('ProjectManagement Page', () => {
   describe('Edge Cases', () => {
     it('should handle null response', async () => {
       const { projectApi } = await import('../services/projectApi');
-      vi.mocked(projectApi.getAllProjects).mockResolvedValue(null as any);
+      vi.mocked(projectApi.getProjectsForClosure).mockResolvedValue(null as any);
 
       render(
         <BrowserRouter>
-          <ProjectManagement />
+          <ProjectClosure />
         </BrowserRouter>
       );
 
       await waitFor(() => {
-        expect(vi.mocked(projectApi.getAllProjects)).toHaveBeenCalled();
-      });
-    });
-
-    it('should handle large project lists', async () => {
-      const { projectApi } = await import('../services/projectApi');
-      const largeProjectList = Array.from({ length: 100 }, (_, i) => ({
-        id: i,
-        name: `Project ${i}`,
-        status: i % 2 === 0 ? 'Active' : 'Planning'
-      }));
-      vi.mocked(projectApi.getAllProjects).mockResolvedValue(largeProjectList as any);
-
-      render(
-        <BrowserRouter>
-          <ProjectManagement />
-        </BrowserRouter>
-      );
-
-      await waitFor(() => {
-        expect(vi.mocked(projectApi.getAllProjects)).toHaveBeenCalled();
+        expect(vi.mocked(projectApi.getProjectsForClosure)).toHaveBeenCalled();
       });
     });
   });
