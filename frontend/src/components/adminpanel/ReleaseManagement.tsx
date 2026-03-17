@@ -93,6 +93,46 @@ const releaseSteps: StepDetail[] = [
   },
 ];
 
+interface ReleaseTag {
+  version: string;
+  date: string;
+  status: 'Production' | 'Rollback' | 'Staging' | 'Failed';
+  commit: string;
+  approvedBy: string;
+  environment: string;
+  changes: string[];
+}
+
+const recentReleases: ReleaseTag[] = [
+  { 
+    version: 'v1.5.0-rc.1', 
+    date: '2026-03-17', 
+    status: 'Staging', 
+    commit: 'f8a91b2',
+    approvedBy: 'Dev Team',
+    environment: 'AWS Staging (us-east-1)',
+    changes: ['Fix Data Extraction Logic', 'Enhance Admin Dashboard', 'Optimize Engine Performance']
+  },
+  { 
+    version: 'v1.4.2', 
+    date: '2026-03-10', 
+    status: 'Production', 
+    commit: '7c8d9e0',
+    approvedBy: 'Release Manager',
+    environment: 'AWS Production (ap-south-1)',
+    changes: ['Security Patch 03-2026', 'Optimize Database Queries']
+  },
+  { 
+    version: 'v1.4.1', 
+    date: '2026-03-05', 
+    status: 'Rollback', 
+    commit: '2a3b4c5',
+    approvedBy: 'Admin',
+    environment: 'AWS Production (ap-south-1)',
+    changes: ['Experimental Feature: Auto-save']
+  },
+];
+
 const ReleaseManagement: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -200,6 +240,94 @@ const ReleaseManagement: React.FC = () => {
             </Button>
           </Paper>
         )}
+      </Paper>
+
+      <Divider sx={{ my: 4 }} />
+      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <GitHubIcon sx={{ color: 'text.secondary' }} />
+        <Typography variant="h5" fontWeight="bold">
+          Recent Releases & Git Tags
+        </Typography>
+      </Box>
+      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <List disablePadding>
+          {recentReleases.map((release, index) => (
+            <React.Fragment key={release.version}>
+              {index > 0 && <Divider />}
+              <ListItem 
+                alignItems="flex-start"
+                sx={{ 
+                  py: 2, 
+                  flexDirection: 'column',
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+              >
+                <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', mb: 1 }}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                     <RocketLaunchIcon color={release.status === 'Production' ? 'primary' : release.status === 'Staging' ? 'info' : release.status === 'Rollback' ? 'error' : 'action'} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          {release.version}
+                        </Typography>
+                        <Chip 
+                          label={release.status} 
+                          size="small" 
+                          color={release.status === 'Production' ? 'success' : release.status === 'Rollback' ? 'error' : release.status === 'Staging' ? 'info' : 'default'} 
+                          variant="outlined" 
+                          sx={{ height: 20 }}
+                        />
+                      </Box>
+                    }
+                    secondary={
+                      <Typography variant="caption" color="text.secondary">
+                        Released on {release.date} • Commit: <code>{release.commit}</code>
+                      </Typography>
+                    }
+                  />
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button size="small" variant="outlined" startIcon={<GitHubIcon />} disabled sx={{ textTransform: 'none' }}>
+                      GitHub Tag
+                    </Button>
+                    {release.status === 'Production' && (
+                      <Button size="small" variant="outlined" color="error" disabled sx={{ textTransform: 'none' }}>
+                        Rollback
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+                
+                <Box sx={{ pl: 5, width: '100%' }}>
+                  <Box sx={{ display: 'flex', gap: 3, mb: 1.5 }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase' }}>
+                        Environment
+                      </Typography>
+                      <Typography variant="body2">{release.environment}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase' }}>
+                        Approver
+                      </Typography>
+                      <Typography variant="body2">{release.approvedBy}</Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', mb: 0.5 }}>
+                    Changes in this release
+                  </Typography>
+                  <Box component="ul" sx={{ m: 0, pl: 2, typography: 'body2', color: 'text.secondary' }}>
+                    {release.changes.map((change, i) => (
+                      <li key={i}>{change}</li>
+                    ))}
+                  </Box>
+                </Box>
+              </ListItem>
+            </React.Fragment>
+          ))}
+        </List>
       </Paper>
     </Box>
   );
