@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using EDR.Application.CQRS.SprintTasks.Commands;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
@@ -42,9 +42,12 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
                 return false;
             }
 
+            // Save old status to detect transition to Done
+            string? oldStatus = existingSprintTask.Taskstatus;
+
             // Update properties from DTO to entity - using null-coalescing to preserve existing data if DTO field is null
             existingSprintTask.TenantId = _context.TenantId ?? 0;
-            existingSprintTask.Taskkey = sprintTaskInputDto.Taskkey ?? existingSprintTask.Taskkey;
+           existingSprintTask.Taskkey = sprintTaskInputDto.Taskkey ?? existingSprintTask.Taskkey;
             existingSprintTask.TaskTitle = sprintTaskInputDto.TaskTitle ?? existingSprintTask.TaskTitle;
             existingSprintTask.Taskdescription = sprintTaskInputDto.Taskdescription ?? existingSprintTask.Taskdescription;
             existingSprintTask.TaskType = sprintTaskInputDto.TaskType ?? existingSprintTask.TaskType;
@@ -67,10 +70,24 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
             existingSprintTask.AcceptanceCriteria = sprintTaskInputDto.AcceptanceCriteria ?? existingSprintTask.AcceptanceCriteria;
             existingSprintTask.DisplayOrder = sprintTaskInputDto.DisplayOrder ?? existingSprintTask.DisplayOrder;
             existingSprintTask.EstimatedHours = sprintTaskInputDto.EstimatedHours.HasValue ? sprintTaskInputDto.EstimatedHours.Value : existingSprintTask.EstimatedHours;
-            existingSprintTask.ActualHours = sprintTaskInputDto.ActualHours.HasValue ? sprintTaskInputDto.ActualHours.Value : existingSprintTask.ActualHours;
-            
+
+            // Detect transition to Done
+            bool isStatusChangedToDone = existingSprintTask.Taskstatus != null && 
+                                         existingSprintTask.Taskstatus.Equals("Done", StringComparison.OrdinalIgnoreCase) && 
+                                         (oldStatus == null || !oldStatus.Equals("Done", StringComparison.OrdinalIgnoreCase));
+
+            if (isStatusChangedToDone)
+            {
+                existingSprintTask.ActualHours = existingSprintTask.EstimatedHours;
+                existingSprintTask.CompletedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                existingSprintTask.ActualHours = sprintTaskInputDto.ActualHours.HasValue ? sprintTaskInputDto.ActualHours.Value : existingSprintTask.ActualHours;
+            }
+
             // Allow 0 as valid value
-            int newRemaining = sprintTaskInputDto.RemainingHours.HasValue ? sprintTaskInputDto.RemainingHours.Value : existingSprintTask.RemainingHours;
+            int newRemaining = isStatusChangedToDone ? 0 : (sprintTaskInputDto.RemainingHours.HasValue ? sprintTaskInputDto.RemainingHours.Value : existingSprintTask.RemainingHours);
             
             // NEW LOGIC: Update SprintWbsPlan if RemainingHours changes
             int diffRemaining = existingSprintTask.RemainingHours - newRemaining;
@@ -92,7 +109,11 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
 
             existingSprintTask.RemainingHours = newRemaining;
             existingSprintTask.StartedAt = sprintTaskInputDto.StartedAt ?? existingSprintTask.StartedAt;
-            existingSprintTask.CompletedAt = sprintTaskInputDto.CompletedAt ?? existingSprintTask.CompletedAt;
+            // CompletedAt is already set if transitioned to Done, otherwise use DTO value
+            if (!isStatusChangedToDone)
+            {
+                existingSprintTask.CompletedAt = sprintTaskInputDto.CompletedAt ?? existingSprintTask.CompletedAt;
+            }
 
             // Note: Subtasks are intentionally not handled here as per the simplified input DTO.
             // If subtask updates are needed, a separate endpoint/command should be used.
