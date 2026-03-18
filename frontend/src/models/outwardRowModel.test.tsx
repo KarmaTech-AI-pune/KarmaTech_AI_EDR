@@ -162,3 +162,20 @@ describe('OutwardRow Model', () => {
           id: '1',
           projectId: '100',
           srNo: 1,
+          letterNo: 'OUT-001',
+          letterDate: '2024-01-15',
+          to: 'Client Name',
+          subject: subject,
+          attachmentDetails: 'Document.pdf',
+          actionTaken: 'Sent',
+          storagePath: '/documents/outward/OUT-001.pdf',
+          remarks: 'Test remarks',
+          acknowledgement: 'Received'
+        };
+
+        expect(outwardRow.subject).toBe(subject);
+        expect(outwardRow.subject.length).toBeGreaterThan(0);
+      });
+    });
+  });
+});
