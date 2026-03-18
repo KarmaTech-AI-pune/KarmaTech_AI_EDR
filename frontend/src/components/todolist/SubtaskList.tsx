@@ -16,12 +16,11 @@ import {
   Check,
   Close,
 } from '@mui/icons-material';
-import { Issue, Subtask, TeamMember, NewSubtaskFormState } from '../../types/todolist';
+import { Issue, Subtask, NewSubtaskFormState } from '../../types/todolist';
 import { SubtaskItem } from './SubtaskItem';
 
 interface SubtaskListProps {
   issue: Issue;
-  teamMembers: TeamMember[];
   onUpdateIssue: (issueId: string, updates: Partial<Issue>) => void;
   onCreateSubtask: (parentIssueId: string, subtaskData: NewSubtaskFormState) => void;
   onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
@@ -31,7 +30,6 @@ interface SubtaskListProps {
 
 export const SubtaskList: React.FC<SubtaskListProps> = ({
   issue,
-  teamMembers,
   onUpdateIssue,
   onCreateSubtask,
   onUpdateSubtask,
@@ -165,7 +163,6 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({
             <React.Fragment key={subtask.id}>
               <SubtaskItem
                 subtask={subtask}
-                teamMembers={teamMembers}
                 onUpdateSubtask={onUpdateSubtask}
                 onDeleteSubtask={onDeleteSubtask}
                 onSubtaskClick={onSubtaskClick}
