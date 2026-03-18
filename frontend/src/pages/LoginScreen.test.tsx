@@ -5,7 +5,6 @@ import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { User } from '../models'; // Corrected import path for User
-import { projectManagementAppContextType } from '../types'; // Import the full type
 import { vi, describe, test, beforeEach, expect, afterEach } from 'vitest'; // Explicitly import vitest globals
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -99,7 +98,7 @@ const renderLoginScreen = (isAuthenticated: boolean = false) => {
                     setProjectCanSubmitForApproval: vi.fn(),
                     canProjectCanApprove: false,
                     setProjectCanApprove: vi.fn(),
-                } as projectManagementAppContextType} // Cast to the full type
+                } as any} // Cast to the full type
             >
                 <UserSubscriptionContext.Provider value={{
                     refreshSubscription: mockRefreshSubscription,

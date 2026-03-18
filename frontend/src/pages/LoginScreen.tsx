@@ -9,8 +9,12 @@ import {
     Box,
     Alert,
     Container,
-    Link
+    Link,
+    IconButton,
+    InputAdornment
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+
 import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
@@ -22,11 +26,12 @@ import ReleaseNotesModal from '../components/ReleaseNotesModal';
 import { releaseNotesApi } from '../services/releaseNotesApi';
 import { versionApi } from '../services/versionApi';
 
-const MANUAL_VERSION_OVERRIDE = '1.3.0'; // Set this to e.g. '1.5.0' to force a version display
+const MANUAL_VERSION_OVERRIDE = '1.3.1'; // Set this to e.g. '1.5.0' to force a version display
 
 export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [requiresOtp, setRequiresOtp] = useState(false);
@@ -133,6 +138,15 @@ export const LoginScreen: React.FC = () => {
         setIsReleaseNotesModalOpen(false);
     };
 
+    const handleClickShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+    };
+
+
     // Show OTP verification if required
     if (requiresOtp) {
         return (
@@ -223,7 +237,7 @@ export const LoginScreen: React.FC = () => {
                         <TextField
                             fullWidth
                             label="Password"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             variant="outlined"
                             margin="normal"
                             value={password}
@@ -233,6 +247,22 @@ export const LoginScreen: React.FC = () => {
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: 1
                                 }
+                            }}
+                            slotProps={{
+                                input: {
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={handleClickShowPassword}
+                                                onMouseDown={handleMouseDownPassword}
+                                                edge="end"
+                                            >
+                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                },
                             }}
                         />
                         <Button

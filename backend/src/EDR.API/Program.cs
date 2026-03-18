@@ -26,6 +26,9 @@ public class Program
         {
             logger.LogInformation("Starting application");
             WebApplication application = CreateHostBuilder(loggerProvider, args).Build();
+
+            await application.MigrateDatabaseAsync();
+            
             WebApplication configuredApplication = application.ConfigureApplication();
             await configuredApplication.RunAsync().ConfigureAwait(false);
         }
@@ -73,6 +76,8 @@ public class Program
         builder.Services.AddCompression();
 
         builder.Services.AddControllers();
+        builder.Services.AddMemoryCache();
+        builder.Services.AddResponseCaching();
         builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
         builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();

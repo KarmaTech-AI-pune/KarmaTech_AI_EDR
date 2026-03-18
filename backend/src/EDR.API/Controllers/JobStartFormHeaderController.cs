@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +13,6 @@ namespace EDR.API.Controllers
     [ApiController]
     [Route("api/projects/{projectId}/jobstartforms/header")]
     [Authorize]
-    [ApiExplorerSettings(GroupName = "v1")]
     public class JobStartFormHeaderController : ControllerBase
     {
         private readonly ProjectManagementContext _context;

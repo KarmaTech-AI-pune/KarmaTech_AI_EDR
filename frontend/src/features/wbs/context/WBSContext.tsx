@@ -38,6 +38,7 @@ interface WBSDataContextType {
 
   // Utility
   getProjectStartDate: () => string;
+  selectedVersion: string | null;
 }
 
 // Actions Context - All handlers and operations
@@ -77,6 +78,7 @@ interface WBSActionsContextType {
 
   // Reload
   reloadWBSData: () => void;
+  setSelectedVersion: (version: string | null) => void;
 
   // Delete dialog state
   deleteDialog: {
@@ -111,13 +113,22 @@ export const WBSProvider: React.FC<WBSProviderProps> = ({
   children,
   formType,
   editMode,
-  onEditModeToggle,
+  onEditModeToggle: originalOnEditModeToggle,
 }) => {
   const { projectId } = useProject();
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
+  const [selectedVersion, setSelectedVersion] = React.useState<string | null>(null);
+
+  const onEditModeToggle = () => {
+    // If we are entering edit mode, ensure we are on the live version (selectedVersion = null)
+    if (editMode) { // remember editMode true means READ ONLY, so switching means entering EDIT mode
+       setSelectedVersion(null);
+    }
+    originalOnEditModeToggle();
+  };
 
   // Use existing hooks
-  const dataHook = useWBSData({ formType });
+  const dataHook = useWBSData({ formType, selectedVersion });
   const totalsHook = useWBSTotals({
     manpowerRows: dataHook.manpowerRows,
     odcRows: dataHook.odcRows,
@@ -164,6 +175,7 @@ export const WBSProvider: React.FC<WBSProviderProps> = ({
     wbsHeaderId: dataHook.wbsHeaderId,
     currentUser: context?.currentUser || null,
     getProjectStartDate: dataHook.getProjectStartDate,
+    selectedVersion,
   };
 
   const actionsContextValue: WBSActionsContextType = {
@@ -189,6 +201,7 @@ export const WBSProvider: React.FC<WBSProviderProps> = ({
     setSnackbarMessage: dataHook.setSnackbarMessage,
     setSnackbarSeverity: dataHook.setSnackbarSeverity,
     reloadWBSData: dataHook.reloadWBSData,
+    setSelectedVersion,
     deleteDialog: logicHook.deleteDialog,
   };
 

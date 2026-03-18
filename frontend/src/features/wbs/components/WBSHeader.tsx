@@ -7,10 +7,12 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import HistoryIcon from '@mui/icons-material/History';
 import { ProjectTrackingWorkflow } from '../../../components/common/ProjectTrackingWorkflow';
 import { useWBSDataContext } from '../context/WBSContext';
 import { TaskType } from '../types/wbs';
 import { useWBSHeaderLogic } from '../hooks/useWBSHeaderLogic'; // Corrected import path
+import WBSVersionHistoryDialog from './WBSVersionHistoryDialog';
 
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
@@ -37,6 +39,14 @@ const WBSHeader: React.FC = () => {
     onEditModeToggle,
     handleStatusUpdate,
     isUnderApproval,
+    isHistoryDialogOpen,
+    versions,
+    versionsLoading,
+    handleOpenHistory,
+    handleCloseHistory,
+    handleActivateVersion,
+    handleSelectVersion,
+    isReadOnlyVersion
   } = useWBSHeaderLogic({ formType });
 
   const taskType = formType === 'manpower' ? TaskType.Manpower : TaskType.ODC;
@@ -45,10 +55,10 @@ const WBSHeader: React.FC = () => {
   // Check if status is "Review Changes" (3) or "Approval Changes" (5)
   const isRejectionStatus = [3, 5].includes(statusId);
 
-  // Edit is allowed if:
-  // 1. Not under approval (2, 4, 6)
+  // 1. Not under approval (2, 4, 6) OR it is the LATEST version
   // 2. AND (Not in rejection status OR (In rejection status AND user is PM))
-  const canEdit = !isUnderApproval && (!isRejectionStatus || isProjectManager);
+  // 3. AND it is NOT a read-only historical version
+  const canEdit = (!isUnderApproval || !isReadOnlyVersion) && (!isRejectionStatus || isProjectManager) && !isReadOnlyVersion;
 
   // Auto-exit edit mode if permissions change while editing
   useEffect(() => {
@@ -75,7 +85,7 @@ const WBSHeader: React.FC = () => {
           {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
-          {editMode && !isLoading && wbsHeaderId && projectId && (
+          {editMode && !isLoading && wbsHeaderId && projectId && !isReadOnlyVersion && (
             <ProjectTrackingWorkflow
               projectId={projectId.toString()}
               status={status}
@@ -86,7 +96,7 @@ const WBSHeader: React.FC = () => {
               onStatusUpdate={handleStatusUpdate}
             />
           )}
-          {canEdit && (
+          {canEdit && !isReadOnlyVersion && (
             <Button
               variant="outlined"
               startIcon={<EditIcon />}
@@ -95,7 +105,16 @@ const WBSHeader: React.FC = () => {
               {editMode ? 'Edit Mode' : 'Exit Edit Mode'}
             </Button>
           )}
-          {!editMode && canEdit && (
+          {editMode && (
+            <Button
+              variant="outlined"
+              startIcon={<HistoryIcon />}
+              onClick={handleOpenHistory}
+            >
+              History
+            </Button>
+          )}
+          {!editMode && canEdit && !isReadOnlyVersion && (
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
@@ -106,6 +125,14 @@ const WBSHeader: React.FC = () => {
           )}
         </Box>
       </StyledHeaderBox>
+      <WBSVersionHistoryDialog
+        open={isHistoryDialogOpen}
+        onClose={handleCloseHistory}
+        versions={versions}
+        loading={versionsLoading}
+        onActivateVersion={handleActivateVersion}
+        onSelectVersion={handleSelectVersion}
+      />
     </>
   );
 };

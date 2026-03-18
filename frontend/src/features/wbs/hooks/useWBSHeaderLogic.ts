@@ -1,7 +1,8 @@
-import { useContext, useEffect, useState, useCallback } from 'react';
-import { projectManagementAppContext } from '../../../App';
-import { TaskType } from '../types/wbs';
+import { useEffect, useState, useCallback } from 'react';
+import { useProject } from '../../../context/ProjectContext';
+import { TaskType, WBSVersion } from '../types/wbs';
 import { wbsHeaderApi } from '../services/wbsHeaderApi';
+import { wbsVersionApi } from '../services/wbsVersionApi';
 import { useWBSDataContext, useWBSActionsContext } from '../context/WBSContext';
 
 interface UseWBSHeaderLogicProps {
@@ -10,11 +11,10 @@ interface UseWBSHeaderLogicProps {
 
 export const useWBSHeaderLogic = (props: UseWBSHeaderLogicProps) => {
   const { formType } = props;
-  const context = useContext(projectManagementAppContext);
-  const projectId = context?.selectedProject?.id;
+  const { projectId } = useProject();
 
-  const { editMode } = useWBSDataContext();
-  const { addNewMonth, onEditModeToggle } = useWBSActionsContext();
+  const { editMode, selectedVersion } = useWBSDataContext();
+  const { addNewMonth, onEditModeToggle, reloadWBSData, setSelectedVersion } = useWBSActionsContext();
 
   const [wbsHeaderId, setWbsHeaderId] = useState<number | null>(null);
   const [status, setStatus] = useState<string>("Initial");
@@ -22,7 +22,16 @@ export const useWBSHeaderLogic = (props: UseWBSHeaderLogicProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
 
-  const title = formType === 'manpower' ? 'Manpower Form' : formType === 'odc' ? 'ODC Form' : 'Work Breakdown Structure';
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState<boolean>(false);
+  const [versions, setVersions] = useState<WBSVersion[]>([]);
+  const [versionsLoading, setVersionsLoading] = useState<boolean>(false);
+
+  const activeVersion = versions.find(v => v.isActive);
+  const baseTitle = formType === 'manpower' ? 'Manpower Form' : formType === 'odc' ? 'ODC Form' : 'Work Breakdown Structure';
+  
+  // Use selectedVersion for title if set, otherwise fallback to active version from list
+  const displayVersion = selectedVersion || (activeVersion ? activeVersion.version : null);
+  const title = displayVersion ? `${baseTitle} (Version ${displayVersion})` : baseTitle;
   const taskType = formType === 'manpower' ? TaskType.Manpower : TaskType.ODC;
 
   const fetchWBSHeaderStatus = useCallback(async () => {
@@ -56,9 +65,23 @@ export const useWBSHeaderLogic = (props: UseWBSHeaderLogicProps) => {
     }
   }, [projectId, taskType]);
 
+  const fetchVersions = useCallback(async () => {
+    if (!projectId) return;
+    setVersionsLoading(true);
+    try {
+      const data = await wbsVersionApi.getWBSVersions(projectId.toString());
+      setVersions(data);
+    } catch (error) {
+      console.error("Error fetching WBS versions:", error);
+    } finally {
+      setVersionsLoading(false);
+    }
+  }, [projectId]);
+
   useEffect(() => {
     fetchWBSHeaderStatus();
-  }, [fetchWBSHeaderStatus, lastRefreshTime]);
+    fetchVersions();
+  }, [fetchWBSHeaderStatus, fetchVersions, lastRefreshTime]);
 
   useEffect(() => {
     if (projectId) {
@@ -72,7 +95,38 @@ export const useWBSHeaderLogic = (props: UseWBSHeaderLogicProps) => {
   const handleStatusUpdate = useCallback(async (newStatus: string) => {
     setStatus(newStatus);
     await fetchWBSHeaderStatus();
-  }, [fetchWBSHeaderStatus]);
+    await fetchVersions();
+  }, [fetchWBSHeaderStatus, fetchVersions]);
+
+  const handleOpenHistory = useCallback(() => {
+    setIsHistoryDialogOpen(true);
+    fetchVersions();
+  }, [fetchVersions]);
+
+  const handleCloseHistory = useCallback(() => {
+    setIsHistoryDialogOpen(false);
+  }, []);
+
+  const handleActivateVersion = useCallback(async (version: string) => {
+    if (!projectId) return;
+    try {
+      await wbsVersionApi.activateWBSVersion(projectId.toString(), version);
+      
+      // Set selected version to the activated version to switch to that specific data
+      setSelectedVersion(version);
+      reloadWBSData();
+      
+      await fetchWBSHeaderStatus();
+      await fetchVersions();
+    } catch (error) {
+      console.error("Error activating version:", error);
+    }
+  }, [projectId, fetchWBSHeaderStatus, fetchVersions, reloadWBSData, setSelectedVersion]);
+
+  const handleSelectVersion = useCallback((version: string) => {
+    setSelectedVersion(version);
+    handleCloseHistory();
+  }, [setSelectedVersion, handleCloseHistory]);
 
   return {
     title,
@@ -85,6 +139,17 @@ export const useWBSHeaderLogic = (props: UseWBSHeaderLogicProps) => {
     addNewMonth,
     onEditModeToggle,
     handleStatusUpdate,
-    isUnderApproval: [2, 4].includes(statusId) || ["Sent for Review", "Sent for Approval" ].includes(status),
+    isUnderApproval: [2, 4, 6].includes(statusId) || ["Sent for Review", "Sent for Approval", "Approved" ].includes(status),
+    isHistoryDialogOpen,
+    versions,
+    versionsLoading,
+    handleOpenHistory,
+    handleCloseHistory,
+    handleActivateVersion,
+    handleSelectVersion,
+    isReadOnlyVersion: (() => {
+      const currentVersionObj = versions.find(v => v.version === displayVersion);
+      return currentVersionObj ? !currentVersionObj.isLatest : (versions.length > 0 && !!displayVersion);
+    })()
   };
 };

@@ -45,7 +45,7 @@ Set-Location "$backendPath"
 $env:ASPNETCORE_ENVIRONMENT = $envName
 
 # Run publish command (explicit .csproj reference)
-dotnet publish ".\NJSAPI.csproj" -c Release -o "$publishPath"
+dotnet publish ".\EDR.API.csproj" -c Release -o "$publishPath"
 Check-LastCommand
 
 Write-Host "✅ .NET backend published successfully to '$publishPath'."

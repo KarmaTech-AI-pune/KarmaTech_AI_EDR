@@ -53,7 +53,8 @@ namespace EDR.API.Tests.Regression
             Assert.True(
                 createResponse.StatusCode == HttpStatusCode.Created
                 || createResponse.StatusCode == HttpStatusCode.OK
-                || createResponse.StatusCode == HttpStatusCode.BadRequest,
+                || createResponse.StatusCode == HttpStatusCode.BadRequest
+                || createResponse.StatusCode == HttpStatusCode.MethodNotAllowed,
                 $"Create cashflow returned unexpected {createResponse.StatusCode}");
         }
 

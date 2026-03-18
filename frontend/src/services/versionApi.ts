@@ -353,7 +353,7 @@ function extractSemanticVersion(fullVersion: string): string {
   }
 
   // Remove 'v' prefix if present
-  let version = fullVersion.startsWith('v') ? fullVersion.substring(1) : fullVersion;
+  const version = fullVersion.startsWith('v') ? fullVersion.substring(1) : fullVersion;
   
   // Extract semantic version part (before any dash)
   // Pattern: MAJOR.MINOR.PATCH (before any environment/build suffixes)

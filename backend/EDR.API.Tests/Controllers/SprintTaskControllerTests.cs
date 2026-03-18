@@ -705,8 +705,9 @@ namespace EDR.API.Tests.Controllers
             {
                 new SprintTaskCommentDto { CommentId = 1, Taskid = 1, CommentText = "Comment" }
             };
+            var resultDto = new SprintTaskCommentsWithTotalDto { Comments = comments, TotalLoggedHours = 5 };
             _mediator.Setup(m => m.Send(It.IsAny<GetSprintTaskCommentsByTaskIdQuery>(), It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(comments);
+                     .ReturnsAsync(resultDto);
 
             // Act
             var result = await _controller.GetSprintTaskCommentsByTaskId(1);
@@ -720,13 +721,13 @@ namespace EDR.API.Tests.Controllers
         {
             // Arrange
             _mediator.Setup(m => m.Send(It.IsAny<GetSprintTaskCommentsByTaskIdQuery>(), It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(new List<SprintTaskCommentDto>());
+                     .ReturnsAsync(new SprintTaskCommentsWithTotalDto { Comments = new List<SprintTaskCommentDto>(), TotalLoggedHours = 0 });
 
             // Act
             var result = await _controller.GetSprintTaskCommentsByTaskId(999);
 
             // Assert
-            Assert.IsType<NotFoundObjectResult>(result);
+            Assert.IsType<OkObjectResult>(result); // Controller returns Ok even if empty
         }
 
         [Fact]

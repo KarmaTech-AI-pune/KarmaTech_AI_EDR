@@ -64,8 +64,14 @@ namespace EDR.API.Tests.Infrastructure
 
             // --- Core Services (from Program.cs) ---
             appBuilder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                })
                 .AddApplicationPart(typeof(EDR.API.Program).Assembly);
 
+            appBuilder.Services.AddMemoryCache();
+            appBuilder.Services.AddResponseCaching();
             appBuilder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             // Tenant strategies
@@ -137,6 +143,10 @@ namespace EDR.API.Tests.Infrastructure
             appBuilder.Services.AddScoped<ITenantUserMigrationStrategy, IsolatedTenantUserMigrationStrategy>();
             appBuilder.Services.AddScoped<ITenantUserMigrationStrategy, SharedTenantUserMigrationStrategy>();
             appBuilder.Services.AddScoped<ITenantUserMigrationStrategySelector, TenantUserMigrationStrategySelector>();
+            
+            // Mock tenant database services
+            appBuilder.Services.AddScoped<IDatabaseManagementService, MockDatabaseManagementService>();
+            appBuilder.Services.AddScoped<ITenantMigrationService, MockTenantMigrationService>();
 
             // Use TestServer instead of Kestrel for integration testing
             appBuilder.WebHost.UseTestServer();
@@ -147,6 +157,18 @@ namespace EDR.API.Tests.Infrastructure
             // --- Configure middleware pipeline (simplified from ConfigureApplication) ---
             app.UseRouting();
             app.UseCors("AllowSpecificOrigin");
+            app.UseResponseCaching();
+            
+            // Add fake response caching feature for tests so VaryByQueryKeys doesn't throw
+            app.Use(async (context, next) =>
+            {
+                if (context.Features.Get<Microsoft.AspNetCore.ResponseCaching.IResponseCachingFeature>() == null)
+                {
+                    context.Features.Set<Microsoft.AspNetCore.ResponseCaching.IResponseCachingFeature>(new FakeResponseCachingFeature());
+                }
+                await next();
+            });
+
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
@@ -228,6 +250,7 @@ namespace EDR.API.Tests.Infrastructure
                 new Claim(ClaimTypes.Name, "testuser@test.com"),
                 new Claim(ClaimTypes.Email, "testuser@test.com"),
                 new Claim("TenantId", "1"),
+                new Claim(ClaimTypes.Role, "Admin")
             };
             var identity = new ClaimsIdentity(claims, "Test");
             var principal = new ClaimsPrincipal(identity);
@@ -235,5 +258,70 @@ namespace EDR.API.Tests.Infrastructure
 
             return Task.FromResult(AuthenticateResult.Success(ticket));
         }
+    }
+
+    /// <summary>
+    /// Mock database management service for integration tests.
+    /// </summary>
+    public class MockDatabaseManagementService : IDatabaseManagementService
+    {
+        public Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsync(string subdomain, bool isolated)
+        {
+            return Task.FromResult((true, $"{subdomain}_db", "Server=(localdb)\\mssqllocaldb;Database=TestDb;Trusted_Connection=True;"));
+        }
+
+        public Task<bool> DeleteTenantDatabaseAsync(string databaseName)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> DatabaseExistsAsync(string databaseName)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> BackupTenantDatabaseAsync(string databaseName, string backupPath = null)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> RestoreTenantDatabaseAsync(string databaseName, string backupFilePath)
+        {
+            return Task.FromResult(true);
+        }
+    }
+
+    /// <summary>
+    /// Mock tenant migration service for integration tests.
+    /// </summary>
+    public class MockTenantMigrationService : ITenantMigrationService
+    {
+        public Task<bool> ExecuteTenantMigrationsAsync(string connectionString, int tenantId, string sourceDatabaseName = null)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> ExecuteNonIsolatedTenantMigrationsAsync(string connectionString, int tenantId, string sourceDatabaseName = null)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> ExecuteTenantUserMigrationsAsync(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string sourceDatabaseName = null)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsync(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string sourceDatabaseName = null)
+        {
+            return Task.FromResult(true);
+        }
+    }
+
+    /// <summary>
+    /// Fake response caching feature to bypass VaryByQueryKeys error in tests.
+    /// </summary>
+    public class FakeResponseCachingFeature : Microsoft.AspNetCore.ResponseCaching.IResponseCachingFeature
+    {
+        public string[] VaryByQueryKeys { get; set; }
     }
 }

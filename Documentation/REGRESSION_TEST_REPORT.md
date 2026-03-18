@@ -234,14 +234,15 @@ These 13 failures are caused by **two specific bugs** in the API. Fixing these t
 
 ### Bug 2: Correspondence Unique Constraint (Causes 5 Failures)
 
-**What's happening:** The database has a rule that only allows **1 inward correspondence per project**. When our automated tests run really fast and create multiple inward correspondences, the database blocks them and throws an error.
+**What's happening:** The database currently has a rule that only allows **1 inward correspondence per project**. When our automated regression tests run rapidly, they attempt to create multiple inward correspondences for the test project, violating this constraint and causing a crash.
 
-**Where to fix:** `backend/src/EDR.API/Controllers/CorrespondenceController.cs` in the `CreateInward()` method.
+**Where to fix:** `backend/src/EDR.Infrastructure.Database/Configurations/CorrespondenceInwardConfiguration.cs` (or your DbContext configuration).
 
 **How to fix:**
-*   Talk to the product owner: Does a project really only need *one* inward correspondence ever? 
-*   If **No**: Remove the unique constraint from the DB/EF Core configuration.
-*   If **Yes**: The tests need to be updated so they each create their own isolated project before testing correspondence.
+*   **Business Rule Update:** It has been confirmed that **multiple inward correspondences per project ARE allowed.**
+*   **Action:**
+    1. Remove the unique constraint indexing on `ProjectId` for `CorrespondenceInward` in EF Core configuration (e.g., remove `.IsUnique()`).
+    2. Generate and apply a new EF Core migration (`dotnet ef migrations add RemoveCorrespondenceUniqueConstraint`).
 
 **Tests affected:**
 * All 5 failures in the `CorrespondenceWorkflowRegressionTests.cs` file.

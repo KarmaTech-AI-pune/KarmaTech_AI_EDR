@@ -5,6 +5,7 @@ using EDR.Domain.Enums;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
 
 namespace EDR.API.Tests.Infrastructure
 {
@@ -26,6 +27,36 @@ namespace EDR.API.Tests.Infrastructure
             Factory = new CustomWebApplicationFactory();
             Client = Factory.CreateClient();
             Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            // Seed the test user so handlers that look up the current user by ID find it.
+            SeedTestUserAsync().GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Seeds the test user that matches the identity set by TestAuthHandler
+        /// (ClaimTypes.NameIdentifier = "test-user-id"). Many handlers and repositories
+        /// perform a DB lookup for the current user or store ChangedBy as a FK to User.
+        /// </summary>
+        protected async Task SeedTestUserAsync()
+        {
+            using var scope = Factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+
+            if (!db.Users.Any(u => u.Id == "test-user-id"))
+            {
+                var user = new User
+                {
+                    Id = "test-user-id",
+                    UserName = "testuser@test.com",
+                    NormalizedUserName = "TESTUSER@TEST.COM",
+                    Email = "testuser@test.com",
+                    NormalizedEmail = "TESTUSER@TEST.COM",
+                    Name = "Test User",
+                    EmailConfirmed = true,
+                    SecurityStamp = Guid.NewGuid().ToString()
+                };
+                db.Users.Add(user);
+                await db.SaveChangesAsync();
+            }
         }
 
         /// <summary>

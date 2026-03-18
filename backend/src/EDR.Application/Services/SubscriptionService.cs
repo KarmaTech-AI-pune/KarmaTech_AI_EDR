@@ -1,4 +1,4 @@
-﻿using Stripe;
+using Stripe;
 using EDR.Domain.Entities;
 using EDR.Domain.Database;
 using Microsoft.EntityFrameworkCore;
@@ -6,8 +6,6 @@ using EDR.Application.Services.IContract;
 using EDR.Application.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System;
 
 namespace EDR.Application.Services
 {
@@ -45,7 +43,7 @@ namespace EDR.Application.Services
                 {
                     _logger.LogInformation("[MOCK STRIPE] Would create subscription plan: {PlanName}", plan.Name);
                     _projectManagementContext.SubscriptionPlans.Add(plan);
-                    await _context.SaveChangesAsync();
+                    await _projectManagementContext.SaveChangesAsync();
                     return plan;
                 }
 
@@ -73,7 +71,7 @@ namespace EDR.Application.Services
 
                 plan.StripePriceId = price.Id;
                 _projectManagementContext.SubscriptionPlans.Add(plan);
-                await _context.SaveChangesAsync();
+                await _projectManagementContext.SaveChangesAsync();
 
                 return plan;
             }
@@ -343,34 +341,49 @@ namespace EDR.Application.Services
 
         public async Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync()
         {
+            // Get tenant counts from TenantDbContext (where Tenants are tracked)
+            var tenantCounts = await _context.Tenants
+                .Where(t => t.SubscriptionPlanId.HasValue)
+                .GroupBy(t => t.SubscriptionPlanId.Value)
+                .Select(g => new { PlanId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.PlanId, x => x.Count);
+
             var plans = await _projectManagementContext.SubscriptionPlans
-                .Include(sp => sp.SubscriptionPlanFeatures)
-                .ThenInclude(spf => spf.Feature)
                 .Where(p => p.IsActive)
+                .Select(plan => new SubscriptionPlanDto
+                {
+                    Id = plan.Id,
+                    Name = plan.Name,
+                    Description = plan.Description,
+                    MonthlyPrice = plan.MonthlyPrice,
+                    YearlyPrice = plan.YearlyPrice,
+                    MaxUsers = plan.MaxUsers,
+                    MaxProjects = plan.MaxProjects,
+                    MaxStorageGB = plan.MaxStorageGB,
+                    IsActive = plan.IsActive,
+                    StripePriceId = plan.StripePriceId,
+                    Features = plan.SubscriptionPlanFeatures
+                        .Where(spf => spf.Feature.IsActive)
+                        .Select(spf => new FeatureDto
+                        {
+                            Id = spf.Feature.Id,
+                            Name = spf.Feature.Name,
+                            Description = spf.Feature.Description,
+                            IsActive = spf.Feature.IsActive
+                        }).ToList()
+                })
                 .ToListAsync();
 
-            return plans.Select(plan => new SubscriptionPlanDto
+            // Map the counts to the DTOs
+            foreach (var planDto in plans)
             {
-                Id = plan.Id,
-                Name = plan.Name,
-                Description = plan.Description,
-                MonthlyPrice = plan.MonthlyPrice,
-                YearlyPrice = plan.YearlyPrice,
-                MaxUsers = plan.MaxUsers,
-                MaxProjects = plan.MaxProjects,
-                MaxStorageGB = plan.MaxStorageGB,
-                IsActive = plan.IsActive,
-                StripePriceId = plan.StripePriceId,
-                Features = plan.SubscriptionPlanFeatures?
-                    .Where(spf => spf.Feature.IsActive)
-                    .Select(spf => new FeatureDto
-                    {
-                        Id = spf.Feature.Id,
-                        Name = spf.Feature.Name,
-                        Description = spf.Feature.Description,
-                        IsActive = spf.Feature.IsActive
-                    }).ToList() ?? new List<FeatureDto>()
-            });
+                if (tenantCounts.TryGetValue(planDto.Id, out int count))
+                {
+                    planDto.Tenants = count;
+                }
+            }
+
+            return plans;
         }
 
         public async Task<PlanByNameResponseDto?> GetPlanByNameAsync(string planName)

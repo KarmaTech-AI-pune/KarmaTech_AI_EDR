@@ -78,8 +78,12 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                     {
                         WorkAssignment = mpe.WorkAssignment,
                         Assignee = mpe.Assignee,
+                        Rate = mpe.Rate,
                         Planned = mpe.Planned,
                         Consumed = mpe.Consumed,
+                        Approved = mpe.Approved,
+                        ExtraCost = mpe.ExtraCost,
+                        Payment = mpe.Payment,
                         Balance = mpe.Balance,
                         NextMonthPlanning = mpe.NextMonthPlanning,
                         ManpowerComments = mpe.ManpowerComments
@@ -88,6 +92,7 @@ namespace EDR.Application.CQRS.MonthlyProgress.Handlers
                     {
                         PlannedTotal = mp.ManpowerEntries?.Sum(x => x.Planned),
                         ConsumedTotal = mp.ManpowerEntries?.Sum(x => x.Consumed),
+                        PaymentTotal = mp.ManpowerEntries?.Sum(x => x.Payment),
                         BalanceTotal = mp.ManpowerEntries?.Sum(x => x.Balance),
                         NextMonthPlanningTotal = mp.ManpowerEntries?.Sum(x => x.NextMonthPlanning)
                     }

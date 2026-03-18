@@ -1,8 +1,8 @@
-﻿import { ProjectClosureComment } from "../../models/projectClosureCommentModel";
+import { ProjectClosureComment } from "../../models/projectClosureCommentModel";
 import { ProjectClosureRow } from "../../models/projectClosureRowModel";
 export const projectClosureLabels = {
   // Section A
-  clientFeedback: "What client feedback / performance certificate has been obtained ? â€“ summarise",
+  clientFeedback: "What client feedback / performance certificate has been obtained ? – summarise",
   successCriteria: "Was the client project success criteria achieved ?",
   clientExpectations: "How well did the project meet (or exceed) the client's expectations ?",
   otherStakeholders: "Other Stakeholders ?",

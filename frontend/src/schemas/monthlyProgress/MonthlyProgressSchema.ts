@@ -35,10 +35,10 @@ export const ctcAndEacSchema = z.object({
   grossProfitPercentage: z.number().nullable(),
 });
 
-// ISO 8601 date format validation (YYYY-MM-DD)
+// Date format validation (DD-MM-YYYY)
 const dateStringSchema = z.union([
-  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
-    message: "Date must be in ISO 8601 format (YYYY-MM-DD)"
+  z.string().regex(/^\d{2}-\d{2}-\d{4}$/, {
+    message: "Date must be in DD-MM-YYYY format"
   }),
   z.null()
 ]);
@@ -111,8 +111,13 @@ export const BudgetTableSchema = z.object({
 export const manpowerSchema = z.object({
   workAssignment: z.string().nullable(),
   assignee: z.string().nullable(),
+  rate: z.number().nullable(),
   planned: z.number().nullable(),
-  consumed: z.number().nullable(),
+  consumed: z.number().nullable().default(0).optional(),
+  approved: z.number().nullable().default(0).optional(),
+  extraHours: z.number().nullable().default(0).optional(),
+  extraCost: z.number().nullable().default(0).optional(),
+  payment: z.number().nullable(),
   balance: z.number().nullable(),
   nextMonthPlanning: z.number().nullable(),
   manpowerComments: z.string().nullable(),
@@ -123,6 +128,10 @@ export const manpowerPlanningSchema = z.object({
   manpowerTotal: z.object({
     plannedTotal: z.number().nullable(),
     consumedTotal: z.number().nullable(),
+    approvedTotal: z.number().nullable(),
+    extraHoursTotal: z.number().nullable(),
+    extraCostTotal: z.number().nullable().optional(),
+    paymentTotal: z.number().nullable(),
     balanceTotal: z.number().nullable(),
     nextMonthPlanningTotal: z.number().nullable(),
   }),

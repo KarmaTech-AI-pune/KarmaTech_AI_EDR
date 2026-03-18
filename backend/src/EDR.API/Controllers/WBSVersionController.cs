@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EDR.Application.CQRS.WorkBreakdownStructures.Commands;
@@ -12,7 +12,6 @@ namespace EDR.API.Controllers
     [ApiController]
     [Route("api/projects/{projectId}/wbs/versions")]
     [Authorize]
-    [ApiExplorerSettings(GroupName = "v1")]
     public class WBSVersionController : ControllerBase
     {
         private readonly IMediator _mediator;

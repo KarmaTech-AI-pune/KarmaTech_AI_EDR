@@ -275,51 +275,6 @@ namespace EDR.Domain.Migrations
                     b.ToTable("CTCEACs");
                 });
 
-            modelBuilder.Entity("EDR.Domain.Entities.Cashflow", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal?>("CashFlow")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("CumulativeCost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("CumulativeRevenue")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Month")
-                        .HasColumnType("text");
-
-                    b.Property<decimal?>("OdcCost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("PersonnelCost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("Revenue")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int?>("TotalHours")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("TotalProjectCost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("Cashflows");
-                });
-
             modelBuilder.Entity("EDR.Domain.Entities.ChangeControl", b =>
                 {
                     b.Property<int>("Id")
@@ -1869,6 +1824,9 @@ namespace EDR.Domain.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal?>("Approved")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("Assignee")
                         .HasColumnType("text");
 
@@ -1880,6 +1838,9 @@ namespace EDR.Domain.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<decimal?>("ExtraCost")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("ManpowerComments")
                         .HasColumnType("text");
 
@@ -1890,9 +1851,15 @@ namespace EDR.Domain.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<decimal?>("Payment")
+                        .HasColumnType("numeric");
+
                     b.Property<decimal?>("Planned")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal?>("Rate")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("integer");
@@ -2260,6 +2227,54 @@ namespace EDR.Domain.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PMWorkflowStatuses");
+                });
+
+            modelBuilder.Entity("EDR.Domain.Entities.PaymentMilestone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AmountINR")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DueDate")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Percentage")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("PaymentMilestones");
                 });
 
             modelBuilder.Entity("EDR.Domain.Entities.PercentCompleteOnCosts", b =>
@@ -3763,11 +3778,18 @@ namespace EDR.Domain.Migrations
                     b.Property<int>("TenantId")
                         .HasColumnType("integer");
 
+                    b.Property<decimal?>("TotalLoggedHours")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<decimal?>("WorkedStoryPoint")
+                        .HasColumnType("numeric");
 
                     b.HasKey("CommentId");
 
@@ -4676,6 +4698,9 @@ namespace EDR.Domain.Migrations
                     b.Property<int>("OriginalTaskId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp without time zone");
 
@@ -4689,6 +4714,9 @@ namespace EDR.Domain.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<int>("WBSOptionId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("WBSVersionHistoryId")
                         .HasColumnType("integer");
@@ -5023,14 +5051,6 @@ namespace EDR.Domain.Migrations
                         .IsRequired();
 
                     b.Navigation("MonthlyProgress");
-                });
-
-            modelBuilder.Entity("EDR.Domain.Entities.Cashflow", b =>
-                {
-                    b.HasOne("EDR.Domain.Entities.Project", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("EDR.Domain.Entities.ChangeControl", b =>
@@ -5482,6 +5502,17 @@ namespace EDR.Domain.Migrations
                     b.Navigation("BudgetTable");
                 });
 
+            modelBuilder.Entity("EDR.Domain.Entities.PaymentMilestone", b =>
+                {
+                    b.HasOne("EDR.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("EDR.Domain.Entities.PercentCompleteOnCosts", b =>
                 {
                     b.HasOne("EDR.Domain.Entities.BudgetTable", "BudgetTable")
@@ -5739,7 +5770,7 @@ namespace EDR.Domain.Migrations
                         .HasForeignKey("SprintPlanId");
 
                     b.HasOne("EDR.Domain.Entities.SprintWbsPlan", "SprintWbsPlan")
-                        .WithMany()
+                        .WithMany("SprintTasks")
                         .HasForeignKey("SprintWbsPlanId");
 
                     b.HasOne("EDR.Domain.Entities.UserWBSTask", "UserTask")
@@ -6325,6 +6356,11 @@ namespace EDR.Domain.Migrations
             modelBuilder.Entity("EDR.Domain.Entities.SprintTask", b =>
                 {
                     b.Navigation("Subtasks");
+                });
+
+            modelBuilder.Entity("EDR.Domain.Entities.SprintWbsPlan", b =>
+                {
+                    b.Navigation("SprintTasks");
                 });
 
             modelBuilder.Entity("EDR.Domain.Entities.SubscriptionPlan", b =>

@@ -56,20 +56,10 @@ describe('dateUtils', () => {
   });
 
   describe('parseDateFromInput', () => {
-    it('should parse a YYYY-MM-DD string to an ISO string', () => {
+    it('should parse a YYYY-MM-DD string to a DD-MM-YYYY string', () => {
       const dateString = '2023-01-15';
-      const expectedDate = new Date('2023-01-15T00:00:00.000Z');
-      // Mock getTimezoneOffset to ensure consistent testing regardless of local timezone
-      const originalGetTimezoneOffset = Date.prototype.getTimezoneOffset;
-      Date.prototype.getTimezoneOffset = () => 0; // Assume UTC for testing
-
-      // When parsing 'YYYY-MM-DD', new Date() creates a date at midnight local time.
-      // .toISOString() then converts it to UTC.
-      // So, '2023-01-15' in a UTC+5:30 timezone would be '2023-01-14T18:30:00.000Z'
-      // To make tests consistent, we'll mock the timezone offset to 0.
-      expect(parseDateFromInput(dateString)).toBe(expectedDate.toISOString());
-
-      Date.prototype.getTimezoneOffset = originalGetTimezoneOffset;
+      const expectedDateString = '15-01-2023';
+      expect(parseDateFromInput(dateString)).toBe(expectedDateString);
     });
 
     it('should return null for an empty string', () => {

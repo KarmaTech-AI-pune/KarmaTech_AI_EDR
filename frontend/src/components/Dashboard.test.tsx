@@ -121,7 +121,7 @@ describe('Dashboard Component', () => {
       setProjectCanSubmitForApproval: vi.fn(),
       canProjectCanApprove: false,
       setProjectCanApprove: vi.fn(),
-    };
+    } as any;
   };
 
   beforeEach(() => {
