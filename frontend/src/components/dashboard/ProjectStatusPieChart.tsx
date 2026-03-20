@@ -62,7 +62,11 @@ const fetchProjectData = async (): Promise<Project[]> => {
   }
 };
 
-const ProjectStatusPieChart = () => {
+interface ProjectStatusPieChartProps {
+  data?: ChartData[];
+}
+
+const ProjectStatusPieChart = ({ data: externalData }: ProjectStatusPieChartProps) => {
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -83,6 +87,12 @@ const ProjectStatusPieChart = () => {
   };
 
   useEffect(() => {
+    if (externalData) {
+      setChartData(externalData);
+      setLoading(false);
+      return;
+    }
+
     const loadData = async () => {
       setLoading(true);
       const projects = await fetchProjectData();
@@ -109,7 +119,7 @@ const ProjectStatusPieChart = () => {
     };
     
     loadData();
-  }, []);
+  }, [externalData]);
   
   // Handle click on pie slice
   const handlePieClick = (data: ChartData) => {

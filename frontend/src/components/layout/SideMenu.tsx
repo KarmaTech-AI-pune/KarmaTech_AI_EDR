@@ -126,38 +126,51 @@ const formSections = [
       id: 'overview',
       title: 'Overview',
       icon: <HomeIcon />,
-      path: 'overview'
+      path: '/program-management/projects/project/overview'
+    },
+    {
+      id: 'dashboard',
+      title: 'Dashboard',
+      icon: <AssessmentIcon />,
+      path: '/program-management/projects/project/dashboard'
     },
     {
       id: 'forms',
       title: 'Forms',
       icon: <ArticleIcon />,
-      path: 'forms',
-      subItems: formSections,
+      path: '/program-management/projects/project/forms',
+      subItems: formSections.map(section => ({
+        ...section,
+        path: `/program-management/projects/project/${section.path}`,
+        subItems: section.subItems?.map(sub => ({
+          ...sub,
+          path: `/program-management/projects/project/${sub.path}`
+        }))
+      })),
     },
     {
       id: 'documents',
       title: 'Documents',
       icon: <FolderIcon />,
-      path: 'documents'
+      path: '/program-management/projects/project/documents'
     },
     {
       id: 'timeline',
       title: 'Timeline',
       icon: <TimelineIcon />,
-      path: 'timeline'
+      path: '/program-management/projects/project/timeline'
     },
     {
       id: 'budgetHistory',
       title: 'Budget History',
       icon: <AccountBalanceIcon />,
-      path: 'budget-history'
+      path: '/program-management/projects/project/budget-history'
     },
     {
       id: 'migrationManagement',
       title: 'Migration Management',
       icon: <DnsIcon />,
-      path: 'admin/migrations' // Path to the new migration page
+      path: '/admin/migrations'
     },
   ];
 

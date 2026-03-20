@@ -1,5 +1,5 @@
-﻿using MediatR;
-using EDR.Application.DTOs.Dashboard;
+using MediatR;
+using EDR.Application.Dtos.Dashboard;
 using EDR.Domain.Database;
 using System;
 using System.Linq;
