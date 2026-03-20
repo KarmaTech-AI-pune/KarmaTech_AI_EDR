@@ -335,6 +335,26 @@ namespace EDR.Application.CQRS.Dashboard.Handlers
                 });
             }
 
+            // --- 9. Task Priority Matrix ---
+            var taskPriorityMatrix = await _context.SprintTasks
+                .Include(st => st.SprintPlan)
+                    .ThenInclude(sp => sp.Project)
+                .Where(st => 
+                    st.SprintPlan != null && 
+                    projectIds.Contains(st.SprintPlan.ProjectId.Value) &&
+                    st.Taskstatus != "Done" && 
+                    st.Taskstatus != "Completed" && 
+                    st.Taskstatus != "Closed")
+                .Select(st => new TaskPriorityItemDto
+                {
+                    Id = st.Taskid,
+                    Title = st.TaskTitle,
+                    Project = st.SprintPlan.Project.Name,
+                    Assignee = st.TaskAssigneeName ?? "Unassigned",
+                    Category = MapPriorityToCategory(st.Taskpriority)
+                })
+                .ToListAsync(cancellationToken);
+
             return new ProgramDashboardDto
             {
                 ProgramId = program.Id,
@@ -360,7 +380,8 @@ namespace EDR.Application.CQRS.Dashboard.Handlers
                 Milestones = milestones,
                 MonthlyCashflow = cashflow,
                 RegionalPortfolio = regionalPortfolio,
-                ProjectsAtRisk = await GetProjectsAtRiskForProgram(projectIds, cancellationToken)
+                ProjectsAtRisk = await GetProjectsAtRiskForProgram(projectIds, cancellationToken),
+                TaskPriorityMatrix = taskPriorityMatrix
             };
             }
             catch (Exception ex)
@@ -498,6 +519,21 @@ namespace EDR.Application.CQRS.Dashboard.Handlers
             DateTime end = endDate ?? DateTime.MaxValue;
 
             return start <= qEnd && end >= qStart;
+        }
+
+        private static string MapPriorityToCategory(string priority)
+        {
+            if (string.IsNullOrWhiteSpace(priority)) return "neither";
+
+            var p = priority.ToLower();
+            if (p.Contains("critical") || p.Contains("highest") || p.Contains("blocker"))
+                return "urgent_important";
+            if (p.Contains("high"))
+                return "important_not_urgent";
+            if (p.Contains("medium"))
+                return "urgent_not_important";
+
+            return "neither";
         }
     }
 }

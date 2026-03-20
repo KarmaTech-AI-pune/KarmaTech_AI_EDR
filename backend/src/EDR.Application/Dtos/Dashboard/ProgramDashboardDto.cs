@@ -39,6 +39,7 @@ namespace EDR.Application.Dtos.Dashboard
         public List<MonthlyCashflowDto> MonthlyCashflow { get; set; }
         public List<ProjectAtRiskDto> ProjectsAtRisk { get; set; }
         public List<RegionalPortfolioDto> RegionalPortfolio { get; set; }
+        public List<TaskPriorityItemDto> TaskPriorityMatrix { get; set; }
     }
 
     public class ProjectStatusCountDto

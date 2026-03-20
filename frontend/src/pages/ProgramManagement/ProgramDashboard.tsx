@@ -13,7 +13,7 @@ import NPVProfitability from "../../components/dashboard/NPVProfitability";
 import PriorityProjectsPanel from "../../components/dashboard/PriorityProjectsPanel";
 import RegionalPortfolio from "../../components/dashboard/RegionalPortfolio";
 import TaskPriorityMatrix from "../../components/dashboard/TaskPriorityMatrix";
-import { aiSuggestions, taskItems } from "../../data/mockData/approvals";
+import { aiSuggestions } from "../../data/mockData/approvals";
 
 // Types
 import { Program } from "../../types/program";
@@ -138,7 +138,7 @@ const ProgramDashboard: React.FC = () => {
 
   const mappedRegionalPortfolio = data.regionalPortfolio || [];
   
-  const mappedTasks = taskItems;
+  const mappedTasks = data.taskPriorityMatrix || [];
 
   return (
     <Box sx={{ py: 3, backgroundColor: theme.palette.background.default, minHeight: "100vh" }}>

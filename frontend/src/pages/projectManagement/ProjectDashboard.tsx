@@ -14,7 +14,6 @@ import TaskPriorityMatrix from "../../components/dashboard/TaskPriorityMatrix";
 
 // Types
 import { FinancialMetrics, CashflowData, PendingApproval, MilestoneData, Project } from "../../data/types/dashboard";
-import { taskItems } from "../../data/mockData/approvals";
 import { useProjectDetailsContext } from "./ProjectDetails";
 
 const ProjectDashboard: React.FC = () => {
@@ -118,7 +117,7 @@ const ProjectDashboard: React.FC = () => {
 
   const mappedRegionalPortfolio = (data as any).regionalPortfolio || [];
   
-  const mappedTasks = taskItems;
+  const mappedTasks = data.taskPriorityMatrix || [];
 
   return (
     <Box sx={{ py: 3, backgroundColor: theme.palette.background.default, minHeight: "100vh" }}>

@@ -17,6 +17,14 @@ export interface PendingFormsResponseDto {
     pendingForms: PendingFormDto[];
 }
 
+export interface TaskPriorityItemDto {
+    id: number;
+    title: string;
+    project: string;
+    assignee: string;
+    category: 'urgent_important' | 'important_not_urgent' | 'urgent_not_important' | 'neither';
+}
+
 export interface TotalRevenueExpectedDto {
     totalRevenue: number;
     changeDescription: string;
@@ -113,6 +121,9 @@ export interface ProjectDashboardDto {
     pendingForms: PendingFormDto[];
     milestones: MilestoneBillingDto[];
     monthlyCashflow: MonthlyCashflowDto[];
+    projectsAtRisk: ProjectAtRiskDto[];
+    regionalPortfolio: RegionalPortfolioDto[];
+    taskPriorityMatrix: TaskPriorityItemDto[];
 }
 
 // Service object
@@ -169,6 +180,11 @@ export const dashboardService = {
 
     getProjectDashboard: async (projectId: number): Promise<ProjectDashboardDto> => {
         const response = await axiosInstance.get<ProjectDashboardDto>(`api/Dashboard/project/${projectId}`);
+        return response.data;
+    },
+
+    getTaskPriorityMatrix: async (): Promise<TaskPriorityItemDto[]> => {
+        const response = await axiosInstance.get<TaskPriorityItemDto[]>('api/Dashboard/task-priority-matrix');
         return response.data;
     },
 

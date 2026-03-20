@@ -283,6 +283,24 @@ namespace EDR.Application.CQRS.Dashboard.Handlers
                 });
             }
 
+            // --- 8. Task Priority Matrix ---
+            var taskPriorityMatrix = await _context.SprintTasks
+                .Where(st => 
+                    st.SprintPlan != null && 
+                    st.SprintPlan.ProjectId == request.ProjectId &&
+                    st.Taskstatus != "Done" && 
+                    st.Taskstatus != "Completed" && 
+                    st.Taskstatus != "Closed")
+                .Select(st => new TaskPriorityItemDto
+                {
+                    Id = st.Taskid,
+                    Title = st.TaskTitle,
+                    Project = project.Name,
+                    Assignee = st.TaskAssigneeName ?? "Unassigned",
+                    Category = MapPriorityToCategory(st.Taskpriority)
+                })
+                .ToListAsync(cancellationToken);
+
             return new ProjectDashboardDto
             {
                 ProjectId = project.Id,
@@ -303,7 +321,8 @@ namespace EDR.Application.CQRS.Dashboard.Handlers
                 Milestones = milestones,
                 MonthlyCashflow = cashflow,
                 RegionalPortfolio = regionalPortfolio,
-                ProjectsAtRisk = await GetProjectsAtRiskForProject(project.Id, cancellationToken)
+                ProjectsAtRisk = await GetProjectsAtRiskForProject(project.Id, cancellationToken),
+                TaskPriorityMatrix = taskPriorityMatrix
             };
         }
 
@@ -429,6 +448,21 @@ namespace EDR.Application.CQRS.Dashboard.Handlers
             DateTime end = endDate ?? DateTime.MaxValue;
 
             return start <= qEnd && end >= qStart;
+        }
+
+        private static string MapPriorityToCategory(string priority)
+        {
+            if (string.IsNullOrWhiteSpace(priority)) return "neither";
+
+            var p = priority.ToLower();
+            if (p.Contains("critical") || p.Contains("highest") || p.Contains("blocker"))
+                return "urgent_important";
+            if (p.Contains("high"))
+                return "important_not_urgent";
+            if (p.Contains("medium"))
+                return "urgent_not_important";
+
+            return "neither";
         }
     }
 }

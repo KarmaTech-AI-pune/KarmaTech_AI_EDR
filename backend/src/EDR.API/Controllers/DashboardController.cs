@@ -12,6 +12,7 @@ using EDR.Application.CQRS.Dashboard.Cashflow.Queries;
 using EDR.Application.CQRS.Dashboard.Regional.Queries;
 using EDR.Application.CQRS.Dashboard.NpvProfitability.Queries;
 using EDR.Application.CQRS.Dashboard.MilestoneBilling.Queries;
+using EDR.Application.CQRS.Dashboard.TaskPriorityMatrix.Queries;
 using EDR.Application.CQRS.Dashboard;
 using System.Threading.Tasks;
 
@@ -112,6 +113,15 @@ namespace EDR.API.Controllers
         public async Task<ActionResult<List<MilestoneBillingDto>>> GetMilestoneBilling()
         {
             var query = new GetMilestoneBillingQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        [HttpGet("task-priority-matrix")]
+        [ProducesResponseType(typeof(List<TaskPriorityItemDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<TaskPriorityItemDto>>> GetTaskPriorityMatrix()
+        {
+            var query = new GetTaskPriorityMatrixQuery();
             var result = await _mediator.Send(query);
             return Ok(result);
         }
