@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useContext } from 'react';
 import {
   Box,
@@ -26,9 +26,9 @@ import { projectManagementAppContextType } from '../types';
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 const subscriptionPlanOptions = [
-  { value: 'Starter', label: 'Starter' },
-  { value: 'Professional', label: 'Professional' },
-  { value: 'Enterprises', label: 'Enterprises' },
+  { value: 'starter', label: 'Starter' },
+  { value: 'professional', label: 'Professional' },
+  { value: 'enterprises', label: 'Enterprises' },
 ];
 
 const theme = createTheme({
@@ -49,6 +49,30 @@ const theme = createTheme({
 });
 
 const Signup: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  
+  // Get plan from query parameters (e.g., /signup?plan=professional)
+  const planParam = searchParams.get('plan');
+  
+  // Validate and normalize the plan parameter
+  const getValidPlan = (planParam?: string | null): 'starter' | 'professional' | 'enterprises' => {
+    if (!planParam) return 'starter';
+    
+    const normalizedPlan = planParam.toLowerCase();
+    switch (normalizedPlan) {
+      case 'starter':
+        return 'starter';
+      case 'professional':
+        return 'professional';
+      case 'enterprises':
+        return 'enterprises';
+      default:
+        return 'starter';
+    }
+  };
+
+  const selectedPlan = getValidPlan(planParam);
+
   const methods = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -59,13 +83,20 @@ const Signup: React.FC = () => {
       phoneNumber: '',
       emailAddress: '',
       subdomain: '',
-      subscriptionPlan: 'Starter',
+      subscriptionPlan: selectedPlan, // Set from query parameter
     },
     mode: 'all',
   });
 
-  const { handleSubmit, reset } = methods;
+  const { handleSubmit, reset, setValue } = methods;
   const navigate = useNavigate();
+
+  // Update form value when plan parameter changes
+  useEffect(() => {
+    setValue('subscriptionPlan', selectedPlan);
+  }, [selectedPlan, setValue]);
+
+
 
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
