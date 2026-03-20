@@ -180,7 +180,7 @@ describe('PermissionType Model', () => {
       const allPermissions = Object.values(PermissionType);
 
       // Assert
-      expect(allPermissions).toHaveLength(18); // Total count of permissions
+      expect(allPermissions).toHaveLength(17); // Total count of permissions
       
       // Project permissions (8)
       expect(allPermissions).toContain(PermissionType.VIEW_PROJECT);
