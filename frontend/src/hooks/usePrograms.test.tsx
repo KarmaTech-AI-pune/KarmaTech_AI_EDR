@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { usePrograms } from './usePrograms';
-import { programApi } from '../services/api/programApi';
+import { programApi } from '../services/programApi';
 
-vi.mock('../services/api/programApi', () => ({
+vi.mock('../services/programApi', () => ({
   programApi: {
     getAll: vi.fn()
   }
