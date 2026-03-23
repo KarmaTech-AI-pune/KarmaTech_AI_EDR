@@ -7,18 +7,21 @@ using EDR.Application.CQRS.MonthlyProgress.Commands;
 using EDR.Application.CQRS.MonthlyProgress.Handlers;
 using EDR.Application.DTOs;
 using EDR.Repositories.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace EDR.API.Tests.CQRS.MonthlyProgress.Handlers
 {
     public class UpdateMonthlyProgressCommandHandlerTests
     {
         private readonly Mock<IMonthlyProgressRepository> _mockRepo;
+        private readonly Mock<ILogger<UpdateMonthlyProgressCommandHandler>> _mockLogger;
         private readonly UpdateMonthlyProgressCommandHandler _handler;
 
         public UpdateMonthlyProgressCommandHandlerTests()
         {
             _mockRepo = new Mock<IMonthlyProgressRepository>();
-            _handler = new UpdateMonthlyProgressCommandHandler(_mockRepo.Object);
+            _mockLogger = new Mock<ILogger<UpdateMonthlyProgressCommandHandler>>();
+            _handler = new UpdateMonthlyProgressCommandHandler(_mockRepo.Object, _mockLogger.Object);
         }
 
         [Fact]
@@ -61,9 +64,9 @@ namespace EDR.API.Tests.CQRS.MonthlyProgress.Handlers
         }
 
         [Fact]
-        public async Task Handle_NullCommand_ThrowsArgumentNullException()
+        public async Task Handle_NullCommand_ThrowsApplicationException()
         {
-            await Assert.ThrowsAsync<ArgumentNullException>(() => _handler.Handle(null, CancellationToken.None));
+            await Assert.ThrowsAsync<ApplicationException>(() => _handler.Handle(null, CancellationToken.None));
         }
     }
 }
