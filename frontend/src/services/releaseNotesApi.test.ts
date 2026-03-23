@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { releaseNotesApi, ReleaseNotesData } from '../releaseNotesApi';
-import { axiosInstance } from '../axiosConfig';
+import { releaseNotesApi, ReleaseNotesData } from './releaseNotesApi';
+import { axiosInstance } from './axiosConfig';
 
 // Mock axios
-vi.mock('../axiosConfig', () => ({
+vi.mock('./axiosConfig', () => ({
   axiosInstance: {
     get: vi.fn()
   }

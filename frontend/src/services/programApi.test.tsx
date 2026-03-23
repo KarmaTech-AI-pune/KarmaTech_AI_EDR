@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 vi.unmock('axios');
 
 import { programApi } from './programApi';
-import { axiosInstance } from '../axiosConfig';
+import { axiosInstance } from './axiosConfig';
 import MockAdapter from 'axios-mock-adapter';
 
 describe('programApi', () => {

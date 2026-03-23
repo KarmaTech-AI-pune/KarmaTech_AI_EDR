@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { changeControlApi } from '../changeControlApi';
-import { axiosInstance } from '../axiosConfig';
+import { changeControlApi } from './changeControlApi';
+import { axiosInstance } from './axiosConfig';
 
 // Mock axiosInstance
 vi.mock('../axiosConfig', () => ({

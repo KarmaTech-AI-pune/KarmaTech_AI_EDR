@@ -1,5 +1,5 @@
-import { axiosInstance } from '../axiosConfig';
-import { Program, ProgramFormDto } from '../../types/program';
+import { axiosInstance } from './axiosConfig';
+import { Program, ProgramFormDto } from '../types/program';
 
 export const programApi = {
   // Get all programs

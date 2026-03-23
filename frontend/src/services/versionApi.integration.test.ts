@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { versionApi } from '../versionApi';
+import { versionApi } from './versionApi';
 
 /**
  * Integration tests for version API
