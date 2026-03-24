@@ -185,5 +185,37 @@ namespace EDR.API.Tests.CQRS.Users
             Assert.NotEmpty(result);
             Assert.Contains(result, r => r.Id == 1 && r.Roles.Any(role => role.Id == roleId));
         }
+        
+        [Fact]
+        public async Task GetPermissionsByGroupedByCategoryHandler_ReturnsGroupedPermissions()
+        {
+            // Arrange
+            var permissions = new List<Permission>
+            {
+                new Permission { Id = 1, Name = "P1", Category = "Cat1" },
+                new Permission { Id = 2, Name = "P2", Category = "Cat1" },
+                new Permission { Id = 3, Name = "P3", Category = "Cat2" }
+            };
+            
+            _permissionRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(permissions);
+            
+            // Use reflection to access the internal handler
+            var handlerType = typeof(GetPermissionsByGroupedByCategoryQuery).Assembly
+                .GetType("EDR.Application.CQRS.Users.Handlers.GetPermissionsByGroupedByCategoryHandler");
+            
+            var handler = Activator.CreateInstance(handlerType, _permissionRepoMock.Object);
+            var query = new GetPermissionsByGroupedByCategoryQuery();
+            
+            // Act
+            var method = handlerType.GetMethod("Handle");
+            var task = (Task<List<PermissionCategoryGroup>>)method.Invoke(handler, new object[] { query, CancellationToken.None });
+            var result = await task;
+            
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+            Assert.Contains(result, g => g.Category == "Cat1" && g.Permissions.Count == 2);
+            Assert.Contains(result, g => g.Category == "Cat2" && g.Permissions.Count == 1);
+        }
     }
 }
