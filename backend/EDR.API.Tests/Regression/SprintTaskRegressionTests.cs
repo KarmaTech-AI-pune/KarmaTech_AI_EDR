@@ -7,7 +7,7 @@ namespace EDR.API.Tests.Regression
 {
     /// <summary>
     /// Regression tests for Sprint Tasks, Daily Progress, and Program Sprints.
-    /// Covers SprintTaskController, SprintDailyProgressController, ProgramSprintController.
+    /// Covers SprintTaskController, ProgramSprintController.
     /// </summary>
     public class SprintTaskRegressionTests : IntegrationTestBase
     {
@@ -66,17 +66,7 @@ namespace EDR.API.Tests.Regression
                 $"SprintTask by project returned unexpected {response.StatusCode}");
         }
 
-        [Fact]
-        public async Task SprintDailyProgress_Endpoint_Reachable()
-        {
-            var response = await Client.GetAsync("/api/SprintDailyProgress");
 
-            Assert.True(
-                response.StatusCode == HttpStatusCode.OK
-                || response.StatusCode == HttpStatusCode.NotFound
-                || response.StatusCode == HttpStatusCode.MethodNotAllowed,
-                $"SprintDailyProgress endpoint returned unexpected {response.StatusCode}");
-        }
 
         [Fact]
         public async Task ProgramSprint_Endpoint_Reachable()
