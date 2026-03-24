@@ -138,5 +138,44 @@ namespace EDR.API.Tests.CQRS.SprintTasks
             Assert.NotNull(result);
             Assert.Equal("C1", result.CommentText);
         }
+
+        [Fact]
+        public async Task GetSprintSubtaskByIdQueryHandler_ReturnsSubtask()
+        {
+            // Arrange
+            var subtask = new SprintSubtask { SubtaskId = 1, Subtasktitle = "Subtask 1", TenantId = 1 };
+            _context.SprintSubtasks.Add(subtask);
+            await _context.SaveChangesAsync();
+
+            var loggerMock = new Mock<ILogger<GetSprintSubtaskByIdQueryHandler>>();
+            var handler = new GetSprintSubtaskByIdQueryHandler(_context, loggerMock.Object);
+            var query = new GetSprintSubtaskByIdQuery { SubtaskId = 1 };
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("Subtask 1", result.Subtasktitle);
+        }
+
+        [Fact]
+        public async Task GetSprintTaskCommentQueryHandler_ReturnsComments()
+        {
+            // Arrange
+            _context.SprintTaskComments.Add(new SprintTaskComment { CommentId = 1, Taskid = 1, CommentText = "C1", TenantId = 1 });
+            _context.SprintTaskComments.Add(new SprintTaskComment { CommentId = 2, Taskid = 1, CommentText = "C2", TenantId = 1 });
+            await _context.SaveChangesAsync();
+
+            var loggerMock = new Mock<ILogger<GetSprintTaskCommentQueryHandler>>();
+            var handler = new GetSprintTaskCommentQueryHandler(_context, loggerMock.Object);
+            var query = new GetSprintTaskCommentQuery { TaskId = 1 };
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(2, result.Count);
+        }
     }
 }

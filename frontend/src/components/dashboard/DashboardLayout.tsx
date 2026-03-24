@@ -25,8 +25,7 @@ import {
   
 } from "../../data/types/dashboard";
 import {
-  aiSuggestions,
-  taskItems,
+  aiSuggestions
 } from "../../data/mockData/approvals";
 
 // Service
@@ -41,7 +40,8 @@ import {
   MonthlyCashflowDto,
   RegionalPortfolioDto,
   NpvProfitabilityDto,
-  MilestoneBillingDto
+  MilestoneBillingDto,
+  TaskPriorityItemDto
 } from "../../services/dashboardService";
 
 const DashboardLayout: React.FC = () => {
@@ -67,6 +67,7 @@ const DashboardLayout: React.FC = () => {
   const [regionalPortfolio, setRegionalPortfolio] = useState<RegionalPortfolioDto[]>([]);
   const [npvProfitability, setNpvProfitability] = useState<NpvProfitabilityDto | null>(null);
   const [milestoneBilling, setMilestoneBilling] = useState<MilestoneBillingDto[]>([]);
+  const [taskPriorityMatrix, setTaskPriorityMatrix] = useState<TaskPriorityItemDto[]>([]);
 
   // Fetch data
   useEffect(() => {
@@ -83,7 +84,8 @@ const DashboardLayout: React.FC = () => {
           cashflowData,
           regionalData,
           npvData,
-          milestoneData
+          milestoneData,
+          taskPriorityMatrixData
         ] = await Promise.all([
           dashboardService.getPendingForms(),
           dashboardService.getTotalRevenueExpected(),
@@ -94,7 +96,8 @@ const DashboardLayout: React.FC = () => {
           dashboardService.getMonthlyCashflow(),
           dashboardService.getRegionalPortfolio(),
           dashboardService.getNpvProfitability(),
-          dashboardService.getMilestoneBilling()
+          dashboardService.getMilestoneBilling(),
+          dashboardService.getTaskPriorityMatrix()
         ]);
 
         setPendingForms(pendingFormsData);
@@ -107,6 +110,7 @@ const DashboardLayout: React.FC = () => {
         setRegionalPortfolio(regionalData);
         setNpvProfitability(npvData);
         setMilestoneBilling(milestoneData);
+        setTaskPriorityMatrix(taskPriorityMatrixData);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         setError("Failed to load dashboard data. Please try again later.");
@@ -283,7 +287,7 @@ const DashboardLayout: React.FC = () => {
 
           {/* Task Priority Matrix */}
           <Grid item xs={12} md={6}>
-            <TaskPriorityMatrix tasks={taskItems} />
+            <TaskPriorityMatrix tasks={taskPriorityMatrix} />
           </Grid>
         </Grid>
 

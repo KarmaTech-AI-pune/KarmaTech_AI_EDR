@@ -1,5 +1,5 @@
-﻿using MediatR;
-using EDR.Application.DTOs.Dashboard; // Corrected DTO namespace
+using MediatR;
+using EDR.Application.Dtos.Dashboard;
 using EDR.Domain.Entities;
 using EDR.Domain.Enums;
 using EDR.Repositories.Interfaces;
@@ -40,7 +40,7 @@ namespace EDR.Application.CQRS.Dashboard.PendingApproval.Handler
                     FormId = cc.Id,
                     ProjectId = cc.ProjectId,
                     StatusId = cc.WorkflowStatusId,
-                    FormName = cc.Description, // Using Description as form name
+                    FormName = "Change Control",
                     ProjectName = cc.Project.Name,
                     HoldingUserName = cc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
                 })
