@@ -228,8 +228,8 @@ describe('ManpowerPlanningTab', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('Task A')).toBeInTheDocument();
-    expect(screen.getByText('Task B')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Task A')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Task B')).toBeInTheDocument();
   });
 
   it('renders in a Paper component', () => {
