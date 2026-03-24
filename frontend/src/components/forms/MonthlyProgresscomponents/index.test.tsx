@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import * as MonthlyProgressComponents from '../index';
+import * as MonthlyProgressComponents from './index';
 
 describe('MonthlyProgresscomponents/index', () => {
   it('should export TabComponents', () => {
