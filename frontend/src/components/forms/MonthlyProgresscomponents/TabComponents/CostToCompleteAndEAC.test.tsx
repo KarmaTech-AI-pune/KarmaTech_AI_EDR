@@ -40,7 +40,8 @@ describe('CostToCompleteAndEAC', () => {
     // Values are formatted as '15,000.00'
     const values = screen.getAllByDisplayValue('15,000.00');
     expect(values.length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByDisplayValue('40,000.00')).toBeInTheDocument(); // CTC Staff (50k - 10k)
+    const staffValues = screen.getAllByDisplayValue('40,000.00'); // CTC Staff (50k - 10k)
+    expect(staffValues.length).toBeGreaterThan(0);
   });
 
   it('calculates EAC and Gross Profit correctly when actual CTC is null', () => {

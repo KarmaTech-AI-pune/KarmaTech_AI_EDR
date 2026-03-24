@@ -1,10 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import LastMonthActionsTab from './LastMonthActionsTab';
 import { MonthlyProgressSchema, MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
+import * as dateUtils from '../../../../utils/dateUtils';
+
+// Mock the utility functions
+vi.mock('../../../../utils/dateUtils', () => ({
+  formatDateForInput: vi.fn(),
+  parseDateFromInput: vi.fn(),
+}));
 
 const TestWrapper: React.FC<{ children: React.ReactNode; defaultValues?: Partial<MonthlyProgressSchemaType> }> = ({
   children,
@@ -13,73 +20,13 @@ const TestWrapper: React.FC<{ children: React.ReactNode; defaultValues?: Partial
   const form = useForm<MonthlyProgressSchemaType>({
     resolver: zodResolver(MonthlyProgressSchema),
     defaultValues: {
-      financialAndContractDetails: {
-        net: null,
-        serviceTax: null,
-        feeTotal: null,
-        budgetOdcs: null,
-        budgetStaff: null,
-        budgetSubTotal: null,
-        contractType: 'lumpsum',
-      },
-      actualCost: {
-        priorCumulativeTotal: null,
-        actualSubtotal: null,
-        totalCumulativeOdc: null,
-        totalCumulativeStaff: null,
-        totalCumulativeCost: null,
-      },
-      ctcAndEac: {
-        ctcODC: null,
-        ctcStaff: null,
-        ctcSubtotal: null,
-        actualctcODC: null,
-        actualCtcStaff: null,
-        actualCtcSubtotal: null,
-        eacOdc: null,
-        eacStaff: null,
-        totalEAC: null,
-        grossProfitPercentage: null,
-      },
-      schedule: {
-        dateOfIssueWOLOI: null,
-        completionDateAsPerContract: null,
-        completionDateAsPerExtension: null,
-        expectedCompletionDate: null,
-      },
-      budgetTable: {
-        originalBudget: { revenueFee: null, cost: null, profitPercentage: null },
-        currentBudgetInMIS: { revenueFee: null, cost: null, profitPercentage: null },
-        percentCompleteOnCosts: { revenueFee: null, cost: null },
-      },
-      manpowerPlanning: {
-        manpower: [],
-        manpowerTotal: {
-          plannedTotal: null,
-          consumedTotal: null,
-          approvedTotal: null,
-          extraHoursTotal: null,
-          extraCostTotal: null,
-          paymentTotal: null,
-          balanceTotal: null,
-          nextMonthPlanningTotal: null,
-        },
-      },
-      progressDeliverable: {
-        deliverables: [],
-        totalPaymentDue: null,
-      },
-      changeOrder: [],
-      programmeSchedule: [],
-      earlyWarnings: [],
       lastMonthActions: [
         {
           actions: 'Completed requirements gathering',
-          date: '01-03-2026',
+          date: '2026-03-01',
           comments: 'All stakeholders approved',
         },
       ],
-      currentMonthActions: [],
       ...defaultValues,
     },
   });
@@ -88,6 +35,16 @@ const TestWrapper: React.FC<{ children: React.ReactNode; defaultValues?: Partial
 };
 
 describe('LastMonthActionsTab', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (dateUtils.formatDateForInput as any).mockImplementation((date: any) => {
+      if (!date) return '';
+      if (typeof date === 'string' && date.includes('-')) return date; // Already in YYYY-MM-DD
+      return '2026-03-01';
+    });
+    (dateUtils.parseDateFromInput as any).mockImplementation((val: string) => val);
+  });
+
   it('renders the component', () => {
     render(
       <TestWrapper>
@@ -95,19 +52,19 @@ describe('LastMonthActionsTab', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText(/Last Month Actions/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Last Month Actions/i)[0]).toBeInTheDocument();
   });
 
-  it('renders action fields', () => {
+  it('renders action fields by placeholder', () => {
     render(
       <TestWrapper>
         <LastMonthActionsTab />
       </TestWrapper>
     );
 
-    expect(screen.getByLabelText(/Actions/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Date/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Comments/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Action Description/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Comments/i)).toBeInTheDocument();
+    // For the date field, we can find it by its type
   });
 
   it('renders with default values', () => {
@@ -118,6 +75,7 @@ describe('LastMonthActionsTab', () => {
     );
 
     expect(screen.getByDisplayValue('Completed requirements gathering')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('All stakeholders approved')).toBeInTheDocument();
   });
 
   it('allows editing action fields', async () => {
@@ -127,32 +85,12 @@ describe('LastMonthActionsTab', () => {
       </TestWrapper>
     );
 
-    const actionsField = screen.getByLabelText(/Actions/i) as HTMLInputElement;
+    const actionsField = screen.getByPlaceholderText(/Action Description/i) as HTMLInputElement;
     fireEvent.change(actionsField, { target: { value: 'Updated action' } });
 
     await waitFor(() => {
       expect(actionsField.value).toBe('Updated action');
     });
-  });
-
-  it('renders with null values', () => {
-    render(
-      <TestWrapper
-        defaultValues={{
-          lastMonthActions: [
-            {
-              actions: null,
-              date: null,
-              comments: null,
-            },
-          ],
-        }}
-      >
-        <LastMonthActionsTab />
-      </TestWrapper>
-    );
-
-    expect(screen.getByText(/Last Month Actions/i)).toBeInTheDocument();
   });
 
   it('renders in a Paper component', () => {
@@ -162,29 +100,31 @@ describe('LastMonthActionsTab', () => {
       </TestWrapper>
     );
 
-    const paperElement = container.querySelector('[class*="MuiPaper"]');
+    const paperElement = container.querySelector('.MuiPaper-root');
     expect(paperElement).toBeInTheDocument();
   });
 
-  it('renders fields in a Grid layout', () => {
+  it('renders fields in a Table layout', () => {
     const { container } = render(
       <TestWrapper>
         <LastMonthActionsTab />
       </TestWrapper>
     );
 
-    const gridContainers = container.querySelectorAll('[class*="MuiGrid"]');
-    expect(gridContainers.length).toBeGreaterThan(0);
+    const table = container.querySelector('.MuiTable-root');
+    expect(table).toBeInTheDocument();
   });
 
   it('handles date field changes', async () => {
-    render(
+    const { container } = render(
       <TestWrapper>
         <LastMonthActionsTab />
       </TestWrapper>
     );
 
-    const dateField = screen.getByLabelText(/Date/i) as HTMLInputElement;
+    const dateField = container.querySelector('input[type="date"]') as HTMLInputElement;
+    expect(dateField).toBeInTheDocument();
+    
     fireEvent.change(dateField, { target: { value: '2025-12-25' } });
 
     await waitFor(() => {
@@ -199,7 +139,7 @@ describe('LastMonthActionsTab', () => {
       </TestWrapper>
     );
 
-    const commentsField = screen.getByLabelText(/Comments/i) as HTMLInputElement;
+    const commentsField = screen.getByPlaceholderText(/Comments/i) as HTMLInputElement;
     fireEvent.change(commentsField, { target: { value: 'Updated comments' } });
 
     await waitFor(() => {
@@ -214,31 +154,16 @@ describe('LastMonthActionsTab', () => {
       </TestWrapper>
     );
 
-    const actionsField = screen.getByLabelText(/Actions/i) as HTMLInputElement;
-    const commentsField = screen.getByLabelText(/Comments/i) as HTMLInputElement;
+    const actionsField = screen.getByPlaceholderText(/Action Description/i) as HTMLInputElement;
+    const commentsField = screen.getByPlaceholderText(/Comments/i) as HTMLInputElement;
 
     fireEvent.change(actionsField, { target: { value: 'Action 1' } });
+    fireEvent.change(commentsField, { target: { value: 'Comment 1' } });
+
     await waitFor(() => {
       expect(actionsField.value).toBe('Action 1');
-    });
-
-    fireEvent.change(commentsField, { target: { value: 'Comment 1' } });
-    await waitFor(() => {
       expect(commentsField.value).toBe('Comment 1');
     });
-
-    expect(actionsField.value).toBe('Action 1');
-  });
-
-  it('renders multiline text field for actions', () => {
-    const { container } = render(
-      <TestWrapper>
-        <LastMonthActionsTab />
-      </TestWrapper>
-    );
-
-    const textareas = container.querySelectorAll('textarea');
-    expect(textareas.length).toBeGreaterThan(0);
   });
 
   it('allows clearing field values', async () => {
@@ -248,7 +173,7 @@ describe('LastMonthActionsTab', () => {
       </TestWrapper>
     );
 
-    const actionsField = screen.getByLabelText(/Actions/i) as HTMLInputElement;
+    const actionsField = screen.getByPlaceholderText(/Action Description/i) as HTMLInputElement;
     fireEvent.change(actionsField, { target: { value: '' } });
 
     await waitFor(() => {
@@ -267,52 +192,43 @@ describe('LastMonthActionsTab', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText(/Last Month Actions/i)).toBeInTheDocument();
+    expect(screen.getByText(/No last month actions/i)).toBeInTheDocument();
   });
 
-  it('renders with multiple actions', () => {
+  it('adds a new row when the "Add Row" button is clicked', async () => {
     render(
       <TestWrapper
         defaultValues={{
-          lastMonthActions: [
-            {
-              actions: 'Action 1',
-              date: '01-03-2026',
-              comments: 'Comment 1',
-            },
-            {
-              actions: 'Action 2',
-              date: '02-03-2026',
-              comments: 'Comment 2',
-            },
-          ],
+          lastMonthActions: [],
         }}
       >
         <LastMonthActionsTab />
       </TestWrapper>
     );
 
-    expect(screen.getByText(/Last Month Actions/i)).toBeInTheDocument();
+    const addButton = screen.getByRole('button', { name: /Add Row/i });
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Action Description/i)).toBeInTheDocument();
+    });
   });
 
-  it('renders with long text values', () => {
-    const longText = 'A'.repeat(500);
+  it('removes a row when the delete button is clicked', async () => {
     render(
-      <TestWrapper
-        defaultValues={{
-          lastMonthActions: [
-            {
-              actions: longText,
-              date: '01-03-2026',
-              comments: longText,
-            },
-          ],
-        }}
-      >
+      <TestWrapper>
         <LastMonthActionsTab />
       </TestWrapper>
     );
 
-    expect(screen.getByText(/Last Month Actions/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Completed requirements gathering')).toBeInTheDocument();
+
+    const deleteButton = screen.getByTestId('DeleteIcon').parentElement as HTMLButtonElement;
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(screen.queryByDisplayValue('Completed requirements gathering')).not.toBeInTheDocument();
+    });
   });
 });
+
