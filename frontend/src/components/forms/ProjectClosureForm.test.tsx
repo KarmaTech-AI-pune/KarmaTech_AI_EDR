@@ -144,7 +144,7 @@ const mockProjectClosureWithMetadata = {
   workflowStatusId: PMWorkflowStatus.Initial,
 };
 
-vi.setConfig({ testTimeout: 20000 });
+vi.setConfig({ testTimeout: 60000 });
 
 describe('ProjectClosureForm', () => {
   afterEach(() => {

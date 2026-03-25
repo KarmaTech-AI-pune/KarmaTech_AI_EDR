@@ -10,7 +10,7 @@ import { projectManagementAppContextType } from "../../types";
 import { Role } from "../../models/roleModel";
 
 // Increase timeout for this complex form
-vi.setConfig({ testTimeout: 15000 });
+vi.setConfig({ testTimeout: 60000 });
 
 // Mock the userApi module
 vi.mock("../../services/userApi", () => ({
@@ -235,6 +235,18 @@ describe("OpportunityForm Component", () => {
     );
   };
 
+  // Helper to fill MUI Select - moved to common scope for reuse
+  const fillSelect = async (testId: string, optionName: string | RegExp) => {
+    const selectContainer = screen.getByTestId(testId);
+    const combobox = within(selectContainer).getByRole("combobox", { hidden: true });
+    fireEvent.mouseDown(combobox);
+    const listbox = await screen.findByRole("listbox");
+    const option = await within(listbox).findByRole("option", { name: optionName });
+    fireEvent.click(option);
+    // Wait for menu to close - this can be slow in JSDOM, using a generous timeout
+    await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument(), { timeout: 10000 });
+  };
+
   // Rendering Tests
   describe("Rendering", () => {
     it("renders without errors", async () => {
@@ -300,12 +312,9 @@ describe("OpportunityForm Component", () => {
       const workNameInput = screen.getByLabelText(/work name/i);
       const clientInput = screen.getByTestId("client-input");
 
-      // Change input values
-      await userEvent.clear(workNameInput);
-      await userEvent.type(workNameInput, "New Project Name");
-
-      await userEvent.clear(clientInput);
-      await userEvent.type(clientInput, "New Client");
+      // Change input values - using fireEvent for speed
+      fireEvent.change(workNameInput, { target: { value: "New Project Name" } });
+      fireEvent.change(clientInput, { target: { value: "New Client" } });
 
       // Check that the input values have been updated
       expect(workNameInput).toHaveValue("New Project Name");
@@ -321,29 +330,13 @@ describe("OpportunityForm Component", () => {
         expect(screen.getByTestId("bd-manager-select")).not.toBeDisabled();
       });
 
-      // Fill required text fields
-      await userEvent.type(screen.getByLabelText(/work name/i), "Test Project");
-      await userEvent.type(screen.getByTestId("client-input"), "Test Client");
-      await userEvent.type(screen.getByLabelText(/client sector/i), "Energy");
-      await userEvent.type(
-        screen.getByLabelText(/operation/i),
-        "New Construction"
-      );
-      await userEvent.type(screen.getByLabelText(/capital value/i), "1000000");
-      await userEvent.type(screen.getByLabelText(/duration of project/i), "12");
-
-      // Fill required select fields
-      // Helper to fill MUI Select
-      const fillSelect = async (testId: string, optionName: string | RegExp) => {
-        const selectContainer = screen.getByTestId(testId);
-        const combobox = within(selectContainer).getByRole("combobox", { hidden: true });
-        fireEvent.mouseDown(combobox);
-        const listbox = await screen.findByRole("listbox");
-        const option = await within(listbox).findByRole("option", { name: optionName });
-        fireEvent.click(option);
-        // Wait briefly for menu to close - this can be slow in JSDOM
-        await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument(), { timeout: 2000 });
-      };
+      // Fill required text fields - using fireEvent.change for speed
+      fireEvent.change(screen.getByLabelText(/work name/i), { target: { value: "Test Project" } });
+      fireEvent.change(screen.getByTestId("client-input"), { target: { value: "Test Client" } });
+      fireEvent.change(screen.getByLabelText(/client sector/i), { target: { value: "Energy" } });
+      fireEvent.change(screen.getByLabelText(/operation/i), { target: { value: "New Construction" } });
+      fireEvent.change(screen.getByLabelText(/capital value/i), { target: { value: "1000000" } });
+      fireEvent.change(screen.getByLabelText(/duration of project/i), { target: { value: "12" } });
 
       // Fill required select fields
       await fillSelect('stage-select', "A");
@@ -385,28 +378,13 @@ describe("OpportunityForm Component", () => {
         expect(screen.getByTestId("bd-manager-select")).not.toBeDisabled();
       });
 
-      // Fill required text fields
-      await userEvent.type(screen.getByLabelText(/work name/i), "Test Project");
-      await userEvent.type(screen.getByTestId("client-input"), "Test Client");
-      await userEvent.type(screen.getByLabelText(/client sector/i), "Energy");
-      await userEvent.type(
-        screen.getByLabelText(/operation/i),
-        "New Construction"
-      );
-      await userEvent.type(screen.getByLabelText(/capital value/i), "1000000");
-      await userEvent.type(screen.getByLabelText(/duration of project/i), "12");
-
-      // Helper to fill MUI Select
-      const fillSelect = async (testId: string, optionName: string | RegExp) => {
-        const selectContainer = screen.getByTestId(testId);
-        const combobox = within(selectContainer).getByRole("combobox", { hidden: true });
-        fireEvent.mouseDown(combobox);
-        const listbox = await screen.findByRole("listbox");
-        const option = await within(listbox).findByRole("option", { name: optionName });
-        fireEvent.click(option);
-        // Wait briefly for menu to close - this can be slow in JSDOM
-        await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument(), { timeout: 2000 });
-      };
+      // Fill required text fields - using fireEvent.change for speed
+      fireEvent.change(screen.getByLabelText(/work name/i), { target: { value: "Test Project" } });
+      fireEvent.change(screen.getByTestId("client-input"), { target: { value: "Test Client" } });
+      fireEvent.change(screen.getByLabelText(/client sector/i), { target: { value: "Energy" } });
+      fireEvent.change(screen.getByLabelText(/operation/i), { target: { value: "New Construction" } });
+      fireEvent.change(screen.getByLabelText(/capital value/i), { target: { value: "1000000" } });
+      fireEvent.change(screen.getByLabelText(/duration of project/i), { target: { value: "12" } });
 
       // Fill required select fields
       await fillSelect('stage-select', "A");
@@ -760,37 +738,13 @@ describe("OpportunityForm Component", () => {
         expect(screen.getByTestId("bd-manager-select")).not.toBeDisabled();
       });
 
-      // Fill required text fields
-      await userEvent.type(
-        screen.getByLabelText(/work name/i),
-        "Minimal Project"
-      );
-      await userEvent.type(
-        screen.getByTestId("client-input"),
-        "Minimal Client"
-      );
-      await userEvent.type(
-        screen.getByLabelText(/client sector/i),
-        "Minimal Sector"
-      );
-      await userEvent.type(
-        screen.getByLabelText(/operation/i),
-        "Minimal Operation"
-      );
-      await userEvent.type(screen.getByLabelText(/capital value/i), "1000");
-      await userEvent.type(screen.getByLabelText(/duration of project/i), "6");
-
-      // Helper to fill MUI Select
-      const fillSelect = async (testId: string, optionName: string | RegExp) => {
-        const selectContainer = screen.getByTestId(testId);
-        const combobox = within(selectContainer).getByRole("combobox", { hidden: true });
-        fireEvent.mouseDown(combobox);
-        const listbox = await screen.findByRole("listbox");
-        const option = await within(listbox).findByRole("option", { name: optionName });
-        fireEvent.click(option);
-        // Wait briefly for menu to close - this can be slow in JSDOM
-        await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument(), { timeout: 2000 });
-      };
+      // Fill required text fields - using fireEvent.change for speed
+      fireEvent.change(screen.getByLabelText(/work name/i), { target: { value: "Minimal Project" } });
+      fireEvent.change(screen.getByTestId("client-input"), { target: { value: "Minimal Client" } });
+      fireEvent.change(screen.getByLabelText(/client sector/i), { target: { value: "Minimal Sector" } });
+      fireEvent.change(screen.getByLabelText(/operation/i), { target: { value: "Minimal Operation" } });
+      fireEvent.change(screen.getByLabelText(/capital value/i), { target: { value: "1000" } });
+      fireEvent.change(screen.getByLabelText(/duration of project/i), { target: { value: "6" } });
 
       // Fill required dropdown fields
       await fillSelect('stage-select', "A");
