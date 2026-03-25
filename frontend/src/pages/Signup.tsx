@@ -26,28 +26,11 @@ import { projectManagementAppContextType } from '../types';
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 const subscriptionPlanOptions = [
-  { value: 'Starter', label: 'Starter' },
-  { value: 'Professional', label: 'Professional' },
-  { value: 'Enterprises', label: 'Enterprises' },
+  { value: 'Operate', label: 'Operate' },
+  { value: 'Automate', label: 'Automate' },
+  { value: 'Autonomous', label: 'Autonomous' },
 ];
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1869DA', // Blue color from textFieldStyle
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none', // Prevent uppercase button text
-        },
-      },
-    },
-  },
-});
-
+// ... theme definition ...
 const Signup: React.FC = () => {
   const methods = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -59,7 +42,7 @@ const Signup: React.FC = () => {
       phoneNumber: '',
       emailAddress: '',
       subdomain: '',
-      subscriptionPlan: 'Starter',
+      subscriptionPlan: 'Operate',
     },
     mode: 'all',
   });
