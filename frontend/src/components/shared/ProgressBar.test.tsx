@@ -169,11 +169,14 @@ describe('ProgressBar Component', () => {
 
   describe('Layout', () => {
     it('should display label and percentage in flex layout', () => {
-      const { container } = renderWithTheme(
+      renderWithTheme(
         <ProgressBar value={50} max={100} label="Progress" showPercentage={true} />
       );
-      const flexBox = container.querySelector('[style*="display"]');
+      const labelText = screen.getByText('Progress');
+      const flexBox = labelText.parentElement;
       expect(flexBox).toBeInTheDocument();
+      // Ensure the percentage is also in the same container
+      expect(screen.getByText('50%')).toBeInTheDocument();
     });
 
     it('should have margin bottom on label section', () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ActionButton from './ActionButton';
@@ -82,10 +82,10 @@ describe('ActionButton Component', () => {
     it('should call onClick handler when clicked', async () => {
       const handleClick = vi.fn();
       renderWithTheme(<ActionButton onClick={handleClick}>Click</ActionButton>);
-      
+
       const button = screen.getByRole('button', { name: /click/i });
       await userEvent.click(button);
-      
+
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
@@ -96,22 +96,22 @@ describe('ActionButton Component', () => {
           Disabled
         </ActionButton>
       );
-      
+
       const button = screen.getByRole('button', { name: /disabled/i });
-      await userEvent.click(button);
-      
+      fireEvent.click(button);
+
       expect(handleClick).not.toHaveBeenCalled();
     });
 
     it('should handle multiple clicks', async () => {
       const handleClick = vi.fn();
       renderWithTheme(<ActionButton onClick={handleClick}>Click</ActionButton>);
-      
+
       const button = screen.getByRole('button', { name: /click/i });
       await userEvent.click(button);
       await userEvent.click(button);
       await userEvent.click(button);
-      
+
       expect(handleClick).toHaveBeenCalledTimes(3);
     });
   });
@@ -193,7 +193,7 @@ describe('ActionButton Component', () => {
     it('should be keyboard accessible', async () => {
       const handleClick = vi.fn();
       renderWithTheme(<ActionButton onClick={handleClick}>Button</ActionButton>);
-      
+
       const button = screen.getByRole('button', { name: /button/i });
       button.focus();
       expect(button).toHaveFocus();
