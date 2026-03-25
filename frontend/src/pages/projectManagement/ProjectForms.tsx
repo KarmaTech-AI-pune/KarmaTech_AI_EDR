@@ -17,6 +17,7 @@ import NotFound from '../NotFound';
 import FeatureGate from '../../components/subscription/FeatureGate';
 
 const TodoList = lazy(() => import('../../features/wbs/pages/TodoList'));
+const ProductBacklog = lazy(() => import('../../features/wbs/pages/ProductBacklog'));
 
 const validFormIds = [
     'wbs',
@@ -29,6 +30,7 @@ const validFormIds = [
     'closure',
     'monthly-reports',
     'cashflow',
+    'product-backlog',
 ];
 
 const Cashflow = lazy(() => import('../../features/cashflow/pages/CashFlowPage'));
@@ -50,6 +52,8 @@ const ProjectForms: React.FC = () => {
                     return <WorkBreakdownStructureForm formType="odc" />;
                 case "todo-list":
                     return <TodoList />;
+                case "product-backlog":
+                    return <ProductBacklog />;
                 default:
                     return <FormsOverview onFormSelect={() => {}} />;
             }

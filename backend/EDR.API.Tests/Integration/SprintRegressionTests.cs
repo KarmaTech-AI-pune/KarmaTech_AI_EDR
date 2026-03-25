@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using EDR.API.Tests.Infrastructure;
-using EDR.Application.CQRS.SprintDailyProgresses.Commands;
+
 using EDR.Application.CQRS.SprintTasks.Commands;
 using EDR.Application.CQRS.SprintWbsPlans.Commands;
 using EDR.Application.Dtos;
