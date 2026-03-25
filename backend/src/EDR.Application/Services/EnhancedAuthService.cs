@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using EDR.Application.Dtos;
 using EDR.Application.Services.IContract;
@@ -22,6 +23,7 @@ namespace EDR.Application.Services
         private readonly IPermissionRepository _permissionRepository;
         private readonly ITenantService _tenantService;
         private readonly TenantDbContext _tenantDbContext;
+        private readonly ILogger<EnhancedAuthService> _logger;
 
         public EnhancedAuthService(
             IConfiguration configuration,
@@ -29,7 +31,8 @@ namespace EDR.Application.Services
             RoleManager<Role> roleManager,
             IPermissionRepository permissionRepository,
             ITenantService tenantService,
-            TenantDbContext tenantDbContext)
+            TenantDbContext tenantDbContext,
+            ILogger<EnhancedAuthService> logger)
         {
             _configuration = configuration;
             _userManager = userManager;
@@ -37,106 +40,103 @@ namespace EDR.Application.Services
             _permissionRepository = permissionRepository;
             _tenantService = tenantService;
             _tenantDbContext = tenantDbContext;
+            _logger = logger;
         }
 
-        public async Task<(bool success, User user, string token)> ValidateUserAsync(string email, string password)
+        public async Task<AuthResult> ValidateUserAsync(string email, string password)
         {
             try
             {
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user == null)
                 {
-                    return (false, null, null);
+                    _logger.LogWarning("Login failed: User with email {Email} not found.", email);
+                    return AuthResult.Failed(AuthResultType.InvalidCredentials, "Invalid credentials");
                 }
 
+                var isSuperAdmin = await IsSuperAdminAsync(user);
+                var currentTenantId = await GetCurrentTenantIdAsync();
+
+                // 1. Super Admin logic
+                if (isSuperAdmin)
+                {
+                    // Super Admins are allowed bypass all tenant/user blocks
+                    // Check password first before granting bypass
+                    var validPwd = await _userManager.CheckPasswordAsync(user, password);
+                    if (!validPwd)
+                    {
+                        return AuthResult.Failed(AuthResultType.InvalidCredentials, "Invalid credentials");
+                    }
+                    var token = await GenerateJwtTokenAsync(user, null, true, currentTenantId);
+                    return AuthResult.Succeeded(user, token);
+                }
+
+                // 2. Regular User logic - Check tenant mapping before password
+                var userTenants = await _tenantService.GetTenantUsersByUserIdAsync(user.Id);
+
+                // If no tenant resolved via host/header, try to find a default active mapping
+                if (!currentTenantId.HasValue)
+                {
+                    var defaultMapping = userTenants?.FirstOrDefault(t => t.IsActive);
+                    if (defaultMapping != null)
+                    {
+                        currentTenantId = defaultMapping.TenantId;
+                        _logger.LogInformation("Resolved default tenant {TenantId} for user {Email}", currentTenantId, email);
+                    }
+                }
+
+                if (!currentTenantId.HasValue)
+                {
+                    return AuthResult.Failed(AuthResultType.NoTenantMapping, "No tenant context found for this user.");
+                }
+
+                // Check Tenant Status (Blocked/Expired)
+                var resolvedTenant = await _tenantService.GetTenantByIdentifierAsync(currentTenantId.Value.ToString());
+                if (resolvedTenant != null && resolvedTenant.IsBlocked)
+                {
+                    _logger.LogWarning("Access to tenant {TenantId} is blocked: {Reason}", currentTenantId, resolvedTenant.BlockReason);
+                    return AuthResult.Failed(AuthResultType.TenantInactive, resolvedTenant.BlockReason);
+                }
+
+                // Check User-Tenant Mapping & Activity
+                var mapping = userTenants?.FirstOrDefault(t => t.TenantId == currentTenantId.Value);
+                if (mapping == null)
+                {
+                    _logger.LogWarning("User {UserId} attempted login to tenant {TenantId} but has no mapping.", user.Id, currentTenantId);
+                    return AuthResult.Failed(AuthResultType.NoTenantMapping, "You do not have access to this tenant.");
+                }
+
+                if (!mapping.IsActive)
+                {
+                    _logger.LogWarning("User {UserId} is inactive for tenant {TenantId}. Login blocked.", user.Id, currentTenantId);
+                    return AuthResult.Failed(AuthResultType.UserInactive, "Your account is inactive for this tenant. Please contact your administrator.");
+                }
+
+                // 3. User is valid and active for the tenant, now check password
                 var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
                 if (!isValidPassword)
                 {
-                    return (false, null, null);
+                    _logger.LogWarning("Login failed: Invalid password for user {Email}.", email);
+                    return AuthResult.Failed(AuthResultType.InvalidCredentials, "Invalid credentials");
                 }
 
-                // Check if user is a super admin (has SYSTEM_ADMIN permission)
-                var isSuperAdmin = await IsSuperAdminAsync(user);
-                
-                if (isSuperAdmin)
-                {
-                    // Super admin can access without tenant context
-                    var token = await GenerateJwtTokenAsync(user, null, true, null);
-                    return (true, user, token);
-                }
-                else
-                {
-                    // Regular user needs tenant context
-                    var currentTenantId = await GetCurrentTenantIdAsync();
-                    TenantUser tenantUser = null;
-
-                    // Fallback: Check user's tenant associations
-                    var userTenants = await _tenantService.GetTenantUsersByUserIdAsync(user.Id);
-
-                    if (!currentTenantId.HasValue)
-                    {
-                        // Try to find a default tenant for the user
-                        if (userTenants != null && userTenants.Any(t => t.IsActive))
-                        {
-                            tenantUser = userTenants.FirstOrDefault(t => t.IsActive);
-                            currentTenantId = tenantUser?.TenantId;
-                        }
-                        else if (user.TenantId > 0)
-                        {
-                             // Fallback to User table TenantId
-                             currentTenantId = user.TenantId;
-                        }
-                    }
-                    else
-                    {
-                        // Verify user belongs to the requested tenant
-                        tenantUser = userTenants?.FirstOrDefault(t => t.TenantId == currentTenantId.Value && t.IsActive);
-                    }
-
-                    if (!currentTenantId.HasValue)
-                    {
-                        return (false, null, null); // No tenant context resolved
-                    }
-
-                    if (tenantUser == null)
-                    {
-                        // Implicit access if TenantId matches User.TenantId but no TenantUser record exists
-                        // Or fail? For now, we allow it if we have a valid TenantId from User table
-                        tenantUser = new TenantUser
-                        {
-                             UserId = user.Id,
-                             TenantId = currentTenantId.Value,
-                             Role = TenantUserRole.User,
-                             IsActive = true
-                        };
-                    }
-
-                    var token = await GenerateJwtTokenAsync(user, tenantUser.Role, false, currentTenantId);
-                    return (true, user, token);
-                }
+                // Success
+                var finalToken = await GenerateJwtTokenAsync(user, mapping.Role, false, currentTenantId);
+                return AuthResult.Succeeded(user, finalToken);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return (false, null, null);
+                _logger.LogError(ex, "Error validating user {Email}", email);
+                return AuthResult.Failed(AuthResultType.Error, "An internal error occurred during validation");
             }
         }
 
-        private async Task<bool> IsSuperAdminAsync(User user)
+        public async Task<bool> IsSuperAdminAsync(User user)
         {
+            if (user == null) return false;
             var roles = await _userManager.GetRolesAsync(user);
-            foreach (var role in roles)
-            {
-                var roleEntity = await _roleManager.FindByNameAsync(role);
-                if (roleEntity != null)
-                {
-                    var permissions = await _permissionRepository.GetPermissionsByRoleIdAsync(roleEntity.Id);
-                    if (permissions.Any(p => p.Name == "SYSTEM_ADMIN"))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            return roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) || 
+                                 r.Equals("Admin", StringComparison.OrdinalIgnoreCase));
         }
 
         private async Task<int?> GetCurrentTenantIdAsync()
@@ -155,6 +155,7 @@ namespace EDR.Application.Services
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Name, user.UserName)
@@ -251,6 +252,7 @@ namespace EDR.Application.Services
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Name, user.UserName)
