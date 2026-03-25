@@ -127,45 +127,58 @@ const formSections = [
   },
 ];
 
-const menuSections = [
-  {
-    id: 'overview',
-    title: 'Overview',
-    icon: <HomeIcon />,
-    path: 'overview'
-  },
-  {
-    id: 'forms',
-    title: 'Forms',
-    icon: <ArticleIcon />,
-    path: 'forms',
-    subItems: formSections,
-  },
-  {
-    id: 'documents',
-    title: 'Documents',
-    icon: <FolderIcon />,
-    path: 'documents'
-  },
-  {
-    id: 'timeline',
-    title: 'Timeline',
-    icon: <TimelineIcon />,
-    path: 'timeline'
-  },
-  {
-    id: 'budgetHistory',
-    title: 'Budget History',
-    icon: <AccountBalanceIcon />,
-    path: 'budget-history'
-  },
-  {
-    id: 'migrationManagement',
-    title: 'Migration Management',
-    icon: <DnsIcon />,
-    path: 'admin/migrations' // Path to the new migration page
-  },
-];
+  const menuSections = [
+    {
+      id: 'overview',
+      title: 'Overview',
+      icon: <HomeIcon />,
+      path: '/program-management/projects/project/overview'
+    },
+    {
+      id: 'dashboard',
+      title: 'Dashboard',
+      icon: <AssessmentIcon />,
+      path: '/program-management/projects/project/dashboard'
+    },
+    {
+      id: 'forms',
+      title: 'Forms',
+      icon: <ArticleIcon />,
+      path: '/program-management/projects/project/forms',
+      subItems: formSections.map(section => ({
+        ...section,
+        path: `/program-management/projects/project/${section.path}`,
+        subItems: section.subItems?.map(sub => ({
+          ...sub,
+          path: `/program-management/projects/project/${sub.path}`
+        }))
+      })),
+    },
+    {
+      id: 'documents',
+      title: 'Documents',
+      icon: <FolderIcon />,
+      path: '/program-management/projects/project/documents'
+    },
+    {
+      id: 'timeline',
+      title: 'Timeline',
+      icon: <TimelineIcon />,
+      path: '/program-management/projects/project/timeline'
+    },
+    {
+      id: 'budgetHistory',
+      title: 'Budget History',
+      icon: <AccountBalanceIcon />,
+      path: '/program-management/projects/project/budget-history'
+    },
+    {
+      id: 'migrationManagement',
+      title: 'Migration Management',
+      icon: <DnsIcon />,
+      path: '/admin/migrations'
+    },
+  ];
 
 
 export const SideMenu: React.FC = () => {

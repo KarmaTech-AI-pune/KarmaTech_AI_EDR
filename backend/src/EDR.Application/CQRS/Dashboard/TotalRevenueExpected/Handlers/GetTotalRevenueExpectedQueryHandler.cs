@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using EDR.Application.DTOs.Dashboard;
+using EDR.Application.Dtos.Dashboard;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
 
