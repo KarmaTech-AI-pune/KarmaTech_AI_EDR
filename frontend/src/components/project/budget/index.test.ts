@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import * as exportObj from '../index';
+import * as exportObj from './index';
 
 describe('components/project/budget/index', () => {
   it('exports expected modules without crashing', () => {

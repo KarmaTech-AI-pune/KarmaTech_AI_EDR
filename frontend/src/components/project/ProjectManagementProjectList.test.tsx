@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { ProjectManagementProjectList } from '../ProjectManagementProjectList';
-import { ProjectStatus } from '../../../types/index';
+import { ProjectManagementProjectList } from './ProjectManagementProjectList';
+import { ProjectStatus } from '../../types/index';
 
 // Mock child components
 vi.mock('../ProjectItem', () => ({
@@ -25,7 +25,7 @@ describe('ProjectManagementProjectList', () => {
 
   it('renders a list of ProjectItems when projects are provided', () => {
     render(<ProjectManagementProjectList projects={mockProjects as any} />);
-    
+
     expect(screen.getByTestId('project-item-1')).toBeInTheDocument();
     expect(screen.getByText('Project A')).toBeInTheDocument();
     expect(screen.getByTestId('project-item-2')).toBeInTheDocument();

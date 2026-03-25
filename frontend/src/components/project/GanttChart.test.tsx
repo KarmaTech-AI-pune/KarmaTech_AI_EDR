@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GanttChart } from '../GanttChart';
-import { WBSStructureAPI } from '../../../features/wbs/services/wbsApi';
-import { transformWbsToGantt } from '../../../features/wbs/utils/wbsToGantt';
+import { GanttChart } from './GanttChart';
+import { WBSStructureAPI } from '../../features/wbs/services/wbsApi';
+import { transformWbsToGantt } from '../../features/wbs/utils/wbsToGantt';
 
 // Mock dependencies
 vi.mock('../../../features/wbs/services/wbsApi', () => ({
@@ -31,8 +31,8 @@ describe('GanttChart', () => {
 
   it('renders loading state initially', () => {
     // Return a promise that doesn't resolve immediately to test loading state
-    (WBSStructureAPI.getProjectWBS as any).mockImplementation(() => new Promise(() => {}));
-    
+    (WBSStructureAPI.getProjectWBS as any).mockImplementation(() => new Promise(() => { }));
+
     render(<GanttChart projectId={projectId} />);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });

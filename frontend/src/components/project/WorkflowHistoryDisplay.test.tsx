@@ -1,9 +1,9 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import WorkflowHistoryDisplay from '../WorkflowHistoryDisplay';
-import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
-import { PMWorkflowStatus } from '../../../models/pmWorkflowModel';
+import WorkflowHistoryDisplay from './WorkflowHistoryDisplay';
+import { pmWorkflowApi } from '../../api/pmWorkflowApi';
+import { PMWorkflowStatus } from '../../models/pmWorkflowModel';
 
 // Mock Dependencies
 vi.mock('../../../api/pmWorkflowApi', () => ({
@@ -49,18 +49,18 @@ describe('WorkflowHistoryDisplay', () => {
   });
 
   it('renders loading state initially', () => {
-    (pmWorkflowApi.getWorkflowHistory as any).mockImplementation(() => new Promise(() => {}));
-    
+    (pmWorkflowApi.getWorkflowHistory as any).mockImplementation(() => new Promise(() => { }));
+
     render(<WorkflowHistoryDisplay {...defaultProps} />);
-    
+
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('renders workflow history data correctly', async () => {
     (pmWorkflowApi.getWorkflowHistory as any).mockResolvedValue(mockHistoryData);
-    
+
     render(<WorkflowHistoryDisplay {...defaultProps} />);
-    
+
     await waitFor(() => {
       // The current status should be displayed
       expect(screen.getAllByText(/Sent for Approval/).length).toBeGreaterThan(0);
@@ -73,9 +73,9 @@ describe('WorkflowHistoryDisplay', () => {
 
   it('renders error message if API fails', async () => {
     (pmWorkflowApi.getWorkflowHistory as any).mockRejectedValue(new Error('Network Error'));
-    
+
     render(<WorkflowHistoryDisplay {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Failed to load workflow history')).toBeInTheDocument();
     });
@@ -83,9 +83,9 @@ describe('WorkflowHistoryDisplay', () => {
 
   it('renders appropriate message for empty history', async () => {
     (pmWorkflowApi.getWorkflowHistory as any).mockResolvedValue({ currentStatusId: 0, history: [] });
-    
+
     render(<WorkflowHistoryDisplay {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('No workflow history available')).toBeInTheDocument();
     });

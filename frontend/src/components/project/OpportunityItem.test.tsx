@@ -1,15 +1,15 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { OpportunityItem } from '../OpportunityItem';
-import { opportunityApi } from '../../../dummyapi/opportunityApi';
-import { authApi } from '../../../dummyapi/authApi';
-import { PermissionType } from '../../../models';
-import { useBusinessDevelopment } from '../../../context/BusinessDevelopmentContext';
+import { OpportunityItem } from './OpportunityItem';
+import { opportunityApi } from '../../dummyapi/opportunityApi';
+import { authApi } from '../../dummyapi/authApi';
+import { PermissionType } from '../../models';
+import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
 import { useNavigate } from 'react-router-dom';
-import { getUserById } from '../../../services/userApi';
-import { getEnhancedWorkflowStatus } from '../../../utils/workflowStatusFormatter';
-import { getWorkflowStatusById } from '../../../dummyapi/database/dummyOpporunityWorkflow'; // Fixed typo in actual import path
+import { getUserById } from '../../services/userApi';
+import { getEnhancedWorkflowStatus } from '../../utils/workflowStatusFormatter';
+import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow'; // Fixed typo in actual import path
 
 // Mock dependencies
 vi.mock('react-router-dom', () => ({
@@ -52,8 +52,8 @@ vi.mock('../../common/BDChips', () => ({
 vi.mock('../../forms/OpportunityForm', () => ({
   OpportunityForm: ({ onSubmit }: any) => (
     <form aria-label="opportuniy-form" onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit({ workName: 'Updated WorkName' });
+      e.preventDefault();
+      onSubmit({ workName: 'Updated WorkName' });
     }}>
       <button type="submit">Submit Form</button>
     </form>
@@ -92,7 +92,7 @@ describe('OpportunityItem', () => {
     (useBusinessDevelopment as any).mockReturnValue({
       setOpportunityId: mockSetOpportunityId,
     });
-    
+
     (authApi.getCurrentUser as any).mockResolvedValue({
       roleDetails: {
         permissions: [PermissionType.EDIT_BUSINESS_DEVELOPMENT, PermissionType.DELETE_BUSINESS_DEVELOPMENT],
@@ -100,9 +100,9 @@ describe('OpportunityItem', () => {
     });
 
     (getUserById as any).mockImplementation((id: number) => {
-        if (id === 2) return Promise.resolve({ id: 2, name: 'Reviewer', roles: [{ name: 'RM' }] });
-        if (id === 3) return Promise.resolve({ id: 3, name: 'Approver', roles: [{ name: 'RD' }] });
-        return Promise.resolve(null);
+      if (id === 2) return Promise.resolve({ id: 2, name: 'Reviewer', roles: [{ name: 'RM' }] });
+      if (id === 3) return Promise.resolve({ id: 3, name: 'Approver', roles: [{ name: 'RD' }] });
+      return Promise.resolve(null);
     });
 
     (getWorkflowStatusById as any).mockReturnValue({ status: 'Initial' });
@@ -116,7 +116,7 @@ describe('OpportunityItem', () => {
     expect(screen.getByText(/Test Client/)).toBeInTheDocument();
     expect(screen.getByText(/Tech/)).toBeInTheDocument();
     expect(screen.getByText(/Sales/)).toBeInTheDocument();
-    
+
     // Wait for the async permission check to finish
     await waitFor(() => {
       expect(screen.getByTestId('EditIcon')).toBeInTheDocument();
@@ -126,7 +126,7 @@ describe('OpportunityItem', () => {
 
   it('navigates to details view on click', async () => {
     render(<OpportunityItem {...defaultProps} />);
-    
+
     // The list item handles the click
     const listItem = screen.getByText('Test Opportunity').closest('li');
     fireEvent.click(listItem!);
@@ -137,9 +137,9 @@ describe('OpportunityItem', () => {
 
   it('opens update dialog and handles update', async () => {
     (opportunityApi.update as any).mockResolvedValue({ ...mockOpportunity, workName: 'Updated WorkName' });
-    
+
     render(<OpportunityItem {...defaultProps} />);
-    
+
     // Wait for edit icon to appear
     await waitFor(() => {
       expect(screen.getByTestId('EditIcon')).toBeInTheDocument();
@@ -168,9 +168,9 @@ describe('OpportunityItem', () => {
 
   it('opens delete dialog and handles deletion', async () => {
     (opportunityApi.delete as any).mockResolvedValue({});
-    
+
     render(<OpportunityItem {...defaultProps} />);
-    
+
     // Wait for delete icon to appear
     await waitFor(() => {
       expect(screen.getByTestId('DeleteIcon')).toBeInTheDocument();

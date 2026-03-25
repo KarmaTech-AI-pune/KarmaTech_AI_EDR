@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { TodolistHeader } from '../TodolistHeader';
+import { TodolistHeader } from './TodolistHeader';
 
 describe('TodolistHeader', () => {
   it('renders correctly with default props', () => {
     render(
-      <TodolistHeader 
+      <TodolistHeader
         searchTerm=""
         setSearchTerm={vi.fn()}
         quickFilters={{ 'Only My Issues': false }}
@@ -24,9 +24,9 @@ describe('TodolistHeader', () => {
       endDate: '2023-01-14',
       sprintGoal: 'Finish everything'
     } as any;
-    
+
     render(
-      <TodolistHeader 
+      <TodolistHeader
         searchTerm=""
         setSearchTerm={vi.fn()}
         quickFilters={{}}
@@ -35,7 +35,7 @@ describe('TodolistHeader', () => {
         sprintPlan={mockSprint}
       />
     );
-    
+
     expect(screen.getByText(/Alpha Sprint/)).toBeInTheDocument();
     expect(screen.getByText(/Goal: Finish everything/)).toBeInTheDocument();
   });
@@ -43,7 +43,7 @@ describe('TodolistHeader', () => {
   it('handles search term changes', () => {
     const setSearchTermMock = vi.fn();
     render(
-      <TodolistHeader 
+      <TodolistHeader
         searchTerm="Initial"
         setSearchTerm={setSearchTermMock}
         quickFilters={{}}
@@ -51,10 +51,10 @@ describe('TodolistHeader', () => {
         setShowCreateModal={vi.fn()}
       />
     );
-    
+
     const searchInput = screen.getByPlaceholderText('Search tasks...');
     fireEvent.change(searchInput, { target: { value: 'New search' } });
-    
+
     expect(setSearchTermMock).toHaveBeenCalledWith('New search');
   });
 });

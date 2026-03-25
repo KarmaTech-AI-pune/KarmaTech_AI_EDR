@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { TodolistColumn } from '../TodolistColumn';
+import { TodolistColumn } from './TodolistColumn';
 
 // Mock react-beautiful-dnd to bypass complex context requirements
 vi.mock('@hello-pangea/dnd', () => ({
@@ -17,7 +17,7 @@ vi.mock('@hello-pangea/dnd', () => ({
 describe('TodolistColumn', () => {
   it('renders title and empty state', () => {
     render(
-      <TodolistColumn 
+      <TodolistColumn
         id="To Do"
         title="To Do"
         color="red"
@@ -27,7 +27,7 @@ describe('TodolistColumn', () => {
         setShowCreateModal={vi.fn()}
       />
     );
-    
+
     expect(screen.getByText('To Do')).toBeInTheDocument();
     expect(screen.getByText('0')).toBeInTheDocument();
     expect(screen.getByTestId('droppable-placeholder')).toBeInTheDocument();

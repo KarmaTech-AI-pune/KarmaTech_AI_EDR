@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SubtaskItem } from '../SubtaskItem';
+import { SubtaskItem } from './SubtaskItem';
 
 const mockSubtask = {
   id: 'sub-1',
@@ -26,7 +26,7 @@ describe('SubtaskItem', () => {
         onDeleteSubtask={vi.fn()}
       />
     );
-    
+
     expect(screen.getByText('TSK-1-1')).toBeInTheDocument();
     expect(screen.getByText('Subtask 1')).toBeInTheDocument();
     expect(screen.getByText('Done')).toBeInTheDocument();
@@ -41,12 +41,12 @@ describe('SubtaskItem', () => {
         onDeleteSubtask={onDeleteMock}
       />
     );
-    
+
     // Click the delete icon button
     const deleteButton = screen.getByTestId('DeleteIcon').closest('button');
     if (deleteButton) {
       fireEvent.click(deleteButton);
-      
+
       // Since it opens a dialog, you'd confirm inside the dialog
       expect(screen.getByText(/Are you sure you want to delete the subtask/i)).toBeInTheDocument();
     }

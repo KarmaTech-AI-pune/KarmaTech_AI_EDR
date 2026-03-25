@@ -1,9 +1,9 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import SendForReviewDialog from '../SendForReviewDialog';
-import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
-import * as userApi from '../../../services/userApi';
+import SendForReviewDialog from './SendForReviewDialog';
+import { pmWorkflowApi } from '../../api/pmWorkflowApi';
+import * as userApi from '../../services/userApi';
 
 // Mock Dependencies
 vi.mock('../../../api/pmWorkflowApi', () => ({
@@ -37,7 +37,7 @@ describe('SendForReviewDialog', () => {
     render(<SendForReviewDialog {...defaultProps} />);
 
     expect(screen.getByRole('heading', { name: 'Send for Review' })).toBeInTheDocument();
-    
+
     await waitFor(() => {
       expect(userApi.getUsersByRole).toHaveBeenCalledWith('SeniorProjectManager');
     });
@@ -60,7 +60,7 @@ describe('SendForReviewDialog', () => {
     // but we can submit and verify it uses the auto-selected ID.
     const submitBtn = screen.getByRole('button', { name: 'Send for Review' });
     expect(submitBtn).not.toBeDisabled();
-    
+
     fireEvent.click(submitBtn);
 
     await waitFor(() => {

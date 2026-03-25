@@ -1,7 +1,7 @@
 
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import OpportunityList from '../OpportunityList';
+import OpportunityList from './OpportunityList';
 
 // Mock OpportunityItem to avoid rendering its complex children and API calls
 vi.mock('../OpportunityItem', () => ({
@@ -36,13 +36,13 @@ describe('OpportunityList', () => {
 
   it('renders a list of opportunities', () => {
     render(
-      <OpportunityList 
-        opportunities={mockOpportunities as any} 
+      <OpportunityList
+        opportunities={mockOpportunities as any}
         onOpportunityDeleted={vi.fn()}
         onOpportunityUpdated={vi.fn()}
       />
     );
-    
+
     const items = screen.getAllByTestId('mock-opportunity-item');
     expect(items).toHaveLength(2);
     expect(items[0]).toHaveTextContent('Test Opportunity 1');
