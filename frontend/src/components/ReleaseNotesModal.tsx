@@ -51,6 +51,19 @@ import {
 import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/releaseNotesApi';
 
 const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
+  '1.4.0': {
+    version: '1.4.0',
+    releaseDate: '2026-03-26',
+    environment: 'production',
+    features: [
+      { id: 401, changeType: 'Feature', description: 'Architecture & Infrastructure: Added TenantMigrationService for executing PostgreSQL database migrations across tenants.', commitSha: '5f8de151' },
+      { id: 402, changeType: 'Feature', description: 'Task Management: Enhanced task management capabilities by implementing UI for user assignments and planned hours, including clearing duplicates.', commitSha: '9a98ee37' },
+      { id: 403, changeType: 'Feature', description: 'Documentation: Added comprehensive EDR application README.md documentation encompassing technical architecture, setup processes, and business logic mapping.', commitSha: 'ae69e9bd' },
+    ],
+    bugFixes: [],
+    improvements: [],
+    breakingChanges: [],
+  },
   '1.3.1': {
     version: '1.3.1',
     releaseDate: '2026-03-16',
