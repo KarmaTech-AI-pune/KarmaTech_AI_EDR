@@ -151,7 +151,7 @@ namespace EDR.Domain.Database
         public DbSet<SprintPlan> SprintPlans { get; set; }
         public DbSet<SprintTaskComment> SprintTaskComments { get; set; }
         public DbSet<SprintSubtaskComment> SprintSubtaskComments { get; set; }
-        public DbSet<SprintDailyProgress> SprintDailyProgresses { get; set; }
+
         public DbSet<SprintWbsPlan> SprintWbsPlans { get; set; }
 
 
@@ -223,7 +223,7 @@ namespace EDR.Domain.Database
             modelBuilder.Entity<SprintPlan>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintTaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintSubtaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
-            modelBuilder.Entity<SprintDailyProgress>().HasQueryFilter(p => p.TenantId == TenantId);
+
             modelBuilder.Entity<User>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<Role>().HasQueryFilter(role => role.TenantId == TenantId);
             modelBuilder.Entity<Program>().HasQueryFilter(role => role.TenantId == TenantId);

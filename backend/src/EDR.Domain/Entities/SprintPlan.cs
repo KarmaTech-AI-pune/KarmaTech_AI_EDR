@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -42,7 +42,7 @@ namespace EDR.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
 
         public ICollection<SprintTask> SprintTasks { get; set; } = new List<SprintTask>();
-        public ICollection<SprintDailyProgress> SprintDailyProgresses { get; set; } = new List<SprintDailyProgress>();
+
     }
 }
 

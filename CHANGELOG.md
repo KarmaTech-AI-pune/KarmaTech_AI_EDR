@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-03-26
+
+### ✨ Features
+- **Architecture & Infrastructure**: Added `TenantMigrationService` for executing PostgreSQL database migrations across tenants.
+- **Task Management**: Enhanced task management capabilities by implementing UI for user assignments and planned hours, including clearing duplicates.
+- **Documentation**: Added comprehensive EDR application `README.md` documentation encompassing technical architecture, setup processes, and business logic mapping.
 ## [1.3.0] - 2026-03-04
 
 ### ✨ Features
