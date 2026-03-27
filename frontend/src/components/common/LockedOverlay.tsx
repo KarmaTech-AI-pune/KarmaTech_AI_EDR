@@ -7,21 +7,21 @@ interface LockedOverlayProps {
 //   message?: string;
 }
 
-const LockedOverlay: React.FC<LockedOverlayProps> = ({children}) => {
+const LockedOverlay: React.FC<LockedOverlayProps> = ({ children }) => {
   return (
-   <Box 
-     position="fixed" 
-     top={0}
-     left={0}
-     width="100vw" 
-     height="100vh"
-     zIndex={1000}
-     overflow="hidden"
-   >
-      {/* Render children content if provided */}
-      {children}
+    <Box 
+      position="relative" 
+      width="100%" 
+      height="100%" 
+      minHeight="400px" // Ensure there's some height if children are empty
+      overflow="hidden"
+    >
+      {/* Background Content (Children) */}
+      <Box sx={{ width: '100%', height: '100%', filter: 'blur(2px)', opacity: 0.7 }}>
+        {children}
+      </Box>
 
-      {/* Overlay */}
+      {/* Overlay Layer */}
       <Box
         position="absolute"
         top={0}
@@ -31,24 +31,25 @@ const LockedOverlay: React.FC<LockedOverlayProps> = ({children}) => {
         display="flex"
         justifyContent="center"
         alignItems="center"
+        zIndex={10}
         sx={{
-          backgroundColor: "rgba(255,255,255,0.7)",
-          backdropFilter: "blur(2px)",
+          backgroundColor: "rgba(255,255,255,0.4)",
+          backdropFilter: "blur(4px)",
         }}
       >
         <Paper
-          elevation={6}
+          elevation={12}
           sx={{
             textAlign: "center",
-            p: 4,
-            minWidth: 340,
-            borderRadius: 3,
-            boxShadow: 3,
+            p: 5,
+            maxWidth: 400,
+            borderRadius: 4,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
-            background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+            background: "rgba(255, 255, 255, 0.95)",
+            boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
           }}
         >
           <Box
@@ -61,24 +62,24 @@ const LockedOverlay: React.FC<LockedOverlayProps> = ({children}) => {
               alignItems: "center",
               justifyContent: "center",
               mb: 2,
-              boxShadow: 1,
+              boxShadow: 2,
             }}
           >
             <LockIcon sx={{ fontSize: 36, color: "#fff" }} />
           </Box>
-          <Typography variant="h6" fontWeight={600} color="text.primary" gutterBottom>
+          <Typography variant="h6" fontWeight={700} color="text.primary" gutterBottom>
             Feature Locked
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            This feature is not available for your current subscription.
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+            This feature is not available for your current subscription plan.
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Please upgrade your plan to unlock this feature.
+          <Typography variant="body2" color="text.secondary" fontWeight={500}>
+            Please upgrade to a higher plan to unlock.
           </Typography>
         </Paper>
       </Box>
     </Box>
-  )
-}
+  );
+};
 
 export default LockedOverlay

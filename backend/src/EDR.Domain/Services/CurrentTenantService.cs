@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -84,6 +84,12 @@ namespace EDR.Domain.Services
                 if (tenantInfo == null)
                 {
                     _logger.LogWarning("Tenant not found with ID: {TenantId}", tenant);
+                    return false;
+                }
+
+                if (tenantInfo.IsBlocked)
+                {
+                    _logger.LogWarning("Tenant {TenantId} is blocked. Reason: {Reason}", tenant, tenantInfo.BlockReason);
                     return false;
                 }
 

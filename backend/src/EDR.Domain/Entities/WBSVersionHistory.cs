@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -57,7 +57,7 @@ namespace EDR.Domain.Entities
         // Navigation properties
         [ForeignKey("WBSHeaderId")]
         [InverseProperty("VersionHistories")]
-        [DeleteBehavior(DeleteBehavior.NoAction)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public virtual WBSHeader WBSHeader { get; set; }
 
         [ForeignKey("CreatedBy")]

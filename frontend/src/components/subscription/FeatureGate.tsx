@@ -32,9 +32,9 @@ const FeatureGate: React.FC<FeatureGateProps> = ({
     return <>{children}</>;
   }
 
-  // If feature is not available, just show the LockedOverlay (without children)
+  // If feature is not available, show the LockedOverlay with children (locked view)
   console.log('🔒 FeatureGate - Showing LockedOverlay for feature:', featureName);
-  return <LockedOverlay />;
+  return <LockedOverlay>{children}</LockedOverlay>;
 };
 export default FeatureGate;
 
