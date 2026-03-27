@@ -64,6 +64,12 @@ const ProjectForms: React.FC = () => {
                                 <TodoList />
                             </FeatureGate>
                         );
+                    case "product-backlog":
+                        return (
+                            <FeatureGate featureName={"Product Backlog"}>
+                                <ProductBacklog />
+                            </FeatureGate>
+                        );
                     default:
                         return <FormsOverview onFormSelect={() => { }} />;
                 }
