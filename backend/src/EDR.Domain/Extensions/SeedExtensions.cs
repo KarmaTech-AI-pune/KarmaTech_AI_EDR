@@ -466,6 +466,7 @@ namespace EDR.Domain.Extensions
                     new Feature { Name = "Monthly Progress Review", IsActive = true },
                     new Feature { Name = "Project Closure", IsActive = true },
                     new Feature { Name = "Monthly Reports", IsActive = true },
+                    new Feature { Name = "Cashflow", IsActive = true },
 
                     // Business Development Forms
                     new Feature { Name = "Opportunity Tracking", IsActive = true },
@@ -491,6 +492,13 @@ namespace EDR.Domain.Extensions
             else
             {
                 Console.WriteLine("Feature table already has data, skipping insert");
+
+                // Check and add Cashflow if it doesn't exist
+                if (!context.Set<Feature>().Any(f => f.Name == "Cashflow"))
+                {
+                    context.Set<Feature>().Add(new Feature { Name = "Cashflow", IsActive = true });
+                    await context.SaveChangesAsync();
+                }
             }
         }
 
@@ -556,6 +564,7 @@ namespace EDR.Domain.Extensions
             var goNoGoFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Go/No Go Decision");
             var bidPreparationFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Bid Preparation");
             var emailNotificationsFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Email Notifications");
+            var cashflowFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Cashflow");
 
             // Operate Plan Features (Basic)
             if (existingOperatePlan != null)
@@ -586,6 +595,7 @@ namespace EDR.Domain.Extensions
                 if (correspondenceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = correspondenceFeature.Id });
                 if (checkReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = checkReviewFeature.Id });
                 if (changeControlFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = changeControlFeature.Id });
+                if (cashflowFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = cashflowFeature.Id });
             }
 
             // Autonomous Plan Features (Full)
@@ -610,6 +620,7 @@ namespace EDR.Domain.Extensions
                 if (goNoGoFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = goNoGoFeature.Id });
                 if (bidPreparationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = bidPreparationFeature.Id });
                 if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = emailNotificationsFeature.Id });
+                if (cashflowFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = cashflowFeature.Id });
             }
 
 
