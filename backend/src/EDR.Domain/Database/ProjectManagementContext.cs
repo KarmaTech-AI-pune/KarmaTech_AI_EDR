@@ -1260,7 +1260,7 @@ namespace EDR.Domain.Database
                 entity.HasOne(h => h.Project)
                     .WithMany()
                     .HasForeignKey(h => h.ProjectId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)
@@ -1424,6 +1424,20 @@ namespace EDR.Domain.Database
                 .HasOne(mp => mp.Project)
                 .WithMany()
                 .HasForeignKey(mp => mp.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure PaymentMilestone Cascade Delete
+            modelBuilder.Entity<PaymentMilestone>()
+                .HasOne(pm => pm.Project)
+                .WithMany()
+                .HasForeignKey(pm => pm.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure ProjectBudgetChangeHistory Cascade Delete
+            modelBuilder.Entity<ProjectBudgetChangeHistory>()
+                .HasOne(pbch => pbch.Project)
+                .WithMany()
+                .HasForeignKey(pbch => pbch.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Configure Program to Project Cascade Delete
