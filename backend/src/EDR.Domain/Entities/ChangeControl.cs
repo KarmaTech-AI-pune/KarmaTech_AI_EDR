@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -51,7 +51,7 @@ namespace EDR.Domain.Entities
 
         // Navigation property
         [ForeignKey("ProjectId")]
-        [DeleteBehavior(DeleteBehavior.NoAction)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public virtual Project Project { get; set; }
 
         // Workflow status

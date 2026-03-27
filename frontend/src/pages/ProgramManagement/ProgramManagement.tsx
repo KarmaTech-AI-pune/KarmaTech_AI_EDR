@@ -379,7 +379,7 @@ const ProgramManagement: React.FC = () => {
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
             Are you sure you want to delete the program <strong>"{programToDelete?.name}"</strong>?
-            This action cannot be undone and will permanently remove the program.
+            This action cannot be undone and will permanently remove the program along with ALL its associated projects and related data.
           </DialogContentText>
           {deleteError && (
             <Alert severity="error" sx={{ mt: 2 }}>

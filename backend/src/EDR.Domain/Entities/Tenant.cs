@@ -35,10 +35,10 @@ namespace EDR.Domain.Entities
         public DateTime? SubscriptionEndDate { get; set; }
 
         [MaxLength(255)]
-        public string StripeCustomerId { get; set; }
+        public string RazorpayCustomerId { get; set; }
 
         [MaxLength(255)]
-        public string StripeSubscriptionId { get; set; }
+        public string RazorpaySubscriptionId { get; set; }
 
         public int? SubscriptionPlanId { get; set; }
 

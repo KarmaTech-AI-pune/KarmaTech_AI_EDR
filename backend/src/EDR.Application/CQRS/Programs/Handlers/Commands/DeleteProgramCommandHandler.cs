@@ -1,7 +1,8 @@
-﻿using MediatR;
+using MediatR;
 using EDR.Application.CQRS.Programs.Commands;
 using EDR.Domain.Database;
 using EDR.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,7 +21,9 @@ namespace EDR.Application.CQRS.Programs.Handlers.Commands
 
         public async Task<Unit> Handle(DeleteProgramCommand request, CancellationToken cancellationToken)
         {
-            var program = await _context.Programs.FindAsync(new object[] { request.Id }, cancellationToken);
+            var program = await _context.Programs
+                .Include(p => p.Projects)
+                .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
 
             if (program != null)
             {
