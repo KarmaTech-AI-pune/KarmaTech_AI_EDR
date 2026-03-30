@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { Edit, Delete, Assessment as AssessmentIcon } from '@mui/icons-material';
+import { Edit, Delete } from '@mui/icons-material';
 import { usePrograms } from '../../hooks/usePrograms';
 import { Pagination } from '../../components/Pagination';
 import CreateProgramDialog from '../../components/ProgramManagement/CreateProgramDialog';
@@ -30,7 +30,7 @@ import { useProject } from '../../context/ProjectContext';
 
 const ProgramManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { programId, setProgramId } = useProject();
+  const { setProgramId } = useProject();
   const { programs, isLoading, error, refetch } = usePrograms();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
