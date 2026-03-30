@@ -239,7 +239,7 @@ const DashboardLayout: React.FC = () => {
         <MetricsGrid metrics={financialMetrics} />
 
         {/* Main Dashboard Grid */}
-        <Grid spacing={3}>
+        <Grid container spacing={3}>
           {/* Left Column - Priority Projects */}
           <Grid item xs={12} lg={4}>
             <PriorityProjectsPanel

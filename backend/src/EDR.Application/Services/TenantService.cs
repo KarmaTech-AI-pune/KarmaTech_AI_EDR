@@ -103,13 +103,16 @@ namespace EDR.Application.Services
                 return false;
 
             var tenants = _tenantDbContext.Tenants.ToList();
-            var selectedTenant = tenants.FirstOrDefault(t => t.Domain.Equals(tenantDomain, StringComparison.OrdinalIgnoreCase));
+            var selectedTenant = tenants.FirstOrDefault(t => 
+                t.Domain.Equals(tenantDomain, StringComparison.OrdinalIgnoreCase) || 
+                t.Id.ToString() == tenantDomain);
 
-            var tenant = await _tenantDbContext.Tenants.FirstOrDefaultAsync(t => t.Domain == tenantDomain);
             if (selectedTenant == null)
             {
                 return false;
             }
+
+            var tenant = selectedTenant;
 
             httpContext.Items["TenantId"] = tenant.Id;
             httpContext.Items["TenantDomain"] = tenant.Domain;
@@ -184,6 +187,13 @@ namespace EDR.Application.Services
             var tenant = await _tenantDbContext.Tenants
                 .FirstOrDefaultAsync(t => t.Domain == identifier);
 
+            // If not found, try reaching by subdomain/name part
+            if (tenant == null)
+            {
+                tenant = await _tenantDbContext.Tenants
+                    .FirstOrDefaultAsync(t => t.Domain.StartsWith(identifier + "."));
+            }
+
             if (tenant == null && int.TryParse(identifier, out var tenantId))
             {
                 tenant = await _tenantDbContext.Tenants
@@ -209,8 +219,8 @@ namespace EDR.Application.Services
                 return true;
 
             // For regular users, check if they belong to the tenant and are active
-            // Note: tenantId 0 is used for Super Admins who don't belong to a specific tenant
-            if (tenantId == 0) return false; 
+            // Note: tenantId 1 is the default workspace (mean db) that all users can access.
+            if (tenantId <= 1) return true;
 
             return await _tenantDbContext.TenantUsers
                 .AnyAsync(tu => tu.UserId == userId && tu.TenantId == tenantId && tu.IsActive);

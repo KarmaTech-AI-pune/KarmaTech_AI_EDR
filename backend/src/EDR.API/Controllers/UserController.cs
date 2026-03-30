@@ -164,7 +164,7 @@ namespace EDR.API.Controllers
                     });
                 }
 
-                return Unauthorized(new { success = false, message = "Invalid credentials" });
+                return Unauthorized(new { success = false, message = authResult.Message ?? "Invalid credentials" });
             }
             catch (Exception ex)
             {

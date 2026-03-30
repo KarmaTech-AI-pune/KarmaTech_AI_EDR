@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -74,20 +74,22 @@ namespace EDR.Application.Services
                 // 2. Regular User logic - Check tenant mapping before password
                 var userTenants = await _tenantService.GetTenantUsersByUserIdAsync(user.Id);
 
-                // If no tenant resolved via host/header, try to find a default active mapping
+                // RESOLVE TENANT: If no tenant context is provided, try to find a valid mapping
                 if (!currentTenantId.HasValue)
                 {
-                    var defaultMapping = userTenants?.FirstOrDefault(t => t.IsActive);
-                    if (defaultMapping != null)
+                    // If the user has a specific mapping, use it (even if inactive, so we can report the correct error later)
+                    var firstMapping = userTenants?.FirstOrDefault();
+                    if (firstMapping != null)
                     {
-                        currentTenantId = defaultMapping.TenantId;
-                        _logger.LogInformation("Resolved default tenant {TenantId} for user {Email}", currentTenantId, email);
+                        currentTenantId = firstMapping.TenantId;
+                        _logger.LogInformation("No tenant context provided. Resolved Tenant ID {TenantId} from user mappings for {Email}", currentTenantId, email);
                     }
-                }
-
-                if (!currentTenantId.HasValue)
-                {
-                    return AuthResult.Failed(AuthResultType.NoTenantMapping, "No tenant context found for this user.");
+                    else
+                    {
+                        // Final fallback to Tenant 1
+                        currentTenantId = 1;
+                        _logger.LogInformation("No tenant context or mappings found. Defaulting to Tenant 1 for user {Email}", email);
+                    }
                 }
 
                 // Check Tenant Status (Blocked/Expired)
@@ -100,6 +102,21 @@ namespace EDR.Application.Services
 
                 // Check User-Tenant Mapping & Activity
                 var mapping = userTenants?.FirstOrDefault(t => t.TenantId == currentTenantId.Value);
+                
+                // FALLBACK: If accessing the main tenant (Tenant 1), allow even without mapping
+                if (mapping == null && currentTenantId == 1)
+                {
+                    var isValidPwd = await _userManager.CheckPasswordAsync(user, password);
+                    if (!isValidPwd)
+                    {
+                        return AuthResult.Failed(AuthResultType.InvalidCredentials, "Invalid credentials");
+                    }
+
+                    _logger.LogInformation("User {UserId} authorized to main tenant 1 by default.", user.Id);
+                    var token = await GenerateJwtTokenAsync(user, TenantUserRole.User, false, 1);
+                    return AuthResult.Succeeded(user, token);
+                }
+
                 if (mapping == null)
                 {
                     _logger.LogWarning("User {UserId} attempted login to tenant {TenantId} but has no mapping.", user.Id, currentTenantId);
@@ -165,7 +182,7 @@ namespace EDR.Application.Services
             {
                 claims.Add(new Claim("IsSuperAdmin", "true"));
                 claims.Add(new Claim("UserType", "SuperAdmin"));
-                claims.Add(new Claim("TenantId", "0")); // Super admin has no specific tenant
+                claims.Add(new Claim("TenantId", "1")); // System admin defaults to main tenant (ID 1)
                 
                 // Super admin has access to ALL features
                 // Get all active features from database
@@ -364,8 +381,15 @@ namespace EDR.Application.Services
                 .ThenInclude(spf => spf.Feature)
                 .FirstOrDefaultAsync(t => t.Id == tenantId);
 
+            // If it's the main tenant (Tenant 1) and no subscription is found, 
+            // or if any tenant has no subscription, default to all active features.
             if (tenant?.SubscriptionPlan == null)
-                return new List<string>();
+            {
+                return await _tenantDbContext.Features
+                    .Where(f => f.IsActive)
+                    .Select(f => f.Name)
+                    .ToListAsync();
+            }
 
             return tenant.SubscriptionPlan.SubscriptionPlanFeatures
                 .Where(spf => spf.Feature.IsActive) // Only globally active features
