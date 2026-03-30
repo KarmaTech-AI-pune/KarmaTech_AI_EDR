@@ -1,9 +1,9 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ProjectInitializationDialog } from '../ProjectInitializationDialog';
-import { opportunityApi } from '../../../services/opportunityApi';
-import { getUsersByRole } from '../../../services/userApi';
+import { ProjectInitializationDialog } from './ProjectInitializationDialog';
+import { opportunityApi } from '../../services/opportunityApi';
+import { getUsersByRole } from '../../services/userApi';
 
 // Mock dependencies
 vi.mock('../../../services/opportunityApi', () => ({
@@ -159,7 +159,7 @@ describe('ProjectInitializationDialog', () => {
 
     // Verify onClose is called
     fireEvent.click(screen.getByText('Cancel Form'));
-    
+
     await waitFor(() => {
       expect(defaultProps.onClose).toHaveBeenCalled();
     });

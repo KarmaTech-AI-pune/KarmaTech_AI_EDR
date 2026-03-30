@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { IssueCard } from '../IssueCard';
+import { IssueCard } from './IssueCard';
 
 vi.mock('@hello-pangea/dnd', () => ({
   Draggable: ({ children }: any) => children({
@@ -37,18 +37,18 @@ describe('IssueCard', () => {
   it('renders issue card information', () => {
     const mockClick = vi.fn();
     render(
-      <IssueCard 
+      <IssueCard
         issue={mockIssue}
         index={0}
         onClick={mockClick}
         onToggleFlag={vi.fn()}
       />
     );
-    
+
     expect(screen.getByText('TSK-1')).toBeInTheDocument();
     expect(screen.getByText('Test task')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument(); // Story points
-    
+
     // Simulate click
     fireEvent.click(screen.getByText('Test task'));
     expect(mockClick).toHaveBeenCalledWith(mockIssue);

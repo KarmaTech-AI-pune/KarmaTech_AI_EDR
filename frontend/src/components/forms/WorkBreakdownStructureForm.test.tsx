@@ -4,12 +4,16 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import WorkBreakdownStructureForm from '../../features/wbs/pages/WorkBreakdownStructureForm';
 import { useProject } from '../../context/ProjectContext';
 import { WBSStructureAPI } from '../../features/wbs/services/wbsApi';
+import { wbsHeaderApi } from '../../features/wbs/services/wbsHeaderApi';
+import { wbsVersionApi } from '../../features/wbs/services/wbsVersionApi';
 import { TaskType, WBSRowData } from '../../features/wbs/types/wbs';
 import * as WBSContext from '../../features/wbs/context/WBSContext';
 
 // Mock dependencies
 vi.mock('../../context/ProjectContext');
 vi.mock('../../features/wbs/services/wbsApi');
+vi.mock('../../features/wbs/services/wbsHeaderApi');
+vi.mock('../../features/wbs/services/wbsVersionApi');
 vi.mock('../../features/wbs/context/WBSContext', async () => {
   const actual = await vi.importActual('../../features/wbs/context/WBSContext');
   return {
@@ -27,6 +31,8 @@ const mockSetProjectWBS = vi.mocked(WBSStructureAPI.setProjectWBS);
 const mockUseWBSDataContext = vi.mocked(WBSContext.useWBSDataContext);
 const mockUseWBSActionsContext = vi.mocked(WBSContext.useWBSActionsContext);
 const mockUseWBSUIStateContext = vi.mocked(WBSContext.useWBSUIStateContext);
+const mockWbsHeaderApi = vi.mocked(wbsHeaderApi);
+const mockWbsVersionApi = vi.mocked(wbsVersionApi);
 
 
 const mockProjectId = 'test-project-id';
@@ -132,6 +138,14 @@ describe('WorkBreakdownStructureForm', () => {
     mockUseWBSDataContext.mockReturnValue(mockDataContext);
     mockUseWBSActionsContext.mockReturnValue(mockActionsContext);
     mockUseWBSUIStateContext.mockReturnValue(mockUIStateContext);
+
+    // Setup API mocks
+    mockWbsHeaderApi.getWBSHeaderStatus.mockResolvedValue({
+      id: 1,
+      statusId: 1,
+      status: 'Initial'
+    });
+    mockWbsVersionApi.getWBSVersions.mockResolvedValue([]);
   });
 
   it('renders without crashing and shows loading initially', () => {

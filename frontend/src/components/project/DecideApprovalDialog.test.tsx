@@ -1,8 +1,8 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import DecideApprovalDialog from '../DecideApprovalDialog';
-import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
+import DecideApprovalDialog from './DecideApprovalDialog';
+import { pmWorkflowApi } from '../../api/pmWorkflowApi';
 
 // Mock pmWorkflowApi
 vi.mock('../../../api/pmWorkflowApi', () => ({
@@ -47,18 +47,18 @@ describe('DecideApprovalDialog', () => {
         (pmWorkflowApi.approvedByRDOrRM as any).mockResolvedValue({});
 
         render(<DecideApprovalDialog {...defaultProps} />);
-        
+
         // Select "Approve"
         fireEvent.click(screen.getByLabelText('Approve'));
-        
+
         // Enter comments
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Looks good' } });
-        
+
         // Click Submit (which becomes "Approve")
         const approveButton = screen.getByRole('button', { name: 'Approve' });
         expect(approveButton).not.toBeDisabled();
         fireEvent.click(approveButton);
-        
+
         await waitFor(() => {
             expect(pmWorkflowApi.approvedByRDOrRM).toHaveBeenCalledWith({
                 entityId: 1,
@@ -73,20 +73,20 @@ describe('DecideApprovalDialog', () => {
 
     it('handles rejection submission and fetches project', async () => {
         (pmWorkflowApi.requestChanges as any).mockResolvedValue({});
-        
+
         render(<DecideApprovalDialog {...defaultProps} />);
-        
+
         // Select "Request Changes"
         fireEvent.click(screen.getByLabelText('Request Changes'));
-        
+
         // Enter comments
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Needs more work' } });
-        
+
         // Click Submit (which becomes "Request Changes")
         const rejectButton = screen.getByRole('button', { name: 'Request Changes' });
         expect(rejectButton).not.toBeDisabled();
         fireEvent.click(rejectButton);
-        
+
         await waitFor(() => {
             expect(global.fetch).toHaveBeenCalledWith('/api/projects/1');
             expect(pmWorkflowApi.requestChanges).toHaveBeenCalledWith({
@@ -105,18 +105,18 @@ describe('DecideApprovalDialog', () => {
     it('shows error snackbar if fields are missing', async () => {
         const props = { ...defaultProps, entityId: 0 };
         render(<DecideApprovalDialog {...props} />);
-        
+
         // Button might be disabled due to lack of decision/comments, 
         // but let's test the submit handler logic if we could trigger it.
         // We can't click because button is disabled if decision or comments are empty.
         // Let's select radio and enter comment so button is enabled
         fireEvent.click(screen.getByLabelText('Approve'));
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Test' } });
-        
+
         // Click Submit
         const submitButton = screen.getByRole('button', { name: 'Approve' });
         fireEvent.click(submitButton);
-        
+
         await waitFor(() => {
             expect(screen.getByText('Error: Missing Entity ID')).toBeInTheDocument();
         });
@@ -126,12 +126,12 @@ describe('DecideApprovalDialog', () => {
         (pmWorkflowApi.approvedByRDOrRM as any).mockRejectedValue(new Error('API failed'));
 
         render(<DecideApprovalDialog {...defaultProps} />);
-        
+
         fireEvent.click(screen.getByLabelText('Approve'));
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test' } });
-        
+
         fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
-        
+
         await waitFor(() => {
             expect(screen.getByText('API failed')).toBeInTheDocument();
         });

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import ProjectManagement from '../ProjectManagement';
+import ProjectManagement from './ProjectManagement';
 
 // Mock the child components to avoid testing their massive rendering logic
 vi.mock('../../dashboard/ProjectStatusPieChart', () => ({
@@ -10,7 +10,7 @@ vi.mock('../../dashboard/ProjectStatusPieChart', () => ({
 describe('ProjectManagement', () => {
   it('renders the Project Management page correctly', () => {
     render(<ProjectManagement />);
-    
+
     expect(screen.getByText('Project Management')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /\+ Initialize Project/i })).toBeInTheDocument();
     expect(screen.getByTestId('mock-pie-chart')).toBeInTheDocument();

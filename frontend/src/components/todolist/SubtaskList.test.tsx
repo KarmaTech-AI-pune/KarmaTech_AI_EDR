@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SubtaskList } from '../SubtaskList';
-import { Issue } from '../../../types/todolist';
+import { SubtaskList } from './SubtaskList';
+import { Issue } from '../../types/todolist';
 
 const mockIssue: Issue = {
   id: '1',
@@ -66,7 +66,7 @@ describe('SubtaskList', () => {
         onDeleteSubtask={vi.fn()}
       />
     );
-    
+
     // Total subtasks = 2, Done = 1 (50%)
     expect(screen.getByText('Subtasks (1/2)')).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
@@ -84,12 +84,12 @@ describe('SubtaskList', () => {
         onDeleteSubtask={vi.fn()}
       />
     );
-    
+
     fireEvent.click(screen.getByRole('button', { name: /Create subtask/i }));
-    
+
     const input = screen.getByPlaceholderText('What needs to be done?');
     expect(input).toBeInTheDocument();
-    
+
     // Simulate entry
     fireEvent.change(input, { target: { value: 'New Subtask' } });
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
