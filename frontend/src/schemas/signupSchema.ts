@@ -10,7 +10,7 @@ export const signupSchema = z.object({
     .regex(/^\d{10}$/, 'Invalid phone number format (e.g., 9012345678)'),
   emailAddress: z.string().min(1, 'Email Address is required').email('Invalid email address'),
   subdomain: z.string().min(1, 'Subdomain is required'),
-  subscriptionPlan: z.enum(["Operate", "Automate", "Autonomous"])
+  subscriptionPlan: z.enum(["Starter", "Professional", "Enterprises"])
 });
 
 export type signupSchemaType= z.infer<typeof signupSchema>;

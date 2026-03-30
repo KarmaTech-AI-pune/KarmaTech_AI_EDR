@@ -211,22 +211,22 @@ BEGIN
 END
 
 -- 9. Insert Default Subscription Plans
-IF NOT EXISTS (SELECT * FROM [dbo].[SubscriptionPlans] WHERE [Name] = 'Operate')
+IF NOT EXISTS (SELECT * FROM [dbo].[SubscriptionPlans] WHERE [Name] = 'Basic')
 BEGIN
     INSERT INTO [dbo].[SubscriptionPlans] ([Name], [Description], [Price], [BillingCycle], [MaxUsers], [MaxProjects], [FeaturesJson], [IsActive])
-    VALUES ('Operate', 'Operate plan for small teams', 29.99, 1, 5, 3, '{"feature1": true, "feature2": false}', 1)
+    VALUES ('Basic', 'Basic plan for small teams', 29.99, 1, 5, 3, '{"feature1": true, "feature2": false}', 1)
 END
 
-IF NOT EXISTS (SELECT * FROM [dbo].[SubscriptionPlans] WHERE [Name] = 'Automate')
+IF NOT EXISTS (SELECT * FROM [dbo].[SubscriptionPlans] WHERE [Name] = 'Professional')
 BEGIN
     INSERT INTO [dbo].[SubscriptionPlans] ([Name], [Description], [Price], [BillingCycle], [MaxUsers], [MaxProjects], [FeaturesJson], [IsActive])
-    VALUES ('Automate', 'Automate plan for growing businesses', 99.99, 1, 20, 15, '{"feature1": true, "feature2": true, "feature3": true}', 1)
+    VALUES ('Professional', 'Professional plan for growing businesses', 99.99, 1, 20, 15, '{"feature1": true, "feature2": true, "feature3": true}', 1)
 END
 
-IF NOT EXISTS (SELECT * FROM [dbo].[SubscriptionPlans] WHERE [Name] = 'Autonomous')
+IF NOT EXISTS (SELECT * FROM [dbo].[SubscriptionPlans] WHERE [Name] = 'Enterprise')
 BEGIN
     INSERT INTO [dbo].[SubscriptionPlans] ([Name], [Description], [Price], [BillingCycle], [MaxUsers], [MaxProjects], [FeaturesJson], [IsActive])
-    VALUES ('Autonomous', 'Autonomous plan for large organizations', 299.99, 1, 100, 50, '{"feature1": true, "feature2": true, "feature3": true, "feature4": true}', 1)
+    VALUES ('Enterprise', 'Enterprise plan for large organizations', 299.99, 1, 100, 50, '{"feature1": true, "feature2": true, "feature3": true, "feature4": true}', 1)
 END
 
 PRINT 'SaaS tables and permissions created successfully!' 

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.WorkBreakdownStructures.Queries;
@@ -60,7 +60,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 };
             }
 
-            // Load all WBSTasks for the project with related data in optimized queries for the SPECIFIC header
+            // Load all WBSTasks for the project with related data in optimized queries
             var wbsTasks = await _context.WBSTasks
                 .Include(t => t.UserWBSTasks)
                     .ThenInclude(ut => ut.User)
@@ -68,25 +68,25 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     .ThenInclude(ut => ut.ResourceRole)
                 .Include(t => t.PlannedHours)
                 .Include(t => t.WBSOption)
-                .Where(t => t.WorkBreakdownStructure.WBSHeaderId == wbsHeader.Id && 
+                .Where(t => t.WorkBreakdownStructure.WBSHeader.ProjectId == request.ProjectId && 
                            !t.IsDeleted)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
             // Load all WBSOptions for the tenant to build hierarchy
-            var tenantId = projectExists ? await _context.Projects
+            var tenantId = await _context.Projects
                 .Where(p => p.Id == request.ProjectId)
                 .Select(p => p.TenantId)
-                .FirstOrDefaultAsync(cancellationToken) : 0;
+                .FirstOrDefaultAsync(cancellationToken);
 
             var wbsOptions = await _context.WBSOptions
                 .Where(o => o.TenantId == tenantId)
                 .AsNoTracking()
                 .ToDictionaryAsync(o => o.Id, cancellationToken);
 
-            // Load WorkBreakdownStructures for the SPECIFIC header
+            // Load WorkBreakdownStructures for the project
             var wbsStructures = await _context.WorkBreakdownStructures
-                .Where(wbs => wbs.WBSHeaderId == wbsHeader.Id)
+                .Where(wbs => wbs.WBSHeader.ProjectId == request.ProjectId)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 

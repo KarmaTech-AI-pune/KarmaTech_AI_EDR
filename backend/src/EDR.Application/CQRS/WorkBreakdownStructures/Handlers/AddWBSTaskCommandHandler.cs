@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using EDR.Application.CQRS.WorkBreakdownStructures.Commands;
 using EDR.Application.Dtos;
@@ -196,18 +196,6 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             }
             else
             {
-                // Deactivate any existing active headers for this project to prevent duplicates in queries
-                var existingHeaders = await _context.WBSHeaders
-                    .Where(h => h.ProjectId == request.ProjectId && h.IsActive)
-                    .ToListAsync(cancellationToken);
-                
-                foreach (var oldHeader in existingHeaders)
-                {
-                    _logger.LogInformation("AddWBSTaskCommandHandler: Deactivating existing WBSHeader {Id} for project {ProjectId}", oldHeader.Id, request.ProjectId);
-                    oldHeader.IsActive = false;
-                    _context.WBSHeaders.Update(oldHeader);
-                }
-
                 wbsHeader = new WBSHeader
                 {
                     TenantId = _context.TenantId ?? 0, // IMPORTANT: Set TenantId

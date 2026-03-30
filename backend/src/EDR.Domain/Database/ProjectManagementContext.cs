@@ -165,8 +165,6 @@ namespace EDR.Domain.Database
         // Release Notes entities
         public DbSet<ReleaseNotes> ReleaseNotes { get; set; }
         public DbSet<ChangeItem> ChangeItems { get; set; }
-        public DbSet<TenantInvoice> TenantInvoices { get; set; }
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -229,7 +227,6 @@ namespace EDR.Domain.Database
             modelBuilder.Entity<Program>().HasQueryFilter(role => role.TenantId == TenantId);
             modelBuilder.Entity<WBSOption>().HasQueryFilter(w => w.TenantId == TenantId);
 
-
             modelBuilder.Entity<SprintWbsPlan>().HasQueryFilter(p => p.TenantId == TenantId);
 
             modelBuilder.Entity<SprintWbsPlan>()
@@ -256,92 +253,77 @@ namespace EDR.Domain.Database
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.FinancialDetails)
                 .WithOne(fd => fd.MonthlyProgress)
-                .HasForeignKey<FinancialDetails>(fd => fd.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey<FinancialDetails>(fd => fd.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.ContractAndCost)
                 .WithOne(cc => cc.MonthlyProgress)
-                .HasForeignKey<ContractAndCost>(cc => cc.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey<ContractAndCost>(cc => cc.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.CTCEAC)
                 .WithOne(cte => cte.MonthlyProgress)
-                .HasForeignKey<CTCEAC>(cte => cte.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey<CTCEAC>(cte => cte.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.Schedule)
                 .WithOne(s => s.MonthlyProgress)
-                .HasForeignKey<Schedule>(s => s.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey<Schedule>(s => s.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasMany(mp => mp.ManpowerEntries)
                 .WithOne(mpe => mpe.MonthlyProgress)
-                .HasForeignKey(mpe => mpe.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(mpe => mpe.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasMany(mp => mp.ProgressDeliverables)
                 .WithOne(pd => pd.MonthlyProgress)
-                .HasForeignKey(pd => pd.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(pd => pd.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasMany(mp => mp.ChangeOrders)
                 .WithOne(co => co.MonthlyProgress)
-                .HasForeignKey(co => co.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(co => co.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasMany(mp => mp.LastMonthActions)
                 .WithOne(lma => lma.MonthlyProgress)
-                .HasForeignKey(lma => lma.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(lma => lma.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasMany(mp => mp.CurrentMonthActions)
                 .WithOne(cma => cma.MonthlyProgress)
-                .HasForeignKey(cma => cma.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(cma => cma.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasMany(mp => mp.ProgrammeSchedules)
                 .WithOne(ps => ps.MonthlyProgress)
-                .HasForeignKey(ps => ps.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(ps => ps.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasMany(mp => mp.EarlyWarnings)
                 .WithOne(ew => ew.MonthlyProgress)
-                .HasForeignKey(ew => ew.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(ew => ew.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.BudgetTable)
                 .WithOne(bt => bt.MonthlyProgress)
-                .HasForeignKey<BudgetTable>(bt => bt.MonthlyProgressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey<BudgetTable>(bt => bt.MonthlyProgressId);
 
             modelBuilder.Entity<BudgetTable>()
                 .HasOne(bt => bt.OriginalBudget)
                 .WithOne(ob => ob.BudgetTable)
-                .HasForeignKey<OriginalBudget>(ob => ob.BudgetTableId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey<OriginalBudget>(ob => ob.BudgetTableId);
 
             modelBuilder.Entity<BudgetTable>()
                 .HasOne(bt => bt.CurrentBudgetInMIS)
                 .WithOne(cb => cb.BudgetTable)
-                .HasForeignKey<CurrentBudgetInMIS>(cb => cb.BudgetTableId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey<CurrentBudgetInMIS>(cb => cb.BudgetTableId);
 
             modelBuilder.Entity<BudgetTable>()
                 .HasOne(pcc => pcc.PercentCompleteOnCosts)
                 .WithOne(pcc => pcc.BudgetTable)
-                .HasForeignKey<PercentCompleteOnCosts>(pcc => pcc.BudgetTableId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey<PercentCompleteOnCosts>(pcc => pcc.BudgetTableId);
 
             // Configure decimal precisions for Monthly Progress related entities
             modelBuilder.Entity<ContractAndCost>().Property(cc => cc.PriorCumulativeOdc).HasPrecision(18, 2);
@@ -1260,7 +1242,7 @@ namespace EDR.Domain.Database
                 entity.HasOne(h => h.Project)
                     .WithMany()
                     .HasForeignKey(h => h.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)
@@ -1383,15 +1365,6 @@ namespace EDR.Domain.Database
                 entity.HasIndex(e => e.ReleaseNotesId);
                 entity.HasIndex(e => e.ChangeType);
             });
-
-            // Configure TenantInvoice entity
-            modelBuilder.Entity<TenantInvoice>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Amount).HasPrecision(18, 2);
-                entity.HasIndex(e => e.TenantId);
-            });
-
         }
 
         private void ConfigureProjectCascadingDeletes(ModelBuilder modelBuilder)
@@ -1424,27 +1397,6 @@ namespace EDR.Domain.Database
                 .HasOne(mp => mp.Project)
                 .WithMany()
                 .HasForeignKey(mp => mp.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure PaymentMilestone Cascade Delete
-            modelBuilder.Entity<PaymentMilestone>()
-                .HasOne(pm => pm.Project)
-                .WithMany()
-                .HasForeignKey(pm => pm.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure ProjectBudgetChangeHistory Cascade Delete
-            modelBuilder.Entity<ProjectBudgetChangeHistory>()
-                .HasOne(pbch => pbch.Project)
-                .WithMany()
-                .HasForeignKey(pbch => pbch.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure Program to Project Cascade Delete
-            modelBuilder.Entity<Project>()
-                .HasOne(p => p.Program)
-                .WithMany(p => p.Projects)
-                .HasForeignKey(p => p.ProgramId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

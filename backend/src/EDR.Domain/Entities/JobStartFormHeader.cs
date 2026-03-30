@@ -1,4 +1,4 @@
-using EDR.Domain.Enums;
+﻿using EDR.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -17,13 +17,13 @@ namespace EDR.Domain.Entities
         public int FormId { get; set; }
         
         [ForeignKey("FormId")]
-        [DeleteBehavior(DeleteBehavior.Cascade)]
+        [DeleteBehavior(DeleteBehavior.NoAction)]
         public virtual JobStartForm JobStartForm { get; set; }
         
         public int ProjectId { get; set; }
         
         [ForeignKey("ProjectId")]
-        [DeleteBehavior(DeleteBehavior.Cascade)]
+        [DeleteBehavior(DeleteBehavior.NoAction)]
         public virtual Project Project { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

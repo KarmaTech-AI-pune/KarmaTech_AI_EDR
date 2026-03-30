@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\src\EDR.Application\EDR.Application.csproj" />
-    <ProjectReference Include="..\src\EDR.Domain\EDR.Domain.csproj" />
     <ProjectReference Include="..\src\EDR.API\EDR.API.csproj" />
   </ItemGroup>
 

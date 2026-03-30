@@ -99,18 +99,6 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             else
             {
                 _logger.LogInformation("SetWBSCommandHandler: Creating new WBSHeader for ProjectId {ProjectId}", request.ProjectId);
-                
-                // Deactivate any existing active headers for this project to prevent duplicates in queries
-                var existingHeaders = await _context.WBSHeaders
-                    .Where(h => h.ProjectId == request.ProjectId && h.IsActive)
-                    .ToListAsync(cancellationToken);
-                
-                foreach (var oldHeader in existingHeaders)
-                {
-                    _logger.LogInformation("SetWBSCommandHandler: Deactivating existing WBSHeader {Id} for project {ProjectId}", oldHeader.Id, request.ProjectId);
-                    oldHeader.IsActive = false;
-                    _context.WBSHeaders.Update(oldHeader);
-                }
 
                 // Create new WBSHeader
                 wbsHeader = new WBSHeader
@@ -143,28 +131,6 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             _logger.LogInformation("SetWBSCommandHandler: Processing {Count} WBS groups. Existing groups: {ExistingIds}",
                 request.WBSMaster.WorkBreakdownStructures.Count,
                 string.Join(", ", existingWBSGroupsDict.Keys));
-
-            // Delete groups that are in DB but NOT in the incoming DTO
-            var groupsToDelete = wbsHeader.WorkBreakdownStructures
-                .Where(g => g.Id > 0 && !incomingWBSGroupIds.Contains(g.Id))
-                .ToList();
-
-            foreach (var groupToDelete in groupsToDelete)
-            {
-                _logger.LogInformation("SetWBSCommandHandler: Deleting WBS group ID {Id}, Name: {Name}",
-                    groupToDelete.Id, groupToDelete.Name);
-                
-                // Delete associated tasks first (assuming hard delete for groups implies cleanup)
-                // Note: WBSTasks have IsDeleted, but if we are removing the group, we might want to hard delete everything
-                // or at least mark all tasks as deleted.
-                foreach (var task in groupToDelete.Tasks)
-                {
-                    task.IsDeleted = true;
-                }
-                
-                _context.WorkBreakdownStructures.Remove(groupToDelete);
-                wbsHeader.WorkBreakdownStructures.Remove(groupToDelete);
-            }
 
             foreach (var wbsGroupDto in request.WBSMaster.WorkBreakdownStructures)
             {
