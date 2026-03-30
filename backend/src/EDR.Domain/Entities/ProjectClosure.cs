@@ -18,7 +18,7 @@ namespace EDR.Domain.Entities
         public int ProjectId { get; set; }
 
         [ForeignKey("ProjectId")]
-        [DeleteBehavior(DeleteBehavior.NoAction)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public virtual Project Project { get; set; }
 
         // Section A: Overall Project Delivery
