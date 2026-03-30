@@ -3,10 +3,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import CreateProgramDialog from './CreateProgramDialog';
-import { programApi } from '../../services/api/programApi';
+import { programApi } from '../../services/programApi';
 
 // Mock the programApi
-vi.mock('../../services/api/programApi', () => ({
+vi.mock('../../services/programApi', () => ({
   programApi: {
     create: vi.fn()
   }

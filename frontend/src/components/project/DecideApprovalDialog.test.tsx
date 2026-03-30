@@ -5,7 +5,7 @@ import DecideApprovalDialog from './DecideApprovalDialog';
 import { pmWorkflowApi } from '../../api/pmWorkflowApi';
 
 // Mock pmWorkflowApi
-vi.mock('../../../api/pmWorkflowApi', () => ({
+vi.mock('../../api/pmWorkflowApi', () => ({
     pmWorkflowApi: {
         approvedByRDOrRM: vi.fn(),
         requestChanges: vi.fn()

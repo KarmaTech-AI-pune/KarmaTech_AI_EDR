@@ -12,46 +12,51 @@ import { getEnhancedWorkflowStatus } from '../../utils/workflowStatusFormatter';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow'; // Fixed typo in actual import path
 
 // Mock dependencies
-vi.mock('react-router-dom', () => ({
-  useNavigate: vi.fn(),
-}));
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    useNavigate: vi.fn(),
+  };
+});
 
-vi.mock('../../../context/BusinessDevelopmentContext', () => ({
+vi.mock('../../context/BusinessDevelopmentContext', () => ({
   useBusinessDevelopment: vi.fn(),
 }));
 
-vi.mock('../../../dummyapi/opportunityApi', () => ({
+vi.mock('../../dummyapi/opportunityApi', () => ({
   opportunityApi: {
     delete: vi.fn(),
     update: vi.fn(),
   },
 }));
 
-vi.mock('../../../dummyapi/authApi', () => ({
+vi.mock('../../dummyapi/authApi', () => ({
   authApi: {
     getCurrentUser: vi.fn(),
   },
 }));
 
-vi.mock('../../../services/userApi', () => ({
+vi.mock('../../services/userApi', () => ({
   getUserById: vi.fn(),
 }));
 
-vi.mock('../../../utils/workflowStatusFormatter', () => ({
+vi.mock('../../utils/workflowStatusFormatter', () => ({
   getEnhancedWorkflowStatus: vi.fn(),
 }));
 
-vi.mock('../../../dummyapi/database/dummyOpporunityWorkflow', () => ({
+vi.mock('../../dummyapi/database/dummyOpporunityWorkflow', () => ({
+  default: [],
   getWorkflowStatusById: vi.fn(),
 }));
 
-vi.mock('../../common/BDChips', () => ({
+vi.mock('../common/BDChips', () => ({
   BDChips: () => <div data-testid="bd-chips-mock">BDChips</div>,
 }));
 
-vi.mock('../../forms/OpportunityForm', () => ({
+vi.mock('../forms/OpportunityForm', () => ({
   OpportunityForm: ({ onSubmit }: any) => (
-    <form aria-label="opportuniy-form" onSubmit={(e) => {
+    <form role="form" aria-label="opportuniy-form" onSubmit={(e) => {
       e.preventDefault();
       onSubmit({ workName: 'Updated WorkName' });
     }}>

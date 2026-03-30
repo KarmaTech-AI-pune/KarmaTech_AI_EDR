@@ -2,7 +2,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import BudgetHealthDisplayComponent from './BudgetHealthIndicatorExample';
 
-vi.mock('../../../../api/budgetHealthApi', () => ({
+vi.mock('../../../api/budgetHealthApi', () => ({
   getBudgetHealth: vi.fn().mockResolvedValue({
     status: 'Healthy',
     utilizationPercentage: 50,

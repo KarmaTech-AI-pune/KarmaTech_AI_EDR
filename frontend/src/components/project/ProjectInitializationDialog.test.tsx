@@ -6,18 +6,18 @@ import { opportunityApi } from '../../services/opportunityApi';
 import { getUsersByRole } from '../../services/userApi';
 
 // Mock dependencies
-vi.mock('../../../services/opportunityApi', () => ({
+vi.mock('../../services/opportunityApi', () => ({
   opportunityApi: {
     getOpportunityByStatus: vi.fn(),
   },
 }));
 
-vi.mock('../../../services/userApi', () => ({
+vi.mock('../../services/userApi', () => ({
   getUsersByRole: vi.fn(),
 }));
 
 // Mock ProjectInitForm
-vi.mock('../../forms/ProjectInitForm', () => ({
+vi.mock('../forms/ProjectInitForm', () => ({
   default: ({ onSubmit, onCancel, project }: any) => (
     <div data-testid="project-init-form">
       Project Form
