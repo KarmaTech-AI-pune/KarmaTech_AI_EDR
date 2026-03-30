@@ -6,7 +6,7 @@ import { pmWorkflowApi } from '../../api/pmWorkflowApi';
 import { PMWorkflowStatus } from '../../models/pmWorkflowModel';
 
 // Mock Dependencies
-vi.mock('../../../api/pmWorkflowApi', () => ({
+vi.mock('../../api/pmWorkflowApi', () => ({
   pmWorkflowApi: {
     getWorkflowHistory: vi.fn(),
   },

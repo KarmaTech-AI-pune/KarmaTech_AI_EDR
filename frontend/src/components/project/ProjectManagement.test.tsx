@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import ProjectManagement from './ProjectManagement';
 
 // Mock the child components to avoid testing their massive rendering logic
-vi.mock('../../dashboard/ProjectStatusPieChart', () => ({
+vi.mock('../dashboard/ProjectStatusPieChart', () => ({
   default: () => <div data-testid="mock-pie-chart">Pie Chart</div>
 }));
 

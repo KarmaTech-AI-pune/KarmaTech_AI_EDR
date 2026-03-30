@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import OpportunityList from './OpportunityList';
 
 // Mock OpportunityItem to avoid rendering its complex children and API calls
-vi.mock('../OpportunityItem', () => ({
+vi.mock('./OpportunityItem', () => ({
   OpportunityItem: ({ opportunity }: any) => (
     <div data-testid="mock-opportunity-item">
       {opportunity.workName}

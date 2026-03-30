@@ -9,32 +9,32 @@ import { PermissionType } from '../../models';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 
 // Mock Dependencies
-vi.mock('../../../services/projectApi', () => ({
+vi.mock('../../services/projectApi', () => ({
   projectApi: {
     delete: vi.fn(),
     update: vi.fn(),
   },
 }));
 
-vi.mock('../../../services/authApi', () => ({
+vi.mock('../../services/authApi', () => ({
   authApi: {
     getCurrentUser: vi.fn(),
   },
 }));
 
-vi.mock('../../../services/userApi', () => ({
+vi.mock('../../services/userApi', () => ({
   getUsersByRole: vi.fn(),
 }));
 
-vi.mock('../../../hooks/useAppNavigation', () => ({
+vi.mock('../../hooks/useAppNavigation', () => ({
   useAppNavigation: vi.fn(),
 }));
 
-vi.mock('../budget/BudgetHealthIndicatorExample', () => ({
+vi.mock('./budget/BudgetHealthIndicatorExample', () => ({
   BudgetHealthDisplay: () => <div data-testid="budget-health-display">Budget Health</div>,
 }));
 
-vi.mock('../../forms/ProjectInitForm', () => ({
+vi.mock('../forms/ProjectInitForm', () => ({
   ProjectInitForm: ({ onSubmit, onCancel }: any) => (
     <div data-testid="project-init-form">
       Project Form

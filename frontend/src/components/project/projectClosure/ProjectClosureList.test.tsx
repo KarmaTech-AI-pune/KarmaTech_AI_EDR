@@ -1,9 +1,9 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import ProjectClosureList from '../ProjectClosureList';
-import * as projectClosureApi from '../../../../services/projectClosureApi';
+import ProjectClosureList from './ProjectClosureList';
+import * as projectClosureApi from '../../../services/projectClosureApi';
 
-vi.mock('../../../../services/projectClosureApi', () => ({
+vi.mock('../../../services/projectClosureApi', () => ({
   getAllProjectClosures: vi.fn(),
   deleteProjectClosure: vi.fn(),
 }));

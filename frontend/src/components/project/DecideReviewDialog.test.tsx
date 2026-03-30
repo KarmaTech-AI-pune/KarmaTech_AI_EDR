@@ -6,14 +6,14 @@ import { pmWorkflowApi } from '../../api/pmWorkflowApi';
 import * as userApi from '../../services/userApi';
 
 // Mock dependencies
-vi.mock('../../../api/pmWorkflowApi', () => ({
+vi.mock('../../api/pmWorkflowApi', () => ({
     pmWorkflowApi: {
         sendToApproval: vi.fn(),
         requestChanges: vi.fn()
     }
 }));
 
-vi.mock('../../../services/userApi', () => ({
+vi.mock('../../services/userApi', () => ({
     getUsersByRole: vi.fn()
 }));
 

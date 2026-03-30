@@ -6,13 +6,13 @@ import { WBSStructureAPI } from '../../features/wbs/services/wbsApi';
 import { transformWbsToGantt } from '../../features/wbs/utils/wbsToGantt';
 
 // Mock dependencies
-vi.mock('../../../features/wbs/services/wbsApi', () => ({
+vi.mock('../../features/wbs/services/wbsApi', () => ({
   WBSStructureAPI: {
     getProjectWBS: vi.fn()
   }
 }));
 
-vi.mock('../../../features/wbs/utils/wbsToGantt', () => ({
+vi.mock('../../features/wbs/utils/wbsToGantt', () => ({
   transformWbsToGantt: vi.fn()
 }));
 
