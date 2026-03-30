@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -85,14 +85,12 @@ namespace EDR.API.Controllers
                     _logger.LogInformation($"Login attempt for tenant: {tenant}");
                 }
 
-                var result = await _authService.ValidateUserAsync(model.Email, model.Password);
+                var (success, user, token) = await _authService.ValidateUserAsync(model.Email, model.Password);
 
-                if (result.Success)
+                if (success)
                 {
-                    var user = result.User;
-                    var token = result.Token;
-                    
                     // Check if 2FA is required for this user
+                   
                     if (await _twoFactorService.IsOtpRequiredAsync(model.Email))
                     {
                         // Send OTP and return response indicating 2FA is required
@@ -163,20 +161,7 @@ namespace EDR.API.Controllers
                     });
                 }
 
-                // Handle specific failure types
-                if (result.ResultType == AuthResultType.UserInactive || 
-                    result.ResultType == AuthResultType.TenantInactive ||
-                    result.ResultType == AuthResultType.NoTenantMapping)
-                {
-                    return StatusCode(StatusCodes.Status403Forbidden, new 
-                    { 
-                        success = false, 
-                        message = result.Message,
-                        errorCode = result.ResultType.ToString() 
-                    });
-                }
-
-                return Unauthorized(new { success = false, message = result.Message ?? "Invalid credentials" });
+                return Unauthorized(new { success = false, message = "Invalid credentials" });
             }
             catch (Exception ex)
             {
@@ -212,11 +197,7 @@ namespace EDR.API.Controllers
             var createdUsers = new List<UserDto>();
             foreach (var command in commands)
             {
-                // Ensure a password is set, use a generator if it's empty
-                if (string.IsNullOrWhiteSpace(command.Password))
-                {
-                    command.Password = GenerateRandomPassword();
-                }
+                command.Password = "Admin@123";
 
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
@@ -506,14 +487,6 @@ namespace EDR.API.Controllers
                 _logger.LogError(ex, "An error occurred during password reset");
                 return StatusCode(500, new { success = false, message = "An error occurred while resetting your password" });
             }
-        }
-
-        private string GenerateRandomPassword()
-        {
-            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*";
-            var random = new Random();
-            return new string(Enumerable.Repeat(chars, 12)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }

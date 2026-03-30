@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -466,7 +466,6 @@ namespace EDR.Domain.Extensions
                     new Feature { Name = "Monthly Progress Review", IsActive = true },
                     new Feature { Name = "Project Closure", IsActive = true },
                     new Feature { Name = "Monthly Reports", IsActive = true },
-                    new Feature { Name = "Cashflow", IsActive = true },
 
                     // Business Development Forms
                     new Feature { Name = "Opportunity Tracking", IsActive = true },
@@ -492,13 +491,6 @@ namespace EDR.Domain.Extensions
             else
             {
                 Console.WriteLine("Feature table already has data, skipping insert");
-
-                // Check and add Cashflow if it doesn't exist
-                if (!context.Set<Feature>().Any(f => f.Name == "Cashflow"))
-                {
-                    context.Set<Feature>().Add(new Feature { Name = "Cashflow", IsActive = true });
-                    await context.SaveChangesAsync();
-                }
             }
         }
 
@@ -516,13 +508,14 @@ namespace EDR.Domain.Extensions
             {
                 Console.WriteLine("SubscriptionPlan table is empty, inserting data...");
 
-                var operatePlan = new SubscriptionPlan { Name = "Operate", Description = "Perfect for individuals and small projects", MonthlyPrice = 100, YearlyPrice = 1000, MaxUsers = 5, MaxProjects = 5, MaxStorageGB = 10, StripePriceId = "plan_operate_2024" };
-                var automatePlan = new SubscriptionPlan { Name = "Automate", Description = "For small to mid-sized teams with advanced needs", MonthlyPrice = 400, YearlyPrice = 4000, MaxUsers = 20, MaxProjects = 25, MaxStorageGB = 100, StripePriceId = "plan_automate_2024" };
-                var autonomousPlan = new SubscriptionPlan { Name = "Autonomous", Description = "Custom solution for large organizations", MonthlyPrice = 0, YearlyPrice = 0, MaxUsers = -1, MaxProjects = -1, MaxStorageGB = -1, StripePriceId = "plan_autonomous_2024" };
+                var starterPlan = new SubscriptionPlan { Name = "Starter", Description = "Perfect for individuals and small projects", MonthlyPrice = 100, YearlyPrice = 1000, MaxUsers = 5, MaxProjects = 5, MaxStorageGB = 10, StripePriceId = "plan_starter_2024" };
+                var businessPlan = new SubscriptionPlan { Name = "Business", Description = "For small to mid-sized teams with advanced needs", MonthlyPrice = 400, YearlyPrice = 4000, MaxUsers = 20, MaxProjects = 25, MaxStorageGB = 100, StripePriceId = "plan_business_2024" };
+                var enterprisePlan = new SubscriptionPlan { Name = "Enterprise", Description = "Custom solution for large organizations", MonthlyPrice = 0, YearlyPrice = 0, MaxUsers = -1, MaxProjects = -1, MaxStorageGB = -1, StripePriceId = "plan_enterprise_2024" };
+                var oneTimeLicensePlan = new SubscriptionPlan { Name = "One-Time License", Description = "Lifetime access with one-time payment", MonthlyPrice = 0, YearlyPrice = 0, MaxUsers = -1, MaxProjects = -1, MaxStorageGB = -1, StripePriceId = "plan_one_time_license" };
 
                 try
                 {
-                    await context.Set<SubscriptionPlan>().AddRangeAsync(operatePlan, automatePlan, autonomousPlan);
+                    await context.Set<SubscriptionPlan>().AddRangeAsync(starterPlan, businessPlan, enterprisePlan, oneTimeLicensePlan);
                     await context.SaveChangesAsync();
                     Console.WriteLine("SubscriptionPlan data inserted successfully");
                 }
@@ -541,9 +534,10 @@ namespace EDR.Domain.Extensions
             Console.WriteLine("Reseeding SubscriptionPlan feature mappings...");
 
             // Get existing plans (they should exist now)
-            var existingOperatePlan = await context.Set<SubscriptionPlan>().FirstOrDefaultAsync(sp => sp.Name == "Operate");
-            var existingAutomatePlan = await context.Set<SubscriptionPlan>().FirstOrDefaultAsync(sp => sp.Name == "Automate");
-            var existingAutonomousPlan = await context.Set<SubscriptionPlan>().FirstOrDefaultAsync(sp => sp.Name == "Autonomous");
+            var existingStarterPlan = await context.Set<SubscriptionPlan>().FirstOrDefaultAsync(sp => sp.Name == "Starter");
+            var existingBusinessPlan = await context.Set<SubscriptionPlan>().FirstOrDefaultAsync(sp => sp.Name == "Business");
+            var existingEnterprisePlan = await context.Set<SubscriptionPlan>().FirstOrDefaultAsync(sp => sp.Name == "Enterprise");
+            var existingOneTimeLicensePlan = await context.Set<SubscriptionPlan>().FirstOrDefaultAsync(sp => sp.Name == "One-Time License");
 
             // Get all features
             var dashboardFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Dashboard");
@@ -564,65 +558,98 @@ namespace EDR.Domain.Extensions
             var goNoGoFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Go/No Go Decision");
             var bidPreparationFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Bid Preparation");
             var emailNotificationsFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Email Notifications");
-            var cashflowFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Cashflow");
 
-            // Operate Plan Features (Basic)
-            if (existingOperatePlan != null)
+            // Starter Plan Features
+            if (existingStarterPlan != null)
             {
-                if (dashboardFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = dashboardFeature.Id });
-                if (programManagementFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = programManagementFeature.Id });
-                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = wbsFeature.Id });
-                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = manpowerPlanningFeature.Id });
-                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = odcTableFeature.Id });
-                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = jobStartFormFeature.Id });
-                if (opportunityTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = opportunityTrackingFeature.Id });
+                if (dashboardFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = dashboardFeature.Id });
+                if (programManagementFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = programManagementFeature.Id });
+                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = wbsFeature.Id });
+                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = manpowerPlanningFeature.Id });
+                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = odcTableFeature.Id });
+                if (sprintPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = sprintPlanningFeature.Id });
+                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = jobStartFormFeature.Id });
+                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = inputRegisterFeature.Id });
+                if (correspondenceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = correspondenceFeature.Id });
+                if (checkReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = checkReviewFeature.Id });
+                if (changeControlFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = changeControlFeature.Id });
+                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = monthlyProgressReviewFeature.Id });
+                if (projectClosureFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = projectClosureFeature.Id });
+                if (monthlyReportsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = monthlyReportsFeature.Id });
+                if (opportunityTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = opportunityTrackingFeature.Id });
+                if (goNoGoFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = goNoGoFeature.Id });
+                if (bidPreparationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = bidPreparationFeature.Id });
+                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = emailNotificationsFeature.Id });
             }
 
-            // Automate Plan Features (Intermediate)
-            if (existingAutomatePlan != null)
+            // Business Plan Features
+            if (existingBusinessPlan != null)
             {
-                // All Operate features
-                if (dashboardFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = dashboardFeature.Id });
-                if (programManagementFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = programManagementFeature.Id });
-                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = wbsFeature.Id });
-                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = manpowerPlanningFeature.Id });
-                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = odcTableFeature.Id });
-                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = jobStartFormFeature.Id });
-                if (opportunityTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = opportunityTrackingFeature.Id });
-
-                // Additional features
-                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = inputRegisterFeature.Id });
-                if (correspondenceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = correspondenceFeature.Id });
-                if (checkReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = checkReviewFeature.Id });
-                if (changeControlFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = changeControlFeature.Id });
-                if (cashflowFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = cashflowFeature.Id });
+                if (dashboardFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = dashboardFeature.Id });
+                if (programManagementFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = programManagementFeature.Id });
+                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = wbsFeature.Id });
+                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = manpowerPlanningFeature.Id });
+                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = odcTableFeature.Id });
+                if (sprintPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = sprintPlanningFeature.Id });
+                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = jobStartFormFeature.Id });
+                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = inputRegisterFeature.Id });
+                if (correspondenceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = correspondenceFeature.Id });
+                if (checkReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = checkReviewFeature.Id });
+                if (changeControlFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = changeControlFeature.Id });
+                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = monthlyProgressReviewFeature.Id });
+                if (projectClosureFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = projectClosureFeature.Id });
+                if (monthlyReportsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = monthlyReportsFeature.Id });
+                if (opportunityTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = opportunityTrackingFeature.Id });
+                if (goNoGoFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = goNoGoFeature.Id });
+                if (bidPreparationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = bidPreparationFeature.Id });
+                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = emailNotificationsFeature.Id });
             }
 
-            // Autonomous Plan Features (Full)
-            if (existingAutonomousPlan != null)
+            // Enterprise Plan Features
+            if (existingEnterprisePlan != null)
             {
-                // Assign every single feature
-                if (dashboardFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = dashboardFeature.Id });
-                if (programManagementFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = programManagementFeature.Id });
-                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = wbsFeature.Id });
-                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = manpowerPlanningFeature.Id });
-                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = odcTableFeature.Id });
-                if (sprintPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = sprintPlanningFeature.Id });
-                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = jobStartFormFeature.Id });
-                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = inputRegisterFeature.Id });
-                if (correspondenceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = correspondenceFeature.Id });
-                if (checkReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = checkReviewFeature.Id });
-                if (changeControlFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = changeControlFeature.Id });
-                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = monthlyProgressReviewFeature.Id });
-                if (projectClosureFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = projectClosureFeature.Id });
-                if (monthlyReportsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = monthlyReportsFeature.Id });
-                if (opportunityTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = opportunityTrackingFeature.Id });
-                if (goNoGoFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = goNoGoFeature.Id });
-                if (bidPreparationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = bidPreparationFeature.Id });
-                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = emailNotificationsFeature.Id });
-                if (cashflowFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = cashflowFeature.Id });
+                if (dashboardFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = dashboardFeature.Id });
+                if (programManagementFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = programManagementFeature.Id });
+                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = wbsFeature.Id });
+                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = manpowerPlanningFeature.Id });
+                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = odcTableFeature.Id });
+                if (sprintPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = sprintPlanningFeature.Id });
+                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = jobStartFormFeature.Id });
+                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = inputRegisterFeature.Id });
+                if (correspondenceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = correspondenceFeature.Id });
+                if (checkReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = checkReviewFeature.Id });
+                if (changeControlFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = changeControlFeature.Id });
+                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = monthlyProgressReviewFeature.Id });
+                if (projectClosureFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = projectClosureFeature.Id });
+                if (monthlyReportsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = monthlyReportsFeature.Id });
+                if (opportunityTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = opportunityTrackingFeature.Id });
+                if (goNoGoFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = goNoGoFeature.Id });
+                if (bidPreparationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = bidPreparationFeature.Id });
+                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = emailNotificationsFeature.Id });
             }
 
+            // One-Time License Plan Features (All Enterprise features)
+            if (existingOneTimeLicensePlan != null)
+            {
+                if (dashboardFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = dashboardFeature.Id });
+                if (programManagementFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = programManagementFeature.Id });
+                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = wbsFeature.Id });
+                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = manpowerPlanningFeature.Id });
+                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = odcTableFeature.Id });
+                if (sprintPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = sprintPlanningFeature.Id });
+                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = jobStartFormFeature.Id });
+                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = inputRegisterFeature.Id });
+                if (correspondenceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = correspondenceFeature.Id });
+                if (checkReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = checkReviewFeature.Id });
+                if (changeControlFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = changeControlFeature.Id });
+                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = monthlyProgressReviewFeature.Id });
+                if (projectClosureFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = projectClosureFeature.Id });
+                if (monthlyReportsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = monthlyReportsFeature.Id });
+                if (opportunityTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = opportunityTrackingFeature.Id });
+                if (goNoGoFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = goNoGoFeature.Id });
+                if (bidPreparationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = bidPreparationFeature.Id });
+                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = emailNotificationsFeature.Id });
+            }
 
             await context.SaveChangesAsync();
             Console.WriteLine("SubscriptionPlan feature mappings reseeded successfully");

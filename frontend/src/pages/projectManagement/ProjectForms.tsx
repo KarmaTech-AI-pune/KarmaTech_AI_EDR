@@ -44,98 +44,50 @@ const ProjectForms: React.FC = () => {
         }
 
         switch (formId) {
-            case "wbs":
-                switch (subFormId) {
-                    case "manpower":
-                        return (
-                            <FeatureGate featureName={"Manpower Planning"}>
-                                <WorkBreakdownStructureForm formType="manpower" />
-                            </FeatureGate>
-                        );
-                    case "odc":
-                        return (
-                            <FeatureGate featureName={"ODC (Other Direct Cost) Table"}>
-                                <WorkBreakdownStructureForm formType="odc" />
-                            </FeatureGate>
-                        );
-                    case "todo-list":
-                        return (
-                            <FeatureGate featureName={"Sprint Planning"}>
-                                <TodoList />
-                            </FeatureGate>
-                        );
-                    case "product-backlog":
-                        return (
-                            <FeatureGate featureName={"Product Backlog"}>
-                                <ProductBacklog />
-                            </FeatureGate>
-                        );
-                    default:
-                        return <FormsOverview onFormSelect={() => { }} />;
-                }
-
-            case "job-start":
-                return (
-                    <FeatureGate featureName={"Job Start Form"} >
-                        <JobStartForm />
-                    </FeatureGate>
-                );
+        case "wbs":
+            switch (subFormId) {
+                case "manpower":
+                    return <WorkBreakdownStructureForm formType="manpower" />;
+                case "odc":
+                    return <WorkBreakdownStructureForm formType="odc" />;
+                case "todo-list":
+                    return <TodoList />;
+                case "product-backlog":
+                    return <ProductBacklog />;
+                default:
+                    return <FormsOverview onFormSelect={() => {}} />;
+            }
+        
+        case "job-start":
+            return(
+        <FeatureGate featureName={"Job Start Form"} >
+          <JobStartForm />
+        </FeatureGate>
+            );
 
             case "input-register":
-                return (
-                    <FeatureGate featureName={"Input/Output Register"} >
-                        <InputRegisterForm />
-                    </FeatureGate>
-                );
+                return <InputRegisterForm />;
 
             case "correspondence":
-                return (
-                    <FeatureGate featureName={"Correspondence"} >
-                        <CorrespondenceForm />
-                    </FeatureGate>
-                );
+                return <CorrespondenceForm />;
 
             case "check&review":
-                return (
-                    <FeatureGate featureName={"Check & Review"} >
-                        <CheckReviewForm />
-                    </FeatureGate>
-                );
+                return <CheckReviewForm />;
 
             case "change-control":
-                return (
-                    <FeatureGate featureName={"Change Control"} >
-                        <ChangeControlForm />
-                    </FeatureGate>
-                );
+                return <ChangeControlForm />;
 
             case "progress-review":
-                return (
-                    <FeatureGate featureName={"Monthly Progress Review"} >
-                        <MonthlyProgressForm />
-                    </FeatureGate>
-                );
+                return <MonthlyProgressForm />;
 
             case "closure":
-                return (
-                    <FeatureGate featureName={"Project Closure"} >
-                        <ProjectClosureForm />
-                    </FeatureGate>
-                );
+                return <ProjectClosureForm />;
 
             case "monthly-reports":
-                return (
-                    <FeatureGate featureName={"Monthly Reports"} >
-                        <MonthlyReports />
-                    </FeatureGate>
-                );
+                return <MonthlyReports />;
 
             case "cashflow":
-                return (
-                    <FeatureGate featureName={"Cashflow"}>
-                        <Cashflow />
-                    </FeatureGate>
-                );
+                return <Cashflow />;
 
             default:
                 return <FormsOverview onFormSelect={() => { }} />;

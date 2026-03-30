@@ -1,7 +1,7 @@
 export const subscriptionPlans = [
   {
     planId: 1,
-    planName: "Operate",
+    planName: "Starter Plan",
     features: [
       { name: "manpower", enabled: true },
       { name: "odc", enabled: true },
@@ -17,7 +17,7 @@ export const subscriptionPlans = [
   },
   {
     planId: 2,
-    planName: "Automate",
+    planName: "Pro Plan",
     features: [
       { name: "manpower", enabled: true },
       { name: "odc", enabled: false },
@@ -33,7 +33,7 @@ export const subscriptionPlans = [
   },
   {
     planId: 3,
-    planName: "Autonomous",
+    planName: "Business Plan",
     features: [
       { name: "manpower", enabled: true },
       { name: "odc", enabled: true },

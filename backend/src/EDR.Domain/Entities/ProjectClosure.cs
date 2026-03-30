@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -18,7 +18,7 @@ namespace EDR.Domain.Entities
         public int ProjectId { get; set; }
 
         [ForeignKey("ProjectId")]
-        [DeleteBehavior(DeleteBehavior.Cascade)]
+        [DeleteBehavior(DeleteBehavior.NoAction)]
         public virtual Project Project { get; set; }
 
         // Section A: Overall Project Delivery
