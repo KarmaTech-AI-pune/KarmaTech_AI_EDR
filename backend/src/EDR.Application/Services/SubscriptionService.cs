@@ -101,6 +101,17 @@ namespace EDR.Application.Services
                     tenant.SubscriptionPlanId = planId;
                     tenant.Status = TenantStatus.Active;
                     tenant.SubscriptionEndDate = DateTime.UtcNow.AddMonths(1);
+
+                    var mockInvoice = new TenantInvoice
+                    {
+                        TenantId = tenant.Id,
+                        InvoiceId = "inv_mock_" + Guid.NewGuid().ToString("N"),
+                        Amount = plan.MonthlyPrice,
+                        Status = "Pending",
+                        DueDate = DateTime.UtcNow
+                    };
+                    _context.TenantInvoices.Add(mockInvoice);
+
                     await _context.SaveChangesAsync();
                     return true;
                 }
@@ -136,6 +147,16 @@ namespace EDR.Application.Services
                 tenant.SubscriptionPlanId = planId;
                 tenant.Status = TenantStatus.Active; // Usually starts as authenticated in Razorpay, making Active for now
                 tenant.SubscriptionEndDate = DateTime.UtcNow.AddMonths(1);
+
+                var autoInvoice = new TenantInvoice
+                {
+                    TenantId = tenant.Id,
+                    InvoiceId = "inv_auto_" + Guid.NewGuid().ToString("N"),
+                    Amount = plan.MonthlyPrice,
+                    Status = "Pending",
+                    DueDate = DateTime.UtcNow
+                };
+                _context.TenantInvoices.Add(autoInvoice);
 
                 await _context.SaveChangesAsync();
                 return true;

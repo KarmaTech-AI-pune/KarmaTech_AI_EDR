@@ -37,12 +37,13 @@ export const getTenantContext = (): string | null => {
       return hostname;
     }
     
-    return null;
+    // Default to tenant 1 if accessed via direct localhost
+    return '1';
   }
 
   // Normal subdomain logic for production
   const subdomain = hostname.split('.')[0];
-  return subdomain && subdomain !== hostname ? hostname : null;
+  return subdomain && subdomain !== hostname ? hostname : '1';
 };
 
 
