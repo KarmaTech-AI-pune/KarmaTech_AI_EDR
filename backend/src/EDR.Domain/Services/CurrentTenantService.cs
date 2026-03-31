@@ -87,6 +87,12 @@ namespace EDR.Domain.Services
                     return false;
                 }
 
+                if (tenantInfo.IsBlocked)
+                {
+                    _logger.LogWarning("Tenant {TenantId} is blocked. Reason: {Reason}", tenant, tenantInfo.BlockReason);
+                    return false;
+                }
+
                 var tenantDb = await _context.TenantDatabases.Where(x => x.TenantId == tenantInfo.Id).FirstOrDefaultAsync();
                 if (tenantDb == null)
                 {

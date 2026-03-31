@@ -103,13 +103,16 @@ namespace EDR.Application.Services
                 return false;
 
             var tenants = _tenantDbContext.Tenants.ToList();
-            var selectedTenant = tenants.FirstOrDefault(t => t.Domain.Equals(tenantDomain, StringComparison.OrdinalIgnoreCase));
+            var selectedTenant = tenants.FirstOrDefault(t => 
+                t.Domain.Equals(tenantDomain, StringComparison.OrdinalIgnoreCase) || 
+                t.Id.ToString() == tenantDomain);
 
-            var tenant = await _tenantDbContext.Tenants.FirstOrDefaultAsync(t => t.Domain == tenantDomain);
             if (selectedTenant == null)
             {
                 return false;
             }
+
+            var tenant = selectedTenant;
 
             httpContext.Items["TenantId"] = tenant.Id;
             httpContext.Items["TenantDomain"] = tenant.Domain;
@@ -176,6 +179,30 @@ namespace EDR.Application.Services
             return isSuperAdminClaim?.Value == "true";
         }
 
+        public async Task<Tenant?> GetTenantByIdentifierAsync(string identifier)
+        {
+            if (string.IsNullOrEmpty(identifier))
+                return null;
+
+            var tenant = await _tenantDbContext.Tenants
+                .FirstOrDefaultAsync(t => t.Domain == identifier);
+
+            // If not found, try reaching by subdomain/name part
+            if (tenant == null)
+            {
+                tenant = await _tenantDbContext.Tenants
+                    .FirstOrDefaultAsync(t => t.Domain.StartsWith(identifier + "."));
+            }
+
+            if (tenant == null && int.TryParse(identifier, out var tenantId))
+            {
+                tenant = await _tenantDbContext.Tenants
+                    .FirstOrDefaultAsync(t => t.Id == tenantId);
+            }
+
+            return tenant;
+        }
+
         public async Task<Tenant> GetCurrentTenantAsync()
         {
             var tenantId = await GetCurrentTenantIdAsync();
@@ -187,20 +214,22 @@ namespace EDR.Application.Services
 
         public async Task<bool> ValidateTenantAccessAsync(string userId, int tenantId)
         {
-            // For super admin, allow access to any tenant
+            // For super admin (System Admin), allow access to any tenant
             if (IsSuperAdminFromClaims())
                 return true;
 
-            // For regular users, check if they belong to the tenant
-            // This would query the TenantUser table
-            // For now, return true (implement actual validation)
-            return true;
+            // For regular users, check if they belong to the tenant and are active
+            // Note: tenantId 1 is the default workspace (mean db) that all users can access.
+            if (tenantId <= 1) return true;
+
+            return await _tenantDbContext.TenantUsers
+                .AnyAsync(tu => tu.UserId == userId && tu.TenantId == tenantId && tu.IsActive);
         }
 
         public async Task<List<TenantUser>> GetTenantUsersByUserIdAsync(string userId)
         {
             return await _tenantDbContext.TenantUsers
-                .Where(tu => tu.UserId == userId && tu.IsActive)
+                .Where(tu => tu.UserId == userId)
                 .Include(tu => tu.Tenant)
                 .ToListAsync();
         }

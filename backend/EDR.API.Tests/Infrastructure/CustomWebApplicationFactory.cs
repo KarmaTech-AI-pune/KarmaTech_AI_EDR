@@ -214,6 +214,7 @@ namespace EDR.API.Tests.Infrastructure
     {
         public int? TenantId { get; set; } = 1;
 
+        public Task<Tenant?> GetTenantByIdentifierAsync(string identifier) => Task.FromResult<Tenant?>(new Tenant { Id = 1, Domain = identifier ?? "localhost", Name = "Test Tenant" });
         public Task<string> GetCurrentTenantDomain() => Task.FromResult("localhost");
         public Task<Tenant> GetCurrentTenantAsync() => Task.FromResult(new Tenant { Id = 1, Domain = "localhost", Name = "Test Tenant" });
         public Task<int?> GetCurrentTenantIdAsync() => Task.FromResult<int?>(1);
