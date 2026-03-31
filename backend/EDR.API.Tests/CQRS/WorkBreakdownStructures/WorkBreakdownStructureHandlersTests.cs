@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using EDR.Application.CQRS.WorkBreakdownStructures.Commands;
 using EDR.Application.CQRS.WorkBreakdownStructures.Handlers;
 using EDR.Application.CQRS.WorkBreakdownStructures.Queries;
@@ -55,6 +56,87 @@ namespace EDR.API.Tests.CQRS.WorkBreakdownStructures
 
             _unitOfWorkMock.Setup(x => x.SaveChangesAsync())
                 .Returns(() => _context.SaveChangesAsync());
+        }
+
+        [Fact]
+        public async Task SetWBSCommandHandler_NewWBS_CreatesHeaderAndTasks()
+        {
+            // Arrange
+            _context.Projects.Add(new Project { Id = 1, Name = "P1", TenantId = 1 });
+            await _context.SaveChangesAsync();
+
+            var loggerMock = new Mock<ILogger<SetWBSCommandHandler>>();
+            var handler = new SetWBSCommandHandler(
+                _context, 
+                _unitOfWorkMock.Object, 
+                _projectHistoryServiceMock.Object, 
+                _userContextMock.Object, 
+                loggerMock.Object, 
+                _wbsVersionRepositoryMock.Object, 
+                _wbsOptionRepositoryMock.Object);
+
+            var command = new SetWBSCommand(1, new WBSMasterDto
+            {
+                WbsHeaderId = 0, // 0 indicates a new header should be created
+                WorkBreakdownStructures = new List<WBSStructureMasterDto>
+                {
+                    new WBSStructureMasterDto
+                    {
+                        Name = "Group 1",
+                        Tasks = new List<WBSTaskDto>
+                        {
+                            new WBSTaskDto { Title = "Task 1", Level = WBSTaskLevel.Level1, DisplayOrder = 1, TaskType = TaskType.Manpower }
+                        }
+                    }
+                }
+            });
+
+            // Act
+            var result = await handler.Handle(command, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.True(result.WbsHeaderId > 0);
+            Assert.Single(_context.WBSHeaders);
+            Assert.Single(_context.WorkBreakdownStructures);
+            Assert.Single(_context.WBSTasks);
+        }
+
+        [Fact]
+        public async Task SetWBSCommandHandler_ExistingWBS_UpdatesHeaderAndIncrementVersion()
+        {
+            // Arrange
+            _context.Projects.Add(new Project { Id = 1, Name = "P1", TenantId = 1 });
+            var header = new WBSHeader { Id = 1, ProjectId = 1, Version = "1.0", TenantId = 1, ApprovalStatus = PMWorkflowStatusEnum.Approved, WorkBreakdownStructures = new List<WorkBreakdownStructure>() };
+            _context.WBSHeaders.Add(header);
+            await _context.SaveChangesAsync();
+
+            var loggerMock = new Mock<ILogger<SetWBSCommandHandler>>();
+            var handler = new SetWBSCommandHandler(
+                _context, 
+                _unitOfWorkMock.Object, 
+                _projectHistoryServiceMock.Object, 
+                _userContextMock.Object, 
+                loggerMock.Object, 
+                _wbsVersionRepositoryMock.Object, 
+                _wbsOptionRepositoryMock.Object);
+
+            var command = new SetWBSCommand(1, new WBSMasterDto
+            {
+                WbsHeaderId = 1,
+                WorkBreakdownStructures = new List<WBSStructureMasterDto>()
+            });
+
+            // Act
+            var result = await handler.Handle(command, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(1, result.WbsHeaderId);
+            
+            var updatedHeader = _context.WBSHeaders.Find(1);
+            Assert.Equal("2.0", updatedHeader.Version);
+            Assert.Equal(PMWorkflowStatusEnum.Initial, updatedHeader.ApprovalStatus);
         }
 
         public void Dispose()
@@ -178,6 +260,166 @@ namespace EDR.API.Tests.CQRS.WorkBreakdownStructures
             // Assert
             Assert.NotNull(result);
             Assert.Equal(1, result.WbsHeaderId);
+        }
+
+        [Fact]
+        public async Task GetApprovedWBSQueryHandler_ReturnsApprovedWBS()
+        {
+            // Arrange
+            var wbsTaskRepositoryMock = new Mock<IWBSTaskRepository>();
+            var approvedWBS = new List<WorkBreakdownStructure>
+            {
+                new WorkBreakdownStructure { Id = 1, WBSHeader = new WBSHeader { ProjectId = 1 }, Tasks = new List<WBSTask>() }
+            };
+            wbsTaskRepositoryMock.Setup(x => x.GetApprovedWBSAsync(1)).ReturnsAsync(approvedWBS);
+
+            var loggerMock = new Mock<ILogger<GetApprovedWBSQueryHandler>>();
+            var handler = new GetApprovedWBSQueryHandler(wbsTaskRepositoryMock.Object, loggerMock.Object);
+            var query = new GetApprovedWBSQuery { ProjectId = 1 };
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal(1, result[0].Id);
+        }
+
+        [Fact]
+        public async Task GetWBSTasksQueryHandler_ReturnsTasks()
+        {
+            // Arrange
+            var header = new WBSHeader { Id = 1, ProjectId = 1, TenantId = 1, IsActive = true };
+            var wbs = new WorkBreakdownStructure { Id = 1, WBSHeaderId = 1, TenantId = 1, WBSHeader = header };
+            var task = new WBSTask 
+            { 
+                Id = 1, 
+                WorkBreakdownStructureId = 1, 
+                TenantId = 1, 
+                Level = WBSTaskLevel.Level1,
+                WorkBreakdownStructure = wbs,
+                Title = "T1"
+            };
+            
+            _context.WBSHeaders.Add(header);
+            _context.WorkBreakdownStructures.Add(wbs);
+            _context.WBSTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            var handler = new GetWBSTasksQueryHandler(_context);
+            var query = new GetWBSTasksQuery(1);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("T1", result[0].Title);
+        }
+
+        [Fact]
+        public async Task GetLevelThreeWbsTasksByProjectIdQueryHandler_ReturnsLevel3Tasks()
+        {
+            // Arrange
+            var header = new WBSHeader { Id = 1, ProjectId = 1, TenantId = 1, IsActive = true };
+            var wbs = new WorkBreakdownStructure { Id = 1, WBSHeaderId = 1, TenantId = 1, WBSHeader = header };
+            var task = new WBSTask 
+            { 
+                Id = 1, 
+                WorkBreakdownStructureId = 1, 
+                TenantId = 1, 
+                Level = WBSTaskLevel.Level3,
+                WorkBreakdownStructure = wbs,
+                Title = "T3"
+            };
+            
+            _context.WBSHeaders.Add(header);
+            _context.WorkBreakdownStructures.Add(wbs);
+            _context.WBSTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            var handler = new GetLevelThreeWbsTasksByProjectIdQueryHandler(_context);
+            var query = new GetLevelThreeWbsTasksByProjectIdQuery(1);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("T3", result[0].Title);
+        }
+
+        private Mock<UserManager<User>> GetUserManagerMock()
+        {
+            var store = new Mock<IUserStore<User>>();
+            return new Mock<UserManager<User>>(store.Object, null, null, null, null, null, null, null, null);
+        }
+
+        [Fact]
+        public async Task GetManpowerResourcesWithPlannedHoursQueryHandler_ReturnsResources()
+        {
+            // Arrange
+            _context.Projects.Add(new Project { Id = 1, TenantId = 1 });
+            var header = new WBSHeader { Id = 1, ProjectId = 1, TenantId = 1, IsActive = true };
+            var wbs = new WorkBreakdownStructure { Id = 1, WBSHeaderId = 1, TenantId = 1, WBSHeader = header };
+            var task = new WBSTask 
+            { 
+                Id = 1, 
+                WorkBreakdownStructureId = 1, 
+                TenantId = 1, 
+                TaskType = TaskType.Manpower,
+                WorkBreakdownStructure = wbs,
+                Title = "Manpower Task"
+            };
+            _context.WBSHeaders.Add(header);
+            _context.WorkBreakdownStructures.Add(wbs);
+            _context.WBSTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            var userManagerMock = GetUserManagerMock();
+            var loggerMock = new Mock<ILogger<GetManpowerResourcesWithPlannedHoursQueryHandler>>();
+            var handler = new GetManpowerResourcesWithPlannedHoursQueryHandler(_context, userManagerMock.Object, loggerMock.Object);
+            var query = new GetManpowerResourcesWithPlannedHoursQuery(1);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(1, result.ProjectId);
+        }
+
+        [Fact]
+        public async Task GetWBSResourceDataQueryHandler_ReturnsAllocations()
+        {
+            // Arrange
+            var header = new WBSHeader { Id = 1, ProjectId = 1, TenantId = 1, IsActive = true };
+            var wbs = new WorkBreakdownStructure { Id = 1, WBSHeaderId = 1, TenantId = 1, WBSHeader = header };
+            var task = new WBSTask 
+            { 
+                Id = 1, 
+                WorkBreakdownStructureId = 1, 
+                TenantId = 1, 
+                Level = WBSTaskLevel.Level3,
+                TaskType = TaskType.Manpower,
+                WorkBreakdownStructure = wbs,
+                Title = "T3"
+            };
+            _context.WBSHeaders.Add(header);
+            _context.WorkBreakdownStructures.Add(wbs);
+            _context.WBSTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            var userManagerMock = GetUserManagerMock();
+            var handler = new GetWBSResourceDataQueryHandler(_context, userManagerMock.Object);
+            var query = new GetWBSResourceDataQuery(1);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(1, result.ProjectId);
         }
     }
 }

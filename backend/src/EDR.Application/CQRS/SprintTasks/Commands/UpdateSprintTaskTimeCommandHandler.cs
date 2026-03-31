@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using EDR.Domain.GenericRepository;
 using EDR.Domain.Entities;using System.Threading;
 using System.Threading.Tasks;
@@ -58,19 +58,6 @@ namespace EDR.Application.CQRS.SprintTasks.Commands{
             task.SprintWbsPlanId = request.SprintWbsPlanId; // Ensure link is correct
             
             await _sprintTaskRepository.UpdateAsync(task);
-
-            // 5. Update SprintWbsPlan
-            // Logic: If I worked 2 hours (delta +2), the remaining plan reduces by 2.
-            // Plan Remaining = Plan Remaining - Delta
-            // Note: SprintWbsPlan.RemainingHours is decimal, Task is int. Casting required.
-            plan.RemainingHours -= (decimal)deltaActual;
-
-            if (deltaActual > 0)
-            {
-                 plan.IsConsumed = true;
-            }
-
-            await _sprintWbsPlanRepository.UpdateAsync(plan);
             
             return true;
         }

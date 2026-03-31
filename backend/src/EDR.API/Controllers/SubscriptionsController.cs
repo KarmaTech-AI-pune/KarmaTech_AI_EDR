@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EDR.Domain.Entities;
 using EDR.Domain.Database;
@@ -125,11 +125,11 @@ namespace EDR.API.Controllers
                 return NotFound();
             }
 
-            _context.Entry(existingPlan).CurrentValues.SetValues(plan);
+            _projectManagementContext.Entry(existingPlan).CurrentValues.SetValues(plan);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _projectManagementContext.SaveChangesAsync();
                 _logger.LogInformation("Updated subscription plan {PlanName}", plan.Name);
             }
             catch (DbUpdateConcurrencyException)
@@ -166,7 +166,7 @@ namespace EDR.API.Controllers
             }
 
             _projectManagementContext.SubscriptionPlans.Remove(plan);
-            await _context.SaveChangesAsync();
+            await _projectManagementContext.SaveChangesAsync();
 
             _logger.LogInformation("Deleted subscription plan {PlanName}", plan.Name);
             return NoContent();

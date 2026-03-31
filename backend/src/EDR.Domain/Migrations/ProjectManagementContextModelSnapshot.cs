@@ -3405,57 +3405,6 @@ namespace EDR.Domain.Migrations
                     b.ToTable("Settings");
                 });
 
-            modelBuilder.Entity("EDR.Domain.Entities.SprintDailyProgress", b =>
-                {
-                    b.Property<int>("DailyProgressId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DailyProgressId"));
-
-                    b.Property<int>("AddedStoryPoints")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CompletedStoryPoints")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<int>("IdealRemainingPoints")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PlannedStoryPoints")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RemainingStoryPoints")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SprintPlanId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.HasKey("DailyProgressId");
-
-                    b.HasIndex("SprintPlanId");
-
-                    b.ToTable("SprintDailyProgresses");
-                });
-
             modelBuilder.Entity("EDR.Domain.Entities.SprintPlan", b =>
                 {
                     b.Property<int>("SprintId")
@@ -3815,8 +3764,14 @@ namespace EDR.Domain.Migrations
                     b.Property<string>("AssignedUserName")
                         .HasColumnType("text");
 
+                    b.Property<int>("BacklogVersion")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsCarryoverApplied")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsConsumed")
                         .HasColumnType("boolean");
@@ -3982,16 +3937,16 @@ namespace EDR.Domain.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("RazorpayCustomerId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("RazorpaySubscriptionId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
-
-                    b.Property<string>("StripeCustomerId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("StripeSubscriptionId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime?>("SubscriptionEndDate")
                         .HasColumnType("timestamp without time zone");
@@ -4043,6 +3998,55 @@ namespace EDR.Domain.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("TenantDatabases");
+                });
+
+            modelBuilder.Entity("EDR.Domain.Entities.TenantInvoice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("InvoiceId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("PaidDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("PaymentId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ReceiptUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("TenantInvoices");
                 });
 
             modelBuilder.Entity("EDR.Domain.Entities.TenantUser", b =>
@@ -5328,7 +5332,7 @@ namespace EDR.Domain.Migrations
                     b.HasOne("EDR.Domain.Entities.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("EDR.Domain.Entities.PMWorkflowStatus", "Status")
@@ -5715,17 +5719,6 @@ namespace EDR.Domain.Migrations
                     b.Navigation("ScoringDescriptions");
                 });
 
-            modelBuilder.Entity("EDR.Domain.Entities.SprintDailyProgress", b =>
-                {
-                    b.HasOne("EDR.Domain.Entities.SprintPlan", "SprintPlan")
-                        .WithMany("SprintDailyProgresses")
-                        .HasForeignKey("SprintPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SprintPlan");
-                });
-
             modelBuilder.Entity("EDR.Domain.Entities.SprintPlan", b =>
                 {
                     b.HasOne("EDR.Domain.Entities.Project", "Project")
@@ -5844,6 +5837,17 @@ namespace EDR.Domain.Migrations
                 {
                     b.HasOne("EDR.Domain.Entities.Tenant", "Tenant")
                         .WithMany("TenantDatabases")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("EDR.Domain.Entities.TenantInvoice", b =>
+                {
+                    b.HasOne("EDR.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -6348,8 +6352,6 @@ namespace EDR.Domain.Migrations
 
             modelBuilder.Entity("EDR.Domain.Entities.SprintPlan", b =>
                 {
-                    b.Navigation("SprintDailyProgresses");
-
                     b.Navigation("SprintTasks");
                 });
 

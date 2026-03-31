@@ -259,9 +259,10 @@ const transformDataForMonthlyProgress = (
           ? new Date(selectedYear, selectedMonth - 1, 1)
           : new Date();
         
-        const targetMonth = targetDate.toLocaleString('default', { month: 'long' });
+        // Backend returns month in MM-YYYY format, so we need to match that
+        const targetMonthNumber = String(targetDate.getMonth() + 1).padStart(2, '0');
         const targetYear = targetDate.getFullYear();
-        const targetMonthYear = `${targetMonth} ${targetYear}`;
+        const targetMonthYear = `${targetMonthNumber}-${targetYear}`;
         
         const normalizeString = (str: string) => 
           str?.trim().toLowerCase().replace(/\s+/g, ' ') || '';
@@ -270,24 +271,15 @@ const transformDataForMonthlyProgress = (
         
         const match = assigneeProgressResult.value.find(ap => {
           const nameMatch = normalizeString(ap.assigneeName) === normalizedEmployeeName;
-          const monthMatch = normalizeString(ap.month) === normalizeString(targetMonthYear);
+          const monthMatch = ap.month === targetMonthYear;
           return nameMatch && monthMatch;
         });
         
         if (match) {
-          consumedHours = match.employeeLoggedHours; // Logged hours
-          approvedHours = match.actualHours; // Actual hours
+          consumedHours = match.employeeLoggedHours || 0; // Logged hours
+          approvedHours = match.actualHours || 0; // Actual hours
         }
       }
-      
-      console.log('📋 Entry:', {
-        name: resource.assignedUserName,
-        rate: resource.costRate,
-        planned: currentMonthHours,
-        consumed: consumedHours,
-        approved: approvedHours,
-        balance: currentMonthHours - consumedHours
-      });
       
       return {
         workAssignment: resource.title || resource.wbsOptionLabel,
@@ -310,14 +302,6 @@ const transformDataForMonthlyProgress = (
     const paymentTotal = manpowerData.reduce((sum, entry) => sum + (entry.payment || 0), 0);
     const balanceTotal = plannedTotal - consumedTotal;
     const nextMonthPlanningTotal = manpowerData.reduce((sum, entry) => sum + (entry.nextMonthPlanning || 0), 0);
-
-    console.log('📊 Summary:', {
-      total: manpowerData.length,
-      plannedTotal,
-      consumedTotal,
-      balanceTotal,
-      withActualHours: manpowerData.filter(e => e.consumed > 0).length
-    });
 
     if (transformedData.manpowerPlanning) {
       transformedData.manpowerPlanning.manpower = manpowerData;

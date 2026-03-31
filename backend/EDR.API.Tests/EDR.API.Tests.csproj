@@ -20,10 +20,12 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.10" />
+    <PackageReference Include="MockQueryable.Moq" Version="7.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\src\EDR.Application\EDR.Application.csproj" />
+    <ProjectReference Include="..\src\EDR.Domain\EDR.Domain.csproj" />
     <ProjectReference Include="..\src\EDR.API\EDR.API.csproj" />
   </ItemGroup>
 

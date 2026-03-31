@@ -17,13 +17,13 @@ namespace EDR.Domain.Entities
         public int FormId { get; set; }
         
         [ForeignKey("FormId")]
-        [DeleteBehavior(DeleteBehavior.NoAction)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public virtual JobStartForm JobStartForm { get; set; }
         
         public int ProjectId { get; set; }
         
         [ForeignKey("ProjectId")]
-        [DeleteBehavior(DeleteBehavior.NoAction)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public virtual Project Project { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

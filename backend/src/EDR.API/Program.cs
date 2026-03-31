@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using EDR.Application.Extensions;
@@ -147,6 +147,9 @@ public class Program
         builder.Services.AddScoped<ITenantUserMigrationStrategy, IsolatedTenantUserMigrationStrategy>();
         builder.Services.AddScoped<ITenantUserMigrationStrategy, SharedTenantUserMigrationStrategy>();
         builder.Services.AddScoped<ITenantUserMigrationStrategySelector, TenantUserMigrationStrategySelector>();
+
+        builder.Services.AddHostedService<BillingBackgroundService>();
+
         return builder;
     }
 }

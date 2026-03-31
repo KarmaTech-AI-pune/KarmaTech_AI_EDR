@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using EDR.Application.Dtos;
 using EDR.Domain.Database;
@@ -35,11 +35,17 @@ namespace EDR.Application.CQRS.SprintWbsPlans.Queries
 
             if (project == null) return null;
 
-            // 2. Fetch Unconsumed SprintWbsPlans for this project
-            // We need to fetch all unconsumed first to perform the custom MonthYear sorting in memory
-            // because "MM-yyyy" string sorting in SQL is unreliable for date logic.
+            // 2. Fetch Latest Backlog Version for this project
+            var maxVersion = await _context.SprintWbsPlans
+                .Where(x => x.ProjectId == request.ProjectId)
+                .Select(x => (int?)x.BacklogVersion)
+                .MaxAsync(cancellationToken) ?? 0;
+
+            if (maxVersion == 0) return null;
+
+            // 3. Fetch Unconsumed SprintWbsPlans for this project and only for the latest version
             var unconsumedPlans = await _context.SprintWbsPlans
-                .Where(x => x.ProjectId == request.ProjectId && !x.IsConsumed)
+                .Where(x => x.ProjectId == request.ProjectId && !x.IsConsumed && x.BacklogVersion == maxVersion)
                 .ToListAsync(cancellationToken);
 
             if (!unconsumedPlans.Any())
@@ -65,13 +71,68 @@ namespace EDR.Application.CQRS.SprintWbsPlans.Queries
 
             var targetMonth = nextBatch.Key.MonthYear;
             var targetSprint = nextBatch.Key.SprintNumber;
+            var parsedTargetDate = nextBatch.FirstOrDefault()?.ParsedDate ?? DateTime.MaxValue;
 
             // 4. Extract Plans for that specific batch
             var currentPlans = nextBatch.Select(x => x.Plan)
                                         .OrderBy(x => x.ProgramSequence)
                                         .ToList();
 
-            // 5. Construct Response
+            // 5. Carryover Logic (Persistent)
+            // For each task in the current batch, find its IMMEDIATE previous sprint in the same version.
+            var wbsTaskIds = currentPlans.Where(p => p.WBSTaskId.HasValue)
+                                         .Select(p => p.WBSTaskId.Value)
+                                         .Distinct()
+                                         .ToList();
+
+            if (wbsTaskIds.Any())
+            {
+                // Fetch ALL sprints for these tasks in the same backlog version to find "immediate previous"
+                var allSprintsForTasks = await _context.SprintWbsPlans
+                    .Where(x => x.ProjectId == request.ProjectId && 
+                                x.BacklogVersion == maxVersion && 
+                                x.WBSTaskId.HasValue && 
+                                wbsTaskIds.Contains(x.WBSTaskId.Value))
+                    .ToListAsync(cancellationToken);
+
+                bool anyChanged = false;
+                var groupedSprints = allSprintsForTasks.GroupBy(p => new { p.ProjectId, p.WBSTaskId });
+
+                foreach (var group in groupedSprints)
+                {
+                    var orderedPlans = group
+                        .OrderBy(x => int.Parse(x.MonthYear.Split('-')[1])) // Year
+                        .ThenBy(x => int.Parse(x.MonthYear.Split('-')[0])) // Month
+                        .ThenBy(x => x.SprintNumber)
+                        .ToList();
+
+                    for (int i = 0; i < orderedPlans.Count; i++)
+                    {
+                        var currentSprint = orderedPlans[i];
+                        var previousSprint = i > 0 ? orderedPlans[i - 1] : null;
+
+                        if (previousSprint != null 
+                            && previousSprint.RemainingHours > 0 
+                            && !currentSprint.IsCarryoverApplied)
+                        {
+                            currentSprint.PlannedHours += previousSprint.RemainingHours;
+                            currentSprint.RemainingHours += previousSprint.RemainingHours;
+
+                            currentSprint.IsCarryoverApplied = true;
+                            anyChanged = true;
+                        }
+
+                        Console.WriteLine($"Project: {currentSprint.ProjectId}, Task: {currentSprint.WBSTaskId}, Sprint: {currentSprint.SprintNumber}, Remaining: {currentSprint.RemainingHours}");
+                    }
+                }
+
+                if (anyChanged)
+                {
+                    await _context.SaveChangesAsync(cancellationToken);
+                }
+            }
+
+            // 6. Construct Response
             return new CurrentSprintWbsPlanResponseDto
             {
                 Project = project,

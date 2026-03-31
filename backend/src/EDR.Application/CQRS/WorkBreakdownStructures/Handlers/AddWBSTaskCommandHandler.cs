@@ -59,17 +59,48 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 var allNewTasks = new List<WBSTask>();
                 var tasksNeedingChildData = new List<(WBSTask task, WBSTaskDto dto)>();
 
-                // 3. Create Tasks (First Pass - Basic Info)
-                // We do NOT set ParentId here, as we might need IDs that don't exist yet.
+                // 3. Upsert Tasks (First Pass - Basic Info)
                 foreach (var taskDto in wbsGroupDto.Tasks)
                 {
-                    var taskEntity = await CreateWBSTaskBasic(
-                        taskDto,
-                        wbsGroupEntity,
-                        wbsHeader.TenantId,
-                        cancellationToken);
+                    WBSTask taskEntity;
+                    if (taskDto.Id > 0)
+                    {
+                        taskEntity = await _context.WBSTasks
+                            .Include(t => t.UserWBSTasks)
+                            .Include(t => t.PlannedHours)
+                            .FirstOrDefaultAsync(t => t.Id == taskDto.Id, cancellationToken);
 
-                    _context.WBSTasks.Add(taskEntity);
+                        if (taskEntity != null)
+                        {
+                            // Update existing task
+                            taskEntity.Title = taskDto.Title;
+                            taskEntity.Description = taskDto.Description;
+                            taskEntity.Level = taskDto.Level;
+                            taskEntity.DisplayOrder = taskDto.DisplayOrder;
+                            taskEntity.EstimatedBudget = taskDto.EstimatedBudget;
+                            taskEntity.StartDate = taskDto.StartDate;
+                            taskEntity.EndDate = taskDto.EndDate;
+                            taskEntity.TaskType = taskDto.TaskType;
+                            taskEntity.WBSOptionId = taskDto.WBSOptionId;
+                            taskEntity.UpdatedAt = DateTime.UtcNow;
+                            taskEntity.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+
+                            _context.WBSTasks.Update(taskEntity);
+                        }
+                        else
+                        {
+                            // Task with ID not found, treat as new
+                            taskEntity = await CreateWBSTaskBasic(taskDto, wbsGroupEntity, wbsHeader.TenantId, cancellationToken);
+                            _context.WBSTasks.Add(taskEntity);
+                        }
+                    }
+                    else
+                    {
+                        // Create new task
+                        taskEntity = await CreateWBSTaskBasic(taskDto, wbsGroupEntity, wbsHeader.TenantId, cancellationToken);
+                        _context.WBSTasks.Add(taskEntity);
+                    }
+
                     allNewTasks.Add(taskEntity);
                     tasksNeedingChildData.Add((taskEntity, taskDto));
                 }
@@ -165,6 +196,18 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             }
             else
             {
+                // Deactivate any existing active headers for this project to prevent duplicates in queries
+                var existingHeaders = await _context.WBSHeaders
+                    .Where(h => h.ProjectId == request.ProjectId && h.IsActive)
+                    .ToListAsync(cancellationToken);
+                
+                foreach (var oldHeader in existingHeaders)
+                {
+                    _logger.LogInformation("AddWBSTaskCommandHandler: Deactivating existing WBSHeader {Id} for project {ProjectId}", oldHeader.Id, request.ProjectId);
+                    oldHeader.IsActive = false;
+                    _context.WBSHeaders.Update(oldHeader);
+                }
+
                 wbsHeader = new WBSHeader
                 {
                     TenantId = _context.TenantId ?? 0, // IMPORTANT: Set TenantId
@@ -352,6 +395,9 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
 
         private async Task UpdateUserAssignment(WBSTask taskEntity, WBSTaskDto taskDto)
         {
+            // Clear existing assignments to prevent duplicates
+            taskEntity.UserWBSTasks.Clear();
+
              // Handle Manpower tasks
             if (taskEntity.TaskType == TaskType.Manpower)
             {
@@ -417,6 +463,9 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
 
         private async Task UpdatePlannedHours(WBSTask taskEntity, WBSTaskDto taskDto, int projectId)
         {
+            // Clear existing planned hours to prevent duplicates
+            taskEntity.PlannedHours.Clear();
+
              // Ensure a WBSTaskPlannedHourHeader exists for this project and task type
             var plannedHourHeader = await _context.WBSTaskPlannedHourHeaders
                 .FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskEntity.TaskType);
