@@ -154,7 +154,7 @@ describe('LoginScreen', () => {
         renderLoginScreen();
 
         expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+        expect(screen.getByLabelText('Password')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
         expect(screen.getByText(/login to your account/i)).toBeInTheDocument();
     });
@@ -190,7 +190,7 @@ describe('LoginScreen', () => {
         renderLoginScreen();
 
         fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
         fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
         await waitFor(() => {
@@ -214,7 +214,7 @@ describe('LoginScreen', () => {
         renderLoginScreen();
 
         fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } });
-        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpass' } });
+        fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrongpass' } });
         fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
         await waitFor(() => {
@@ -231,7 +231,7 @@ describe('LoginScreen', () => {
         renderLoginScreen();
 
         fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
         fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
         await waitFor(() => expect(screen.getByText(/Network error/i)).toBeInTheDocument());
@@ -267,7 +267,7 @@ describe('LoginScreen', () => {
         renderLoginScreen();
 
         fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
         fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
         await waitFor(() => {

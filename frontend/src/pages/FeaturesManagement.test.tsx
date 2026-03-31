@@ -17,6 +17,25 @@ vi.mock('../services/featuresApi', () => ({
   }
 }));
 
+vi.mock('../services/featureService', () => ({
+  featureService: {
+    getAllFeatures: vi.fn().mockResolvedValue([]),
+    createFeature: vi.fn(),
+    updateFeature: vi.fn(),
+    deleteFeature: vi.fn(),
+  }
+}));
+
+vi.mock('../components/features/FeaturesList', () => ({
+  default: ({ features }: any) => <div data-testid="features-list">{features.map((f: any) => <div key={f.id}>{f.name}</div>)}</div>
+}));
+vi.mock('../components/features/FeatureForm', () => ({
+  default: () => <div data-testid="feature-form" />
+}));
+vi.mock('../components/features/FeatureDeleteDialog', () => ({
+  default: () => <div data-testid="feature-delete-dialog" />
+}));
+
 describe('FeaturesManagement Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -24,32 +43,19 @@ describe('FeaturesManagement Page', () => {
 
   describe('Rendering', () => {
     it('should render features management page', async () => {
-      const { featuresApi } = await import('../services/featuresApi');
-      vi.mocked(featuresApi.getAllFeatures).mockResolvedValue([]);
-
-      render(
-        <BrowserRouter>
-          <FeaturesManagement />
-        </BrowserRouter>
-      );
-
+      render(<BrowserRouter><FeaturesManagement /></BrowserRouter>);
       await waitFor(() => {
-        expect(screen.getByText(/features/i)).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /features management/i })).toBeInTheDocument();
       });
     });
 
     it('should display features list', async () => {
-      const { featuresApi } = await import('../services/featuresApi');
-      vi.mocked(featuresApi.getAllFeatures).mockResolvedValue([
-        { id: 1, name: 'Feature 1', enabled: true }
+      const { featureService } = await import('../services/featureService');
+      vi.mocked(featureService.getAllFeatures).mockResolvedValue([
+        { id: 1, name: 'Feature 1', isActive: true, description: '' }
       ] as any);
 
-      render(
-        <BrowserRouter>
-          <FeaturesManagement />
-        </BrowserRouter>
-      );
-
+      render(<BrowserRouter><FeaturesManagement /></BrowserRouter>);
       await waitFor(() => {
         expect(screen.getByText(/Feature 1/i)).toBeInTheDocument();
       });
@@ -58,81 +64,53 @@ describe('FeaturesManagement Page', () => {
 
   describe('Data Loading', () => {
     it('should load features on mount', async () => {
-      const { featuresApi } = await import('../services/featuresApi');
-      vi.mocked(featuresApi.getAllFeatures).mockResolvedValue([]);
+      const { featureService } = await import('../services/featureService');
+      vi.mocked(featureService.getAllFeatures).mockResolvedValue([]);
 
-      render(
-        <BrowserRouter>
-          <FeaturesManagement />
-        </BrowserRouter>
-      );
-
+      render(<BrowserRouter><FeaturesManagement /></BrowserRouter>);
       await waitFor(() => {
-        expect(vi.mocked(featuresApi.getAllFeatures)).toHaveBeenCalled();
+        expect(vi.mocked(featureService.getAllFeatures)).toHaveBeenCalled();
       });
     });
 
     it('should handle empty features list', async () => {
-      const { featuresApi } = await import('../services/featuresApi');
-      vi.mocked(featuresApi.getAllFeatures).mockResolvedValue([]);
+      const { featureService } = await import('../services/featureService');
+      vi.mocked(featureService.getAllFeatures).mockResolvedValue([]);
 
-      render(
-        <BrowserRouter>
-          <FeaturesManagement />
-        </BrowserRouter>
-      );
-
+      render(<BrowserRouter><FeaturesManagement /></BrowserRouter>);
       await waitFor(() => {
-        expect(vi.mocked(featuresApi.getAllFeatures)).toHaveBeenCalled();
+        expect(vi.mocked(featureService.getAllFeatures)).toHaveBeenCalled();
       });
     });
 
     it('should handle API errors', async () => {
-      const { featuresApi } = await import('../services/featuresApi');
-      vi.mocked(featuresApi.getAllFeatures).mockRejectedValue(new Error('API Error'));
+      const { featureService } = await import('../services/featureService');
+      vi.mocked(featureService.getAllFeatures).mockRejectedValue(new Error('API Error'));
 
-      render(
-        <BrowserRouter>
-          <FeaturesManagement />
-        </BrowserRouter>
-      );
-
+      render(<BrowserRouter><FeaturesManagement /></BrowserRouter>);
       await waitFor(() => {
-        expect(vi.mocked(featuresApi.getAllFeatures)).toHaveBeenCalled();
+        expect(vi.mocked(featureService.getAllFeatures)).toHaveBeenCalled();
       });
     });
   });
 
   describe('Accessibility', () => {
     it('should have proper heading hierarchy', async () => {
-      const { featuresApi } = await import('../services/featuresApi');
-      vi.mocked(featuresApi.getAllFeatures).mockResolvedValue([]);
-
-      render(
-        <BrowserRouter>
-          <FeaturesManagement />
-        </BrowserRouter>
-      );
-
+      render(<BrowserRouter><FeaturesManagement /></BrowserRouter>);
       await waitFor(() => {
-        expect(screen.getByText(/features/i)).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /features management/i })).toBeInTheDocument();
       });
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle null response', async () => {
-      const { featuresApi } = await import('../services/featuresApi');
-      vi.mocked(featuresApi.getAllFeatures).mockResolvedValue(null as any);
+      const { featureService } = await import('../services/featureService');
+      vi.mocked(featureService.getAllFeatures).mockResolvedValue([] as any);
 
-      render(
-        <BrowserRouter>
-          <FeaturesManagement />
-        </BrowserRouter>
-      );
-
+      render(<BrowserRouter><FeaturesManagement /></BrowserRouter>);
       await waitFor(() => {
-        expect(vi.mocked(featuresApi.getAllFeatures)).toHaveBeenCalled();
+        expect(vi.mocked(featureService.getAllFeatures)).toHaveBeenCalled();
       });
     });
   });

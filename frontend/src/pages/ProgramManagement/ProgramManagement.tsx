@@ -24,7 +24,7 @@ import { usePrograms } from '../../hooks/usePrograms';
 import { Pagination } from '../../components/Pagination';
 import CreateProgramDialog from '../../components/ProgramManagement/CreateProgramDialog';
 import EditProgramDialog from '../../components/ProgramManagement/EditProgramDialog';
-import { programApi } from '../../services/api/programApi';
+import { programApi } from '../../services/programApi';
 import { Program } from '../../types/program';
 import { useProject } from '../../context/ProjectContext';
 

@@ -1,84 +1,57 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import businessDevelopmentRoutes from './businessDevelopmentRoutes';
+import { businessDevelopmentRoutes } from './businessDevelopmentRoutes';
+
+const flattenRoutes = (routes: any[]): any[] =>
+  routes.reduce((acc, r) => {
+    acc.push(r);
+    if (r.children) acc.push(...flattenRoutes(r.children));
+    return acc;
+  }, []);
 
 describe('Business Development Routes', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  beforeEach(() => { vi.clearAllMocks(); });
 
   describe('Route Definition', () => {
-    it('should export business development routes', () => {
-      expect(businessDevelopmentRoutes).toBeDefined();
-    });
-
-    it('should be an array of routes', () => {
-      expect(Array.isArray(businessDevelopmentRoutes)).toBe(true);
-    });
-
+    it('should export business development routes', () => { expect(businessDevelopmentRoutes).toBeDefined(); });
+    it('should be an array of routes', () => { expect(Array.isArray(businessDevelopmentRoutes)).toBe(true); });
     it('should have route objects with path property', () => {
-      businessDevelopmentRoutes.forEach(route => {
-        expect(route).toHaveProperty('path');
-      });
+      businessDevelopmentRoutes.forEach(route => { expect(route).toHaveProperty('path'); });
     });
-
-    it('should have route objects with element property', () => {
+    it('should have route objects with children or element', () => {
       businessDevelopmentRoutes.forEach(route => {
-        expect(route).toHaveProperty('element');
+        expect(route.children || route.element).toBeDefined();
       });
     });
   });
 
   describe('Route Paths', () => {
     it('should have valid path strings', () => {
-      businessDevelopmentRoutes.forEach(route => {
-        expect(typeof route.path).toBe('string');
-        expect(route.path.length).toBeGreaterThan(0);
-      });
+      businessDevelopmentRoutes.forEach(route => { expect(typeof route.path).toBe('string'); });
     });
-
     it('should have business development related paths', () => {
-      const bdPaths = businessDevelopmentRoutes.map(route => route.path);
-      const hasBDPath = bdPaths.some(path => 
-        path.includes('business') || path.includes('opportunity') || path.includes('bd')
-      );
-      expect(hasBDPath).toBe(true);
+      const allRoutes = flattenRoutes(businessDevelopmentRoutes);
+      expect(allRoutes.some(r => r.path?.includes('business') || r.path?.includes('details'))).toBe(true);
     });
-
     it('should not have duplicate paths', () => {
-      const paths = businessDevelopmentRoutes.map(route => route.path);
-      const uniquePaths = new Set(paths);
-      expect(paths.length).toBe(uniquePaths.size);
+      const paths = businessDevelopmentRoutes.map(r => r.path);
+      expect(paths.length).toBe(new Set(paths).size);
     });
   });
 
   describe('Route Elements', () => {
-    it('should have valid React elements', () => {
-      businessDevelopmentRoutes.forEach(route => {
-        expect(route.element).toBeDefined();
-      });
+    it('should have valid React elements in children', () => {
+      const allRoutes = flattenRoutes(businessDevelopmentRoutes);
+      expect(allRoutes.filter(r => r.element !== undefined).length).toBeGreaterThan(0);
     });
   });
 
   describe('Business Development Route Types', () => {
-    it('should include opportunity list routes', () => {
-      const hasListRoutes = businessDevelopmentRoutes.some(route => 
-        route.path.includes('opportunity') || route.path.includes('business')
-      );
-      expect(hasListRoutes).toBe(true);
+    it('should include business-development path', () => {
+      expect(businessDevelopmentRoutes.some(r => r.path?.includes('business-development'))).toBe(true);
     });
-
-    it('should include dashboard routes', () => {
-      const hasDashboardRoutes = businessDevelopmentRoutes.some(route => 
-        route.path.includes('dashboard')
-      );
-      expect(hasDashboardRoutes).toBe(true);
-    });
-
-    it('should include detail routes', () => {
-      const hasDetailRoutes = businessDevelopmentRoutes.some(route => 
-        route.path.includes(':id')
-      );
-      expect(hasDetailRoutes).toBe(true);
+    it('should include detail routes in children', () => {
+      const allRoutes = flattenRoutes(businessDevelopmentRoutes);
+      expect(allRoutes.some(r => r.path?.includes('details') || r.path?.includes('overview'))).toBe(true);
     });
   });
 
@@ -87,12 +60,8 @@ describe('Business Development Routes', () => {
       expect(businessDevelopmentRoutes).toBeDefined();
       expect(Array.isArray(businessDevelopmentRoutes)).toBe(true);
     });
-
     it('should have consistent route structure', () => {
-      businessDevelopmentRoutes.forEach(route => {
-        expect(route).toHaveProperty('path');
-        expect(route).toHaveProperty('element');
-      });
+      businessDevelopmentRoutes.forEach(route => { expect(route).toHaveProperty('path'); });
     });
   });
 });

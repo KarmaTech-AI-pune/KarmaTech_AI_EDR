@@ -38,7 +38,9 @@ describe('RouteConfig', () => {
 
     it('should have valid path strings', () => {
       RouteConfig.forEach(route => {
-        expect(typeof route.path).toBe('string');
+        if (route.path !== undefined) {
+          expect(typeof route.path).toBe('string');
+        }
       });
     });
   });
@@ -67,23 +69,34 @@ describe('RouteConfig', () => {
   });
 
   describe('Route Categories', () => {
+    const flattenRoutes = (routes: any[]): any[] => {
+      return routes.reduce((acc, route) => {
+        acc.push(route);
+        if (route.children) acc.push(...flattenRoutes(route.children));
+        return acc;
+      }, []);
+    };
+
     it('should include core routes', () => {
-      const hasCoreRoutes = RouteConfig.some(route => 
-        route.path === '/' || route.path === '/login' || route.path === '*'
+      const allRoutes = flattenRoutes(RouteConfig);
+      const hasCoreRoutes = allRoutes.some(route => 
+        route.path === '/' || route.path === 'login' || route.path === '*'
       );
       expect(hasCoreRoutes).toBe(true);
     });
 
     it('should include admin routes', () => {
-      const hasAdminRoutes = RouteConfig.some(route => 
-        route.path.includes('admin')
+      const allRoutes = flattenRoutes(RouteConfig);
+      const hasAdminRoutes = allRoutes.some(route => 
+        route.path?.includes('admin')
       );
       expect(hasAdminRoutes).toBe(true);
     });
 
     it('should include project management routes', () => {
-      const hasProjectRoutes = RouteConfig.some(route => 
-        route.path.includes('project')
+      const allRoutes = flattenRoutes(RouteConfig);
+      const hasProjectRoutes = allRoutes.some(route => 
+        route.path?.includes('project')
       );
       expect(hasProjectRoutes).toBe(true);
     });

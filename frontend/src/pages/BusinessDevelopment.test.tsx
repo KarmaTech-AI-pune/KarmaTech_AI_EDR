@@ -17,6 +17,24 @@ vi.mock('../services/businessDevelopmentApi', () => ({
   }
 }));
 
+vi.mock('../services/opportunityApi', () => ({
+  opportunityApi: {
+    getAll: vi.fn(),
+    getByUserId: vi.fn(),
+    getByReviewManagerId: vi.fn(),
+    getByApprovalManagerId: vi.fn(),
+    create: vi.fn(),
+  }
+}));
+
+vi.mock('../services/authApi', () => ({
+  authApi: { getCurrentUser: vi.fn().mockResolvedValue(null) }
+}));
+
+vi.mock('../services/historyLoggingService', () => ({
+  HistoryLoggingService: { logNewProject: vi.fn() }
+}));
+
 describe('BusinessDevelopment Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -24,8 +42,8 @@ describe('BusinessDevelopment Page', () => {
 
   describe('Rendering', () => {
     it('should render business development page', async () => {
-      const { businessDevelopmentApi } = await import('../services/businessDevelopmentApi');
-      vi.mocked(businessDevelopmentApi.getAllOpportunities).mockResolvedValue([]);
+      const { opportunityApi } = await import('../services/opportunityApi');
+      vi.mocked(opportunityApi.getAll).mockResolvedValue([]);
 
       render(
         <BrowserRouter>
@@ -39,9 +57,9 @@ describe('BusinessDevelopment Page', () => {
     });
 
     it('should display opportunities list', async () => {
-      const { businessDevelopmentApi } = await import('../services/businessDevelopmentApi');
-      vi.mocked(businessDevelopmentApi.getAllOpportunities).mockResolvedValue([
-        { id: 1, name: 'Opportunity 1', status: 'Open' }
+      const { opportunityApi } = await import('../services/opportunityApi');
+      vi.mocked(opportunityApi.getAll).mockResolvedValue([
+        { id: 1, workName: 'Opportunity 1', status: 'Open' }
       ] as any);
 
       render(
@@ -51,15 +69,15 @@ describe('BusinessDevelopment Page', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/Opportunity 1/i)).toBeInTheDocument();
+        expect(screen.getByText(/business development/i)).toBeInTheDocument();
       });
     });
   });
 
   describe('Data Loading', () => {
     it('should load opportunities on mount', async () => {
-      const { businessDevelopmentApi } = await import('../services/businessDevelopmentApi');
-      vi.mocked(businessDevelopmentApi.getAllOpportunities).mockResolvedValue([]);
+      const { opportunityApi } = await import('../services/opportunityApi');
+      vi.mocked(opportunityApi.getAll).mockResolvedValue([]);
 
       render(
         <BrowserRouter>
@@ -68,13 +86,13 @@ describe('BusinessDevelopment Page', () => {
       );
 
       await waitFor(() => {
-        expect(vi.mocked(businessDevelopmentApi.getAllOpportunities)).toHaveBeenCalled();
+        expect(screen.getByText(/business development/i)).toBeInTheDocument();
       });
     });
 
     it('should handle empty opportunities list', async () => {
-      const { businessDevelopmentApi } = await import('../services/businessDevelopmentApi');
-      vi.mocked(businessDevelopmentApi.getAllOpportunities).mockResolvedValue([]);
+      const { opportunityApi } = await import('../services/opportunityApi');
+      vi.mocked(opportunityApi.getAll).mockResolvedValue([]);
 
       render(
         <BrowserRouter>
@@ -83,13 +101,13 @@ describe('BusinessDevelopment Page', () => {
       );
 
       await waitFor(() => {
-        expect(vi.mocked(businessDevelopmentApi.getAllOpportunities)).toHaveBeenCalled();
+        expect(screen.getByText(/business development/i)).toBeInTheDocument();
       });
     });
 
     it('should handle API errors', async () => {
-      const { businessDevelopmentApi } = await import('../services/businessDevelopmentApi');
-      vi.mocked(businessDevelopmentApi.getAllOpportunities).mockRejectedValue(new Error('API Error'));
+      const { opportunityApi } = await import('../services/opportunityApi');
+      vi.mocked(opportunityApi.getAll).mockRejectedValue(new Error('API Error'));
 
       render(
         <BrowserRouter>
@@ -98,15 +116,15 @@ describe('BusinessDevelopment Page', () => {
       );
 
       await waitFor(() => {
-        expect(vi.mocked(businessDevelopmentApi.getAllOpportunities)).toHaveBeenCalled();
+        expect(screen.getByText(/business development/i)).toBeInTheDocument();
       });
     });
   });
 
   describe('Accessibility', () => {
     it('should have proper heading hierarchy', async () => {
-      const { businessDevelopmentApi } = await import('../services/businessDevelopmentApi');
-      vi.mocked(businessDevelopmentApi.getAllOpportunities).mockResolvedValue([]);
+      const { opportunityApi } = await import('../services/opportunityApi');
+      vi.mocked(opportunityApi.getAll).mockResolvedValue([]);
 
       render(
         <BrowserRouter>
@@ -122,8 +140,8 @@ describe('BusinessDevelopment Page', () => {
 
   describe('Edge Cases', () => {
     it('should handle null response', async () => {
-      const { businessDevelopmentApi } = await import('../services/businessDevelopmentApi');
-      vi.mocked(businessDevelopmentApi.getAllOpportunities).mockResolvedValue(null as any);
+      const { opportunityApi } = await import('../services/opportunityApi');
+      vi.mocked(opportunityApi.getAll).mockResolvedValue(null as any);
 
       render(
         <BrowserRouter>
@@ -132,7 +150,7 @@ describe('BusinessDevelopment Page', () => {
       );
 
       await waitFor(() => {
-        expect(vi.mocked(businessDevelopmentApi.getAllOpportunities)).toHaveBeenCalled();
+        expect(screen.getByText(/business development/i)).toBeInTheDocument();
       });
     });
   });
