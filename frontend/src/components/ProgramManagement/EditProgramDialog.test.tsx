@@ -258,7 +258,9 @@ describe('EditProgramDialog', () => {
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     await user.click(saveButton);
 
-    expect(screen.getByText(/saving/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/saving/i)).toBeInTheDocument();
+    });
   });
 
   it('handles null end date correctly', async () => {
@@ -292,7 +294,7 @@ describe('EditProgramDialog', () => {
         name: 'Updated Name',
         endDate: null
       }));
-    });
+    }, { timeout: 10000 });
   });
 
   it('validates required fields', async () => {

@@ -17,7 +17,7 @@ import { ProjectManagementProjectList } from '../components/project/ProjectManag
 import { ProjectInitializationDialog } from '../components/project/ProjectInitializationDialog.tsx';
 import { Pagination } from '../components/Pagination';
 import { projectApi } from '../services/projectApi';
-import { programApi } from '../services/api/programApi';
+import { programApi } from '../services/programApi';
 import { UserWithRole } from '../types';
 import { Project } from '../models';
 import { PermissionType } from '../models';

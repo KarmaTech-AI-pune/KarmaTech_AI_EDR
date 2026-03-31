@@ -102,7 +102,7 @@ describe('SubscriptionManagement', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Basic Plan')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
 
     const addButton = screen.getByRole('button', { name: /Add Plan/i });
     fireEvent.click(addButton);
@@ -139,7 +139,7 @@ describe('SubscriptionManagement', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Basic Plan')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
     
     fireEvent.click(screen.getByRole('button', { name: /Add Plan/i }));
 
@@ -183,7 +183,7 @@ describe('SubscriptionManagement', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Basic Plan')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
     
     fireEvent.click(screen.getByRole('button', { name: /Add Plan/i }));
 

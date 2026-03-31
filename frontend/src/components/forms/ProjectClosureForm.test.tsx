@@ -435,6 +435,12 @@ describe('ProjectClosureForm', () => {
 
     // Simulate clicking delete when no closureId or existingClosureId is set
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    // Wait for the confirmation dialog to appear before confirming
+    await waitFor(() => {
+      expect(screen.getByText('Delete Project Closure')).toBeInTheDocument();
+    }, { timeout: 5000 });
+
     fireEvent.click(screen.getByRole('button', { name: 'Delete' })); // Confirm delete
 
     await waitFor(() => {

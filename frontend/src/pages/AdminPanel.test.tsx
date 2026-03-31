@@ -105,7 +105,7 @@ describe('AdminPanel Page', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /chevron/i })).toBeInTheDocument();
+        expect(screen.getByTestId('ChevronLeftIcon')).toBeInTheDocument();
       });
     });
 
@@ -149,7 +149,7 @@ describe('AdminPanel Page', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Tenant Management')).toBeInTheDocument();
+        expect(screen.getByTestId('tenant-management')).toBeInTheDocument();
       });
     });
 
@@ -170,7 +170,7 @@ describe('AdminPanel Page', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Users Management')).toBeInTheDocument();
+        expect(screen.getByTestId('users-management')).toBeInTheDocument();
       });
     });
 
@@ -214,8 +214,7 @@ describe('AdminPanel Page', () => {
       );
 
       await waitFor(() => {
-        const usersButton = screen.getByText('Users Management');
-        expect(usersButton).toBeInTheDocument();
+        expect(screen.getByTestId('users-management')).toBeInTheDocument();
       });
     });
 
@@ -259,11 +258,14 @@ describe('AdminPanel Page', () => {
       );
 
       await waitFor(() => {
-        const toggleButton = screen.getByRole('button', { name: /chevron/i });
-        expect(toggleButton).toBeInTheDocument();
-        
-        fireEvent.click(toggleButton);
-        expect(toggleButton).toBeInTheDocument();
+        expect(screen.getByTestId('ChevronLeftIcon')).toBeInTheDocument();
+      });
+
+      const toggleButton = screen.getByTestId('ChevronLeftIcon').closest('button')!;
+      fireEvent.click(toggleButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('ChevronRightIcon')).toBeInTheDocument();
       });
     });
 
@@ -284,10 +286,15 @@ describe('AdminPanel Page', () => {
       );
 
       await waitFor(() => {
-        const toggleButton = screen.getByRole('button', { name: /chevron/i });
-        fireEvent.click(toggleButton);
-        fireEvent.click(toggleButton);
-        expect(toggleButton).toBeInTheDocument();
+        expect(screen.getByTestId('ChevronLeftIcon')).toBeInTheDocument();
+      });
+
+      const toggleButton = screen.getByTestId('ChevronLeftIcon').closest('button')!;
+      fireEvent.click(toggleButton);
+      fireEvent.click(screen.getByTestId('ChevronRightIcon').closest('button')!);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('ChevronLeftIcon')).toBeInTheDocument();
       });
     });
   });
@@ -304,8 +311,7 @@ describe('AdminPanel Page', () => {
       );
 
       await waitFor(() => {
-        // Should still render without crashing
-        expect(screen.getByRole('button', { name: /chevron/i })).toBeInTheDocument();
+        expect(screen.getByTestId('ChevronLeftIcon')).toBeInTheDocument();
       });
     });
 
@@ -320,7 +326,7 @@ describe('AdminPanel Page', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /chevron/i })).toBeInTheDocument();
+        expect(screen.getByTestId('ChevronLeftIcon')).toBeInTheDocument();
       });
     });
   });
@@ -410,7 +416,7 @@ describe('AdminPanel Page', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Users Management')).toBeInTheDocument();
+        expect(screen.getByTestId('users-management')).toBeInTheDocument();
       });
     });
   });
