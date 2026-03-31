@@ -30,7 +30,7 @@ const subscriptionPlanOptions = [
   { value: 'Automate', label: 'Automate' },
   { value: 'Autonomous', label: 'Autonomous' },
 ];
-// ... theme definition ...
+const theme = createTheme();
 const Signup: React.FC = () => {
   const methods = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
