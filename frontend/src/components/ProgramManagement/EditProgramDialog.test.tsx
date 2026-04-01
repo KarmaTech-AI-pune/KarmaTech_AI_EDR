@@ -3,11 +3,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import EditProgramDialog from './EditProgramDialog';
-import { programApi } from '../../services/api/programApi';
+import { programApi } from '../../services/programApi';
 import { Program } from '../../types/program';
 
 // Mock the programApi
-vi.mock('../../services/api/programApi', () => ({
+vi.mock('../../services/programApi', () => ({
   programApi: {
     update: vi.fn()
   }
@@ -258,7 +258,9 @@ describe('EditProgramDialog', () => {
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     await user.click(saveButton);
 
-    expect(screen.getByText(/saving/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/saving/i)).toBeInTheDocument();
+    });
   });
 
   it('handles null end date correctly', async () => {
@@ -292,7 +294,7 @@ describe('EditProgramDialog', () => {
         name: 'Updated Name',
         endDate: null
       }));
-    });
+    }, { timeout: 10000 });
   });
 
   it('validates required fields', async () => {

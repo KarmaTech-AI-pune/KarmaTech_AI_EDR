@@ -5,12 +5,12 @@ import { vi, describe, it, expect, beforeEach,  afterEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import ProgramManagement from './ProgramManagement';
 import { usePrograms } from '../../hooks/usePrograms';
-import { programApi } from '../../services/api/programApi';
+import { programApi } from '../../services/programApi';
 import { Program } from '../../types/program';
 
 // Mock the hooks and API
 vi.mock('../../hooks/usePrograms');
-vi.mock('../../services/api/programApi');
+vi.mock('../../services/programApi');
 
 // Mock useProject context
 vi.mock('../../context/ProjectContext', () => ({
