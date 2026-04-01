@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.WorkBreakdownStructures.Queries;
@@ -47,6 +47,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             // Optimized data retrieval: Load all necessary data in single operations
             var wbsHeader = await _context.WBSHeaders
                 .Where(h => h.ProjectId == request.ProjectId && h.IsActive)
+                .OrderByDescending(h => h.Id)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(cancellationToken);
 

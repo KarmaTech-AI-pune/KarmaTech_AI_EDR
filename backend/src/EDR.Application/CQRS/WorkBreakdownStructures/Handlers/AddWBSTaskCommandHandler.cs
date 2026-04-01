@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using EDR.Application.CQRS.WorkBreakdownStructures.Commands;
 using EDR.Application.Dtos;
@@ -45,8 +45,21 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             _logger.LogInformation("Handling AddWBSTaskCommand for ProjectId {ProjectId}, TenantId {TenantId}",
                 request.ProjectId, _context.TenantId);
 
+            // 0. Verify Project exists
+            var projectExists = await _context.Projects
+                .AnyAsync(p => p.Id == request.ProjectId, cancellationToken);
+            
+            if (!projectExists)
+            {
+                _logger.LogError("Project with ID {ProjectId} not found for current tenant.", request.ProjectId);
+                throw new ArgumentException($"Project with ID {request.ProjectId} not found or you don't have access to it.");
+            }
+
             // 1. Find or create WBSHeader
             var wbsHeader = await FindOrCreateWBSHeader(request, cancellationToken);
+            
+            // Map the header ID back to the return DTO
+            request.WBSMaster.WbsHeaderId = wbsHeader.Id;
 
             // 2. Process each WorkBreakdownStructure
             foreach (var wbsGroupDto in request.WBSMaster.WorkBreakdownStructures)
@@ -55,44 +68,46 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 
                 // Save group first to ensure we have an ID
                 await _unitOfWork.SaveChangesAsync();
+                
+                // Map the group ID back to the DTO
+                wbsGroupDto.WorkBreakdownStructureId = wbsGroupEntity.Id;
 
                 var allNewTasks = new List<WBSTask>();
                 var tasksNeedingChildData = new List<(WBSTask task, WBSTaskDto dto)>();
 
+                // Track which existing tasks have been "claimed" by an incoming DTO to allow multiples of same level
+                var claimedTaskIds = new HashSet<int>();
+
                 // 3. Upsert Tasks (First Pass - Basic Info)
                 foreach (var taskDto in wbsGroupDto.Tasks)
                 {
-                    WBSTask taskEntity;
+                    WBSTask taskEntity = null;
                     if (taskDto.Id > 0)
                     {
                         taskEntity = await _context.WBSTasks
                             .Include(t => t.UserWBSTasks)
                             .Include(t => t.PlannedHours)
                             .FirstOrDefaultAsync(t => t.Id == taskDto.Id, cancellationToken);
+                    }
 
-                        if (taskEntity != null)
-                        {
-                            // Update existing task
-                            taskEntity.Title = taskDto.Title;
-                            taskEntity.Description = taskDto.Description;
-                            taskEntity.Level = taskDto.Level;
-                            taskEntity.DisplayOrder = taskDto.DisplayOrder;
-                            taskEntity.EstimatedBudget = taskDto.EstimatedBudget;
-                            taskEntity.StartDate = taskDto.StartDate;
-                            taskEntity.EndDate = taskDto.EndDate;
-                            taskEntity.TaskType = taskDto.TaskType;
-                            taskEntity.WBSOptionId = taskDto.WBSOptionId;
-                            taskEntity.UpdatedAt = DateTime.UtcNow;
-                            taskEntity.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+                    // IDENTITY SEARCH REMOVED: This allows for multiple tasks of same level
+                    if (taskEntity != null)
+                    {
+                        // Update existing task
+                        taskEntity.Title = string.IsNullOrEmpty(taskDto.Title) ? taskEntity.Title : taskDto.Title;
+                        taskEntity.Description = taskDto.Description;
+                        taskEntity.Level = taskDto.Level;
+                        taskEntity.DisplayOrder = taskDto.DisplayOrder;
+                        taskEntity.EstimatedBudget = taskDto.EstimatedBudget;
+                        taskEntity.StartDate = taskDto.StartDate;
+                        taskEntity.EndDate = taskDto.EndDate;
+                        taskEntity.TaskType = taskDto.TaskType;
+                        taskEntity.WBSOptionId = taskDto.WBSOptionId;
+                        taskEntity.IsDeleted = false; // RESTORE
+                        taskEntity.UpdatedAt = DateTime.UtcNow;
+                        taskEntity.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
 
-                            _context.WBSTasks.Update(taskEntity);
-                        }
-                        else
-                        {
-                            // Task with ID not found, treat as new
-                            taskEntity = await CreateWBSTaskBasic(taskDto, wbsGroupEntity, wbsHeader.TenantId, cancellationToken);
-                            _context.WBSTasks.Add(taskEntity);
-                        }
+                        _context.WBSTasks.Update(taskEntity);
                     }
                     else
                     {
@@ -139,7 +154,27 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                  {
                      dto.Id = task.Id;
                  }
+
             }
+            
+            // 10. Global Cleanup: Remove any groups with 0 active tasks (handles orphaned groups too)
+            _logger.LogInformation("AddWBSTaskCommandHandler: Performing global cleanup of empty groups for WBSHeader ID {WbsHeaderId}", wbsHeader.Id);
+            var allHeaderGroups = await _context.WorkBreakdownStructures
+                .Include(w => w.Tasks)
+                .Where(w => w.WBSHeaderId == wbsHeader.Id)
+                .ToListAsync(cancellationToken);
+
+            foreach(var group in allHeaderGroups) 
+            {
+                var activeTasksCount = group.Tasks.Count(t => !t.IsDeleted);
+                if (activeTasksCount == 0)
+                {
+                    _logger.LogInformation("AddWBSTaskCommandHandler: Found orphaned group '{Name}' (ID {Id}) with 0 active tasks. Deleting.", 
+                        group.Name, group.Id);
+                    _context.WorkBreakdownStructures.Remove(group);
+                }
+            }
+            await _unitOfWork.SaveChangesAsync();
 
             return request.WBSMaster;
         }
@@ -196,31 +231,54 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             }
             else
             {
-                // Deactivate any existing active headers for this project to prevent duplicates in queries
-                var existingHeaders = await _context.WBSHeaders
-                    .Where(h => h.ProjectId == request.ProjectId && h.IsActive)
-                    .ToListAsync(cancellationToken);
-                
-                foreach (var oldHeader in existingHeaders)
-                {
-                    _logger.LogInformation("AddWBSTaskCommandHandler: Deactivating existing WBSHeader {Id} for project {ProjectId}", oldHeader.Id, request.ProjectId);
-                    oldHeader.IsActive = false;
-                    _context.WBSHeaders.Update(oldHeader);
-                }
+                // If WbsHeaderId is not provided, try to find an existing active header for this project
+                _logger.LogInformation("AddWBSTaskCommandHandler: No WbsHeaderId provided. Searching for an existing active header for ProjectId {ProjectId}", request.ProjectId);
 
-                wbsHeader = new WBSHeader
+                wbsHeader = await _context.WBSHeaders
+                    .Include(h => h.WorkBreakdownStructures)
+                        .ThenInclude(wbs => wbs.Tasks)
+                    .Where(h => h.ProjectId == request.ProjectId && h.IsActive)
+                    .OrderByDescending(h => h.Id)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (wbsHeader != null)
                 {
-                    TenantId = _context.TenantId ?? 0, // IMPORTANT: Set TenantId
-                    ProjectId = request.ProjectId,
-                    Version = "1.0",
-                    VersionDate = DateTime.UtcNow,
-                    CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
-                    IsActive = true,
-                    ApprovalStatus = PMWorkflowStatusEnum.Initial,
-                    WorkBreakdownStructures = new List<WorkBreakdownStructure>()
-                };
-                _context.WBSHeaders.Add(wbsHeader);
-                await _unitOfWork.SaveChangesAsync();
+                    _logger.LogInformation("AddWBSTaskCommandHandler: Found and reusing existing active WBSHeader with ID {WbsHeaderId} for project {ProjectId}", wbsHeader.Id, request.ProjectId);
+                }
+                else
+                {
+                    _logger.LogInformation("AddWBSTaskCommandHandler: No active header found. Creating new WBSHeader for ProjectId {ProjectId}", request.ProjectId);
+
+                    // Double-check project existence without filters to diagnose FK issues if needed, 
+                    // but for creation we must respect the tenant filter to ensure data integrity.
+                    
+                    wbsHeader = new WBSHeader
+                    {
+                        TenantId = _context.TenantId ?? 0,
+                        ProjectId = request.ProjectId,
+                        Version = "1.0",
+                        VersionDate = DateTime.UtcNow,
+                        CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
+                        IsActive = true,
+                        ApprovalStatus = PMWorkflowStatusEnum.Initial,
+                        WorkBreakdownStructures = new List<WorkBreakdownStructure>()
+                    };
+                    
+                    _context.WBSHeaders.Add(wbsHeader);
+                    
+                    try 
+                    {
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        _logger.LogError(ex, "Database error while creating WBSHeader for ProjectId {ProjectId}. This is likely a Foreign Key violation.", request.ProjectId);
+                        throw new Exception($"Failed to create WBS Header. Please ensure Project {request.ProjectId} exists. Detail: {ex.InnerException?.Message ?? ex.Message}");
+                    }
+                    
+                    _logger.LogInformation("AddWBSTaskCommandHandler: Created new WBSHeader with ID {WbsHeaderId}, TenantId {TenantId}",
+                        wbsHeader.Id, wbsHeader.TenantId);
+                }
             }
             return wbsHeader;
         }
@@ -245,24 +303,42 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 wbsGroupEntity.Name = wbsGroupDto.Name;
                 wbsGroupEntity.Description = wbsGroupDto.Description;
                 wbsGroupEntity.DisplayOrder = wbsGroupDto.DisplayOrder;
-                wbsGroupEntity.TenantId = wbsHeader.TenantId; // Update TenantId
+                wbsGroupEntity.TenantId = wbsHeader.TenantId;
                 _context.WorkBreakdownStructures.Update(wbsGroupEntity);
             }
             else
             {
-                wbsGroupEntity = new WorkBreakdownStructure
+                // If ID is not provided, try to find by NAME within this header
+                wbsGroupEntity = wbsHeader.WorkBreakdownStructures
+                    .FirstOrDefault(w => w.Name != null && w.Name.Equals(wbsGroupDto.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (wbsGroupEntity != null)
                 {
-                    TenantId = wbsHeader.TenantId, // IMPORTANT: Set TenantId
-                    WBSHeader = wbsHeader,
-                    Name = wbsGroupDto.Name,
-                    Description = wbsGroupDto.Description,
-                    DisplayOrder = wbsGroupDto.DisplayOrder,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
-                    Tasks = new List<WBSTask>()
-                };
-                _context.WorkBreakdownStructures.Add(wbsGroupEntity);
-                wbsHeader.WorkBreakdownStructures.Add(wbsGroupEntity);
+                    _logger.LogInformation("ProcessWorkBreakdownStructure: Found and reusing existing WBS Group '{GroupName}' (ID: {GroupId})", wbsGroupEntity.Name, wbsGroupEntity.Id);
+                    
+                    // Update details if necessary
+                    wbsGroupEntity.Description = wbsGroupDto.Description;
+                    wbsGroupEntity.DisplayOrder = wbsGroupDto.DisplayOrder;
+                    _context.WorkBreakdownStructures.Update(wbsGroupEntity);
+                }
+                else
+                {
+                    _logger.LogInformation("ProcessWorkBreakdownStructure: Creating new WBS Group '{GroupName}'", wbsGroupDto.Name);
+                    
+                    wbsGroupEntity = new WorkBreakdownStructure
+                    {
+                        TenantId = wbsHeader.TenantId,
+                        WBSHeaderId = wbsHeader.Id,
+                        Name = wbsGroupDto.Name,
+                        Description = wbsGroupDto.Description,
+                        DisplayOrder = wbsGroupDto.DisplayOrder,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
+                        Tasks = new List<WBSTask>()
+                    };
+                    _context.WorkBreakdownStructures.Add(wbsGroupEntity);
+                    wbsHeader.WorkBreakdownStructures.Add(wbsGroupEntity);
+                }
             }
 
             return wbsGroupEntity;
@@ -277,14 +353,32 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             // Validate required fields
             if (taskDto.WBSOptionId <= 0)
             {
-                _logger.LogError("WBSOptionId is required for task.");
-                throw new Exception("WBSOptionId is required for a task.");
+                _logger.LogError("WBSOptionId is required for task: {Title}", taskDto.Title);
+                throw new Exception($"WBSOptionId is required for task '{taskDto.Title}'.");
+            }
+
+            if (taskDto.Level <= 0)
+            {
+                 _logger.LogError("Task Level is required and must be greater than 0 for task: {Title}", taskDto.Title);
+                throw new Exception($"Task Level is required and must be greater than 0 for task '{taskDto.Title}'.");
+            }
+
+            // Get Title from WBSOption if not provided
+            if (string.IsNullOrEmpty(taskDto.Title))
+            {
+                var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskDto.WBSOptionId);
+                if (wbsOption != null)
+                {
+                    taskDto.Title = wbsOption.Label;
+                    taskDto.WBSOptionLabel = wbsOption.Label;
+                    _logger.LogInformation("CreateWBSTaskBasic: Automatically set Title to '{Title}' from WBSOption {OptionId}", taskDto.Title, taskDto.WBSOptionId);
+                }
             }
 
             if (string.IsNullOrEmpty(taskDto.Title))
             {
-                _logger.LogError("Task Title is required.");
-                throw new Exception("Task Title is required.");
+                _logger.LogError("Task Title is required and could not be determined from WBSOptionId {OptionId}.", taskDto.WBSOptionId);
+                throw new Exception($"Task Title is required and could not be determined from WBSOptionId {taskDto.WBSOptionId}.");
             }
 
             // Create task entity
@@ -292,7 +386,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             {
                 TenantId = tenantId, // IMPORTANT: Set TenantId
                 WorkBreakdownStructureId = wbsGroupEntity.Id,
-                Description = taskDto.Description,
+                Description = taskDto.Description ?? string.Empty,
                 Level = taskDto.Level,
                 DisplayOrder = taskDto.DisplayOrder,
                 EstimatedBudget = taskDto.EstimatedBudget,

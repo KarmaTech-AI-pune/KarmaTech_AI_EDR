@@ -49,6 +49,16 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             _logger.LogInformation("SetWBSCommandHandler: Processing WBS for ProjectId {ProjectId}, WbsHeaderId {WbsHeaderId}, TenantId {TenantId}",
                 request.ProjectId, request.WBSMaster.WbsHeaderId, _context.TenantId);
 
+            // 0. Verify Project exists
+            var projectExists = await _context.Projects
+                .AnyAsync(p => p.Id == request.ProjectId, cancellationToken);
+            
+            if (!projectExists)
+            {
+                _logger.LogError("SetWBSCommandHandler: Project with ID {ProjectId} not found or inaccessible.", request.ProjectId);
+                throw new ArgumentException($"Project with ID {request.ProjectId} not found or you don't have access to it.");
+            }
+
             // 1. Handle WBSHeader creation/update based on WBSMaster.WbsHeaderId
             WBSHeader wbsHeader;
 
@@ -98,38 +108,48 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             }
             else
             {
-                _logger.LogInformation("SetWBSCommandHandler: Creating new WBSHeader for ProjectId {ProjectId}", request.ProjectId);
+                // If WbsHeaderId is not provided, try to find an existing active header for this project
+                _logger.LogInformation("SetWBSCommandHandler: No WbsHeaderId provided. Searching for an existing active header for ProjectId {ProjectId}", request.ProjectId);
                 
-                // Deactivate any existing active headers for this project to prevent duplicates in queries
-                var existingHeaders = await _context.WBSHeaders
+                wbsHeader = await _context.WBSHeaders
+                    .Include(h => h.WorkBreakdownStructures)
+                        .ThenInclude(w => w.Tasks.Where(t => !t.IsDeleted))
                     .Where(h => h.ProjectId == request.ProjectId && h.IsActive)
-                    .ToListAsync(cancellationToken);
-                
-                foreach (var oldHeader in existingHeaders)
+                    .OrderByDescending(h => h.Id)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (wbsHeader != null)
                 {
-                    _logger.LogInformation("SetWBSCommandHandler: Deactivating existing WBSHeader {Id} for project {ProjectId}", oldHeader.Id, request.ProjectId);
-                    oldHeader.IsActive = false;
-                    _context.WBSHeaders.Update(oldHeader);
+                    _logger.LogInformation("SetWBSCommandHandler: Found and reusing existing active WBSHeader with ID {WbsHeaderId} for project {ProjectId}", wbsHeader.Id, request.ProjectId);
+                    
+                    // Update the header (e.g., version date)
+                    wbsHeader.VersionDate = DateTime.UtcNow;
+                    wbsHeader.CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+                    _context.WBSHeaders.Update(wbsHeader);
                 }
-
-                // Create new WBSHeader
-                wbsHeader = new WBSHeader
+                else
                 {
-                    TenantId = _context.TenantId ?? 0, // Set TenantId from context
-                    ProjectId = request.ProjectId,
-                    Version = "1.0",
-                    VersionDate = DateTime.UtcNow,
-                    CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
-                    IsActive = true,
-                    ApprovalStatus = PMWorkflowStatusEnum.Initial,
-                    WorkBreakdownStructures = new List<WorkBreakdownStructure>(),
-                    VersionHistories = new List<WBSVersionHistory>()
-                };
-                _context.WBSHeaders.Add(wbsHeader);
-                await _unitOfWork.SaveChangesAsync(); // Save to get ID
-
-                _logger.LogInformation("SetWBSCommandHandler: Created new WBSHeader with ID {WbsHeaderId}, TenantId {TenantId}",
-                    wbsHeader.Id, wbsHeader.TenantId);
+                    _logger.LogInformation("SetWBSCommandHandler: No active header found. Creating new WBSHeader for ProjectId {ProjectId}", request.ProjectId);
+                    
+                    // Create new WBSHeader
+                    wbsHeader = new WBSHeader
+                    {
+                        TenantId = _context.TenantId ?? 0,
+                        ProjectId = request.ProjectId,
+                        Version = "1.0",
+                        VersionDate = DateTime.UtcNow,
+                        CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
+                        IsActive = true,
+                        ApprovalStatus = PMWorkflowStatusEnum.Initial,
+                        WorkBreakdownStructures = new List<WorkBreakdownStructure>(),
+                        VersionHistories = new List<WBSVersionHistory>()
+                    };
+                    _context.WBSHeaders.Add(wbsHeader);
+                    await _unitOfWork.SaveChangesAsync(); // Save to get ID
+                    
+                    _logger.LogInformation("SetWBSCommandHandler: Created new WBSHeader with ID {WbsHeaderId}, TenantId {TenantId}",
+                        wbsHeader.Id, wbsHeader.TenantId);
+                }
             }
 
             // 2. Handle WorkBreakdownStructures (WBS Groups)
@@ -166,20 +186,54 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 wbsHeader.WorkBreakdownStructures.Remove(groupToDelete);
             }
 
-            foreach (var wbsGroupDto in request.WBSMaster.WorkBreakdownStructures)
+            // Deduplicate incoming groups by name to prevent multiple updates to the same logical group
+            var distinctIncomingGroups = request.WBSMaster.WorkBreakdownStructures
+                .GroupBy(g => g.Name?.Trim().ToLower() ?? string.Empty)
+                .Select(g => {
+                    var first = g.First();
+                    // Merge tasks from all groups with the same name if any
+                    if (g.Count() > 1) {
+                        _logger.LogWarning("SetWBSCommandHandler: Multiple groups with same name '{Name}' detected. Merging all tasks.", first.Name);
+                        foreach(var other in g.Skip(1)) {
+                            foreach(var task in other.Tasks) {
+                                // Just add all tasks from other groups into the first group
+                                first.Tasks.Add(task);
+                            }
+                        }
+                    }
+                    return first;
+                })
+                .ToList();
+
+            foreach (var wbsGroupDto in distinctIncomingGroups)
             {
-                WorkBreakdownStructure wbsGroupEntity;
+                WorkBreakdownStructure wbsGroupEntity = null;
+                
+                // 1. Try search by ID
                 if (wbsGroupDto.WorkBreakdownStructureId > 0 && existingWBSGroupsDict.TryGetValue(wbsGroupDto.WorkBreakdownStructureId, out wbsGroupEntity))
                 {
                     _logger.LogInformation("SetWBSCommandHandler: Updating existing WBS group ID {Id}, Name: {Name}",
                         wbsGroupDto.WorkBreakdownStructureId, wbsGroupDto.Name);
+                }
+                // 2. Try search by Name (Identity)
+                else 
+                {
+                    wbsGroupEntity = wbsHeader.WorkBreakdownStructures
+                        .FirstOrDefault(w => w.Name != null && w.Name.Equals(wbsGroupDto.Name, StringComparison.OrdinalIgnoreCase));
+                        
+                    if (wbsGroupEntity != null)
+                    {
+                        _logger.LogInformation("SetWBSCommandHandler: Found and reusing existing WBS group '{Name}' (ID: {Id})", wbsGroupEntity.Name, wbsGroupEntity.Id);
+                    }
+                }
 
+                if (wbsGroupEntity != null)
+                {
                     // Update existing WBS Group
                     wbsGroupEntity.Name = wbsGroupDto.Name;
                     wbsGroupEntity.Description = wbsGroupDto.Description;
                     wbsGroupEntity.DisplayOrder = wbsGroupDto.DisplayOrder;
-                    wbsGroupEntity.TenantId = wbsHeader.TenantId; // Ensure TenantId is set
-                    // Removed UpdatedAt and UpdatedBy as WorkBreakdownStructure no longer has these properties
+                    wbsGroupEntity.TenantId = wbsHeader.TenantId;
                     _context.WorkBreakdownStructures.Update(wbsGroupEntity);
                 }
                 else
@@ -190,7 +244,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     // Create new WBS Group
                     wbsGroupEntity = new WorkBreakdownStructure
                     {
-                        TenantId = wbsHeader.TenantId, // IMPORTANT: Set TenantId for tenant isolation
+                        TenantId = wbsHeader.TenantId,
                         WBSHeader = wbsHeader,
                         WBSHeaderId = wbsHeader.Id,
                         Name = wbsGroupDto.Name,
@@ -268,6 +322,30 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     }
                 }
             }
+            
+            // Final save to handle all task updates/deletions before global cleanup
+            await _unitOfWork.SaveChangesAsync();
+
+            // 3.5. Global Cleanup: Remove any groups with 0 active tasks (handles orphaned groups too)
+            _logger.LogInformation("SetWBSCommandHandler: Performing global cleanup of empty groups for WBSHeader ID {WbsHeaderId}", wbsHeader.Id);
+            var allHeaderGroups = await _context.WorkBreakdownStructures
+                .Include(w => w.Tasks)
+                .Where(w => w.WBSHeaderId == wbsHeader.Id)
+                .ToListAsync(cancellationToken);
+
+            foreach(var group in allHeaderGroups) 
+            {
+                var activeTasksCount = group.Tasks.Count(t => !t.IsDeleted);
+                if (activeTasksCount == 0)
+                {
+                    _logger.LogInformation("SetWBSCommandHandler: Found orphaned group '{Name}' (ID {Id}) with 0 active tasks. Deleting. mapping mapping 94th part", 
+                        group.Name, group.Id);
+                    _context.WorkBreakdownStructures.Remove(group);
+                }
+            }
+            
+            // Save final cleanup changes
+            await _unitOfWork.SaveChangesAsync();
 
             // 4. Create WBSVersionHistory and link granular versions
             var project = await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == request.ProjectId, cancellationToken);
@@ -299,9 +377,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             var tasksToDelete = wbsGroupEntity.Tasks.Where(t => !t.IsDeleted && !incomingTaskIds.Contains(t.Id)).ToList();
             foreach (var task in tasksToDelete)
             {
-                task.IsDeleted = true;
-                task.UpdatedAt = DateTime.UtcNow;
-                task.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+                MarkTaskAndChildrenDeleted(task, wbsGroupEntity.Tasks);
             }
 
             // Map to keep track of ALL tasks being processed in this batch (existing and new)
@@ -311,15 +387,34 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
 
             foreach (var dto in taskDtos)
             {
-                WBSTask taskEntity;
-                bool isNewTask = dto.Id <= 0;
+                WBSTask taskEntity = null;
+                bool isNewTask = true;
 
-                if (!isNewTask && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
+                // 1. Only find existing task by ID. If ID is 0, ALWAYS create a new one.
+                if (dto.Id > 0 && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
+                {
+                    isNewTask = false;
+                }
+                // NO IDENTITY SEARCH: This allows adding multiple tasks of the same level correctly.
+
+                if (!isNewTask && taskEntity != null)
                 {
                     // Update existing task
                     taskEntity.TenantId = wbsHeader.TenantId;
                     taskEntity.WorkBreakdownStructureId = wbsGroupEntity.Id;
                     taskEntity.WBSOptionId = dto.WBSOptionId;
+                    
+                    // Get Title from WBSOption if not provided
+                    if (string.IsNullOrEmpty(dto.Title) && dto.WBSOptionId > 0)
+                    {
+                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId);
+                        if (wbsOption != null)
+                        {
+                            dto.Title = wbsOption.Label;
+                            dto.WBSOptionLabel = wbsOption.Label;
+                        }
+                    }
+
                     taskEntity.Title = dto.Title;
                     taskEntity.Description = dto.Description;
                     taskEntity.Level = dto.Level;
@@ -333,7 +428,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskEntity.IsDeleted = false;
 
                     // Handle WBS Option Label
-                    if (dto.WBSOptionId > 0)
+                    if (dto.WBSOptionId > 0 && string.IsNullOrEmpty(dto.WBSOptionLabel))
                     {
                         var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId);
                         if (wbsOption != null)
@@ -342,7 +437,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                         }
                     }
 
-                    taskLookup.Add(dto.Id, taskEntity);
+                    taskLookup.Add(dto.Id > 0 ? dto.Id : taskEntity.Id, taskEntity);
                 }
                 else
                 {
@@ -367,13 +462,20 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                         Title = dto.Title
                     };
 
-                    // Handle WBS Option Label
+                    // Handle WBS Option Label and auto-populate Title if empty
                     if (dto.WBSOptionId > 0)
                     {
                         var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId);
                         if (wbsOption != null)
                         {
                             dto.WBSOptionLabel = wbsOption.Label;
+                            if (string.IsNullOrEmpty(dto.Title))
+                            {
+                                dto.Title = wbsOption.Label;
+                                // Update entity title as well
+                                taskEntity.Title = dto.Title;
+                                _logger.LogInformation("SetWBSCommandHandler: Auto-populated title '{Title}' from WBSOption {OptionId}", dto.Title, dto.WBSOptionId);
+                            }
                         }
                     }
 
@@ -796,6 +898,28 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             else if (userTask != null)
             {
                 _context.UserWBSTasks.Remove(userTask);
+            }
+        }
+
+        private async Task ProcessPlannedHours(WBSTask entity, WBSTaskDto dto, string version, int projectId)
+        {
+            await UpdatePlannedHours(entity, dto, version, projectId);
+        }
+
+        private void MarkTaskAndChildrenDeleted(WBSTask task, ICollection<WBSTask> allGroupTasks)
+        {
+            if (task.IsDeleted) return;
+
+            _logger.LogInformation("SetWBSCommandHandler: marking task '{Title}' (ID {Id}) and its children as deleted", task.Title, task.Id);
+            task.IsDeleted = true;
+            task.UpdatedAt = DateTime.UtcNow;
+            task.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+
+            // Find all children of this task in the same group and delete them too
+            var children = allGroupTasks.Where(t => t.ParentId == task.Id && !t.IsDeleted).ToList();
+            foreach (var child in children)
+            {
+                MarkTaskAndChildrenDeleted(child, allGroupTasks);
             }
         }
 
