@@ -7,22 +7,30 @@ describe('TaskPriorityMatrix Component', () => {
     {
       id: 1,
       title: 'Fix critical database issue',
-      category: 'urgent_important' as const
+      category: 'urgent_important' as const,
+      project: 'Project Alpha',
+      assignee: 'Alice'
     },
     {
       id: 2,
       title: 'Update Q3 roadmap',
-      category: 'important_not_urgent' as const
+      category: 'important_not_urgent' as const,
+      project: 'Internal',
+      assignee: 'Bob'
     },
     {
       id: 3,
       title: 'Reply to client email',
-      category: 'urgent_not_important' as const
+      category: 'urgent_not_important' as const,
+      project: 'Client X',
+      assignee: 'Charlie'
     },
     {
       id: 4,
       title: 'Organize desk drawer',
-      category: 'neither' as const
+      category: 'neither' as const,
+      project: 'Internal',
+      assignee: 'Dave'
     }
   ];
 

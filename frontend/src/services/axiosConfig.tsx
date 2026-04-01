@@ -24,33 +24,26 @@ const ENV_CONFIG: EnvironmentConfig = {
  * @returns {string | null} The tenant subdomain or null if not found
  */
 export const getTenantContext = (): string | null => {
-  // debugger;
-  // const hostname = window.location.hostname;
-  
-  // // Extract subdomain (e.g., 'companyb' from 'companyb.localhost')
-  // const subdomain = hostname.split('.')[0];
-  
-  // // Return null for localhost, empty string, or invalid subdomains
-  // if (!subdomain || subdomain === 'localhost' || subdomain === hostname) {
-  //   return null; 
-  // }
-  
-  // return subdomain;
-// debugger;
   const hostname = window.location.hostname;
-  // debugger;
-  // Support "companya.localhost" and "companya.dev.localhost"
+  
+  // Support "tenant1.localhost" and "tenant1.dev.localhost"
   if (hostname.includes('localhost')) {
     const parts = hostname.split('.');
-    if(parts[0]=="localhost"){
-      return parts[0];
+    
+    // If it's just "localhost" or ends with ".localhost", it's a tenant subdomain or main domain
+    if (parts.length > 1 && parts[parts.length - 1] === 'localhost') {
+      // In development, return the full hostname as the tenant context
+      // This will match "tenant1.localhost" in the database
+      return hostname;
     }
-    return parts.length > 1 ? parts[0] : null;
+    
+    // Default to tenant 1 if accessed via direct localhost
+    return '1';
   }
 
-  // Normal subdomain logic
+  // Normal subdomain logic for production
   const subdomain = hostname.split('.')[0];
-  return subdomain && subdomain !== hostname ? subdomain : null;
+  return subdomain && subdomain !== hostname ? hostname : '1';
 };
 
 

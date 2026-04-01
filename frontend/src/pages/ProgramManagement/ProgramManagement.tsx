@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { Edit, Delete, Assessment as AssessmentIcon } from '@mui/icons-material';
+import { Edit, Delete } from '@mui/icons-material';
 import { usePrograms } from '../../hooks/usePrograms';
 import { Pagination } from '../../components/Pagination';
 import CreateProgramDialog from '../../components/ProgramManagement/CreateProgramDialog';
@@ -30,7 +30,7 @@ import { useProject } from '../../context/ProjectContext';
 
 const ProgramManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { programId, setProgramId } = useProject();
+  const { setProgramId } = useProject();
   const { programs, isLoading, error, refetch } = usePrograms();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -221,7 +221,7 @@ const ProgramManagement: React.FC = () => {
 
         {/* Programs List */}
         {!isLoading && currentPrograms.length > 0 && (
-          <List sx={{ 
+          <List sx={{
             width: '100%',
             '& > *:not(:last-child)': {
               mb: 1
@@ -315,11 +315,11 @@ const ProgramManagement: React.FC = () => {
 
         {/* Empty State */}
         {!isLoading && filteredPrograms.length === 0 && (
-          <Box 
-            display="flex" 
+          <Box
+            display="flex"
             flexDirection="column"
-            justifyContent="center" 
-            alignItems="center" 
+            justifyContent="center"
+            alignItems="center"
             minHeight="200px"
             width="100%"
           >
@@ -379,7 +379,7 @@ const ProgramManagement: React.FC = () => {
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
             Are you sure you want to delete the program <strong>"{programToDelete?.name}"</strong>?
-            This action cannot be undone and will permanently remove the program.
+            This action cannot be undone and will permanently remove the program along with ALL its associated projects and related data.
           </DialogContentText>
           {deleteError && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -388,16 +388,16 @@ const ProgramManagement: React.FC = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={handleDeleteCancel} 
+          <Button
+            onClick={handleDeleteCancel}
             disabled={isDeleting}
             sx={{ textTransform: 'none' }}
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
             variant="contained"
             disabled={isDeleting}
             sx={{ textTransform: 'none' }}

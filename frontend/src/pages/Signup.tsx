@@ -26,28 +26,11 @@ import { projectManagementAppContextType } from '../types';
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 const subscriptionPlanOptions = [
-  { value: 'Starter', label: 'Starter' },
-  { value: 'Professional', label: 'Professional' },
-  { value: 'Enterprises', label: 'Enterprises' },
+  { value: 'Operate', label: 'Operate' },
+  { value: 'Automate', label: 'Automate' },
+  { value: 'Autonomous', label: 'Autonomous' },
 ];
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1869DA', // Blue color from textFieldStyle
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none', // Prevent uppercase button text
-        },
-      },
-    },
-  },
-});
-
+const theme = createTheme();
 const Signup: React.FC = () => {
   const methods = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -59,7 +42,7 @@ const Signup: React.FC = () => {
       phoneNumber: '',
       emailAddress: '',
       subdomain: '',
-      subscriptionPlan: 'Starter',
+      subscriptionPlan: 'Operate',
     },
     mode: 'all',
   });
@@ -141,13 +124,13 @@ const Signup: React.FC = () => {
             KarmaTech-AI EDR(Enterprise Digital Runner)
           </Typography>
           <Typography variant="subtitle1" color="textSecondary">
-          <VersionDisplay
-            variant="subtitle1"
-            color="textSecondary"
-            showBuildDate={false}
-            showDevIndicator={false}
-            fetchVersionFromAPI={false}
-          />
+            <VersionDisplay
+              variant="subtitle1"
+              color="textSecondary"
+              showBuildDate={false}
+              showDevIndicator={false}
+              fetchVersionFromAPI={false}
+            />
           </Typography>
         </Box>
 
@@ -164,7 +147,7 @@ const Signup: React.FC = () => {
           <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', marginBottom: 1, textAlign: 'center' }}>
             Create Account
           </Typography>
-          <Typography variant="body2" color="textSecondary" sx={{ marginBottom: 3 , textAlign: 'center'}}>
+          <Typography variant="body2" color="textSecondary" sx={{ marginBottom: 3, textAlign: 'center' }}>
             Join thousands of professionals using  EDR enterprise digital runner
           </Typography>
 

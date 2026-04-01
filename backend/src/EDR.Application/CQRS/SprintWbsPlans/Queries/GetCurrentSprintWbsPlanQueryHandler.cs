@@ -96,35 +96,33 @@ namespace EDR.Application.CQRS.SprintWbsPlans.Queries
                     .ToListAsync(cancellationToken);
 
                 bool anyChanged = false;
-                var groupedSprints = allSprintsForTasks.GroupBy(p => p.WBSTaskId.Value);
+                var groupedSprints = allSprintsForTasks.GroupBy(p => new { p.ProjectId, p.WBSTaskId });
 
                 foreach (var group in groupedSprints)
                 {
-                    var sortedSprints = group.Select(p => new
-                    {
-                        Plan = p,
-                        ParsedDate = ParseMonthYear(p.MonthYear)
-                    })
-                    .OrderBy(x => x.ParsedDate)
-                    .ThenBy(x => x.Plan.SprintNumber)
-                    .ToList();
+                    var orderedPlans = group
+                        .OrderBy(x => int.Parse(x.MonthYear.Split('-')[1])) // Year
+                        .ThenBy(x => int.Parse(x.MonthYear.Split('-')[0])) // Month
+                        .ThenBy(x => x.SprintNumber)
+                        .ToList();
 
-                    // Carryover propagates through the chain
-                    for (int i = 1; i < sortedSprints.Count; i++)
+                    for (int i = 0; i < orderedPlans.Count; i++)
                     {
-                        var prev = sortedSprints[i - 1].Plan;
-                        var curr = sortedSprints[i].Plan;
+                        var currentSprint = orderedPlans[i];
+                        var previousSprint = i > 0 ? orderedPlans[i - 1] : null;
 
-                        // Logic: Carryover must only run when a valid previous sprint exists
-                        // and only if the previous sprint has been worked on (consumed).
-                        if (prev != null && prev.IsConsumed && prev.RemainingHours > 0 && !curr.IsCarryoverApplied)
+                        if (previousSprint != null 
+                            && previousSprint.RemainingHours > 0 
+                            && !currentSprint.IsCarryoverApplied)
                         {
-                            curr.PlannedHours += prev.RemainingHours;
-                            curr.RemainingHours += prev.RemainingHours;
-                            prev.RemainingHours = 0;
-                            curr.IsCarryoverApplied = true;
+                            currentSprint.PlannedHours += previousSprint.RemainingHours;
+                            currentSprint.RemainingHours += previousSprint.RemainingHours;
+
+                            currentSprint.IsCarryoverApplied = true;
                             anyChanged = true;
                         }
+
+                        Console.WriteLine($"Project: {currentSprint.ProjectId}, Task: {currentSprint.WBSTaskId}, Sprint: {currentSprint.SprintNumber}, Remaining: {currentSprint.RemainingHours}");
                     }
                 }
 

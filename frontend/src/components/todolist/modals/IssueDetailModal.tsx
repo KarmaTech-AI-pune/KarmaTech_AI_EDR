@@ -26,7 +26,7 @@ import { TimeTrackingWidget } from "../common/TimeTrackingWidget";
 import { projectApi } from '../../../services/projectApi';
 import { getUserById } from '../../../services/userApi';
 import { useProject } from '../../../context/ProjectContext';
-import { updateIssueTimeAPI } from "../../../data/todolistData";
+
 
 interface IssueDetailModalProps {
   showIssueDetail: Issue | null;
@@ -304,7 +304,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     if (showIssueDetail) {
       if (modalType === 'reporter') {
         const newActual = (showIssueDetail.actualHours || 0) + timeSpent;
-        const addedHours = timeSpent;
 
         // Optimistic update
         const updatedIssue = {

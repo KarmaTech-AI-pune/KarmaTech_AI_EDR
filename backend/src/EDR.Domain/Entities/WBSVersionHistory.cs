@@ -57,7 +57,7 @@ namespace EDR.Domain.Entities
         // Navigation properties
         [ForeignKey("WBSHeaderId")]
         [InverseProperty("VersionHistories")]
-        [DeleteBehavior(DeleteBehavior.NoAction)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public virtual WBSHeader WBSHeader { get; set; }
 
         [ForeignKey("CreatedBy")]

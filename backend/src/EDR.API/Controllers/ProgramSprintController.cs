@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using EDR.Application.CQRS.SprintWbsPlans.Commands;
 using EDR.Application.CQRS.SprintWbsPlans.Queries;
@@ -29,6 +29,13 @@ namespace EDR.API.Controllers{
         [HttpGet("{projectId}")]
         public async Task<ActionResult<List<EDR.Domain.Entities.SprintWbsPlan>>> Get(int projectId)        {
             var result = await _mediator.Send(new GetSprintWbsPlansByProjectQuery(projectId));
+            return Ok(result);
+        }
+
+        [HttpGet("{projectId}/version/{backlogVersion}")]
+        public async Task<ActionResult<List<EDR.Domain.Entities.SprintWbsPlan>>> GetByVersion(int projectId, int backlogVersion)
+        {
+            var result = await _mediator.Send(new GetSprintWbsPlansByProjectAndVersionQuery(projectId, backlogVersion));
             return Ok(result);
         }
 

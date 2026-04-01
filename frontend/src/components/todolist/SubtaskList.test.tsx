@@ -59,7 +59,6 @@ describe('SubtaskList', () => {
     render(
       <SubtaskList
         issue={mockIssue}
-        teamMembers={[]}
         onUpdateIssue={vi.fn()}
         onCreateSubtask={vi.fn()}
         onUpdateSubtask={vi.fn()}
@@ -77,7 +76,6 @@ describe('SubtaskList', () => {
     render(
       <SubtaskList
         issue={mockIssue}
-        teamMembers={[]}
         onUpdateIssue={vi.fn()}
         onCreateSubtask={onCreateSubtaskMock}
         onUpdateSubtask={vi.fn()}

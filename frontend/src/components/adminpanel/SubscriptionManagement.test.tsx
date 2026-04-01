@@ -27,7 +27,7 @@ const mockPlans: SubscriptionPlan[] = [
     maxStorageGB: 5,
     features: [mockFeatures[0]],
     isActive: true,
-    tenants: 1, // Number of tenants, not array
+    tenants: 1,
   },
   {
     id: 2,
@@ -40,7 +40,7 @@ const mockPlans: SubscriptionPlan[] = [
     maxStorageGB: 50,
     features: [mockFeatures[0], mockFeatures[1]],
     isActive: true,
-    tenants: 2, // Number of tenants, not array
+    tenants: 2,
   },
 ];
 
@@ -132,7 +132,7 @@ describe('SubscriptionManagement', () => {
       maxStorageGB: 100,
       features: [mockFeatures[0]],
       isActive: true,
-      tenants: 0, // Number of tenants, not array
+      tenants: 0,
     });
     
     render(<SubscriptionManagement />);
