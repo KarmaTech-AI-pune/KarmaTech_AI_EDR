@@ -6,7 +6,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { Delete } from "@mui/icons-material";
-import { Subtask, TeamMember } from "../../types/todolist";
+import { Subtask } from "../../types/todolist";
 import { IssueTypeIcon } from "./common/IssueTypeIcon";
 import { PriorityIcon } from "./common/PriorityIcon";
 import { InlineEdit } from "./common/InlineEdit";
@@ -14,7 +14,6 @@ import { ConfirmationDialog } from "../common/ConfirmationDialog";
 
 interface SubtaskItemProps {
   subtask: Subtask;
-  teamMembers?: TeamMember[];
   onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
   onDeleteSubtask: (subtaskId: string) => void;
   onSubtaskClick?: (subtask: Subtask) => void;

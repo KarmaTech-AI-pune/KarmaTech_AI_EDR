@@ -168,8 +168,21 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   ];
 
   const handleStatusChange = (newStatus: Issue["status"]) => {
-    onUpdateIssue(showIssueDetail.id, { status: newStatus });
-    setShowIssueDetail((prev: Issue | null) => prev ? { ...prev, status: newStatus } : null);
+    const oldStatus = showIssueDetail.status;
+    const isTransitioningToDone = newStatus === 'Done' && oldStatus !== 'Done';
+
+    if (isTransitioningToDone) {
+      const updatedFields: Partial<Issue> = {
+        status: newStatus,
+        actualHours: showIssueDetail.estimatedHours || 0,
+        remainingHours: 0,
+      };
+      onUpdateIssue(showIssueDetail.id, updatedFields);
+      setShowIssueDetail((prev: Issue | null) => prev ? { ...prev, ...updatedFields } : null);
+    } else {
+      onUpdateIssue(showIssueDetail.id, { status: newStatus });
+      setShowIssueDetail((prev: Issue | null) => prev ? { ...prev, status: newStatus } : null);
+    }
   };
 
   const handleAddComment = () => {
@@ -287,7 +300,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
 
 
-  const handleLogWork = async (timeSpent: number, remainingEstimate: number, description: string, modalType?: 'employee' | 'reporter', workedSP?: number) => {
+  const handleLogWork = async (timeSpent: number, remainingEstimate: number, description: string, modalType?: 'employee' | 'reporter') => {
     if (showIssueDetail) {
       if (modalType === 'reporter') {
         const newActual = (showIssueDetail.actualHours || 0) + timeSpent;
@@ -297,8 +310,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         const updatedIssue = {
           ...showIssueDetail,
           actualHours: newActual,
-          remainingHours: remainingEstimate,
-          allWorkStoryPoints: (showIssueDetail.allWorkStoryPoints || 0) + (workedSP || 0)
+          remainingHours: remainingEstimate
         };
 
         const reporterDisplayName = projectManager?.name && projectManager.name !== 'Unknown'
@@ -318,26 +330,17 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           text: workLogComment,
           createdDate: new Date().toISOString().split("T")[0],
           hoursLogged: 0,
-          description: description,
-          workedStoryPoints: workedSP
+          description: description
         };
         updatedIssue.comments = [...updatedIssue.comments, newComment];
-        onAddComment(showIssueDetail.id, workLogComment, workedSP);
+        onAddComment(showIssueDetail.id, workLogComment);
 
         setShowIssueDetail(updatedIssue);
         // Update the issue in the main list as well
         handleUpdateIssueAndState(showIssueDetail.id, {
           actualHours: newActual,
-          remainingHours: remainingEstimate,
-          allWorkStoryPoints: (showIssueDetail.allWorkStoryPoints || 0) + (workedSP || 0)
+          remainingHours: remainingEstimate
         });
-
-        // Call the dedicated API for time tracking
-        const apiIssuePayload = {
-          ...updatedIssue,
-          actualHours: addedHours
-        };
-        await updateIssueTimeAPI(apiIssuePayload);
       } else {
         // Employee flow: Only history/comment is updated
         const logActionText = `logged ${timeSpent}h`;
@@ -480,7 +483,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           {/* Subtask Management */}
           <SubtaskList
             issue={showIssueDetail}
-            teamMembers={teamMembers}
             onUpdateIssue={handleUpdateIssueAndState}
             onCreateSubtask={onCreateSubtask}
             onUpdateSubtask={handleUpdateSubtask}
@@ -633,16 +635,13 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             {/* Time Tracking Widget */}
             <TimeTrackingWidget
               status={showIssueDetail.status}
-              storyPoints={showIssueDetail.storyPoints}
-              allWorkStoryPoints={showIssueDetail.allWorkStoryPoints}
-              workedStoryPoints={showIssueDetail.workedStoryPoints}
               taskName={showIssueDetail.summary}
               reporterName={projectManager?.name || showIssueDetail.reporter?.name}
               originalEstimate={showIssueDetail.estimatedHours || 0}
               remainingEstimate={showIssueDetail.remainingHours || 0}
               timeSpent={showIssueDetail.actualHours || 0}
               employeeLoggedHours={showIssueDetail.totalLoggedHours || 0}
-              onLogWork={(time, rem, desc, modalType, _allWorkSP, workedSP) => handleLogWork(time, rem, desc, modalType, workedSP)}
+              onLogWork={(time, rem, desc, modalType) => handleLogWork(time, rem, desc, modalType)}
               recentLogs={recentWorkLogs}
             />
           </Box>

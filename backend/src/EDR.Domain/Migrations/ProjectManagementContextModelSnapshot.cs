@@ -3815,8 +3815,14 @@ namespace EDR.Domain.Migrations
                     b.Property<string>("AssignedUserName")
                         .HasColumnType("text");
 
+                    b.Property<int>("BacklogVersion")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsCarryoverApplied")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsConsumed")
                         .HasColumnType("boolean");

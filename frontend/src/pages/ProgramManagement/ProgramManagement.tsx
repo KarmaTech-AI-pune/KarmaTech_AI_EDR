@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { Edit, Delete } from '@mui/icons-material';
+import { Edit, Delete, Assessment as AssessmentIcon } from '@mui/icons-material';
 import { usePrograms } from '../../hooks/usePrograms';
 import { Pagination } from '../../components/Pagination';
 import CreateProgramDialog from '../../components/ProgramManagement/CreateProgramDialog';
@@ -30,7 +30,7 @@ import { useProject } from '../../context/ProjectContext';
 
 const ProgramManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { setProgramId } = useProject();
+  const { programId, setProgramId } = useProject();
   const { programs, isLoading, error, refetch } = usePrograms();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -164,19 +164,21 @@ const ProgramManagement: React.FC = () => {
             Program Management
           </Typography>
 
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={() => setIsCreateDialogOpen(true)}
-            sx={{
-              textTransform: 'none',
-              borderRadius: 2,
-              px: 3
-            }}
-          >
-            Create Program
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={() => setIsCreateDialogOpen(true)}
+              sx={{
+                textTransform: 'none',
+                borderRadius: 2,
+                px: 3
+              }}
+            >
+              Create Program
+            </Button>
+          </Box>
         </Box>
 
         <Divider sx={{ mb: 3 }} />
@@ -276,6 +278,7 @@ const ProgramManagement: React.FC = () => {
                   gap: 1,
                   ml: 2
                 }}>
+
                   <Button
                     size="small"
                     onClick={(e) => {
