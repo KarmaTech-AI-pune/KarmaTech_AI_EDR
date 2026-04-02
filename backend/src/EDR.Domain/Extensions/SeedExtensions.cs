@@ -486,6 +486,7 @@ namespace EDR.Domain.Extensions
 
                     // Shared / Utility
                     new Feature { Name = "Email Notifications", IsActive = true },
+                    new Feature { Name = "Product Backlog", IsActive = true },
                 };
 
                 try
@@ -508,6 +509,13 @@ namespace EDR.Domain.Extensions
                 if (!context.Set<Feature>().Any(f => f.Name == "Cashflow"))
                 {
                     context.Set<Feature>().Add(new Feature { Name = "Cashflow", IsActive = true });
+                    await context.SaveChangesAsync();
+                }
+
+                // Check and add Product Backlog if it doesn't exist
+                if (!context.Set<Feature>().Any(f => f.Name == "Product Backlog"))
+                {
+                    context.Set<Feature>().Add(new Feature { Name = "Product Backlog", IsActive = true });
                     await context.SaveChangesAsync();
                 }
             }
@@ -576,6 +584,7 @@ namespace EDR.Domain.Extensions
             var bidPreparationFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Bid Preparation");
             var emailNotificationsFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Email Notifications");
             var cashflowFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Cashflow");
+            var productBacklogFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Product Backlog");
 
             // Operate Plan Features (Basic)
             if (existingOperatePlan != null)
@@ -587,6 +596,7 @@ namespace EDR.Domain.Extensions
                 if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = odcTableFeature.Id });
                 if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = jobStartFormFeature.Id });
                 if (opportunityTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = opportunityTrackingFeature.Id });
+                if (productBacklogFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOperatePlan.Id, FeatureId = productBacklogFeature.Id });
             }
 
             // Automate Plan Features (Intermediate)
@@ -600,6 +610,7 @@ namespace EDR.Domain.Extensions
                 if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = odcTableFeature.Id });
                 if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = jobStartFormFeature.Id });
                 if (opportunityTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = opportunityTrackingFeature.Id });
+                if (productBacklogFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = productBacklogFeature.Id });
 
                 // Additional features
                 if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutomatePlan.Id, FeatureId = inputRegisterFeature.Id });
@@ -632,6 +643,7 @@ namespace EDR.Domain.Extensions
                 if (bidPreparationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = bidPreparationFeature.Id });
                 if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = emailNotificationsFeature.Id });
                 if (cashflowFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = cashflowFeature.Id });
+                if (productBacklogFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingAutonomousPlan.Id, FeatureId = productBacklogFeature.Id });
             }
 
 
