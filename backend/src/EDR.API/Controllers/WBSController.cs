@@ -90,15 +90,9 @@ namespace EDR.API.Controllers
                     return BadRequest("WBS master data cannot be null.");
                 }
 
-                if (wbsMaster.WorkBreakdownStructures == null || !wbsMaster.WorkBreakdownStructures.Any())
-                {
-                    _logger.LogWarning("SetWBS: WorkBreakdownStructures array is null or empty");
-                    return BadRequest("WorkBreakdownStructures array cannot be null or empty.");
-                }
-
                 _logger.LogInformation("SetWBS: Processing {Count} WBS groups with {TaskCount} total tasks",
-                    wbsMaster.WorkBreakdownStructures.Count,
-                    wbsMaster.WorkBreakdownStructures.Sum(w => w.Tasks?.Count ?? 0));
+                    wbsMaster.WorkBreakdownStructures?.Count ?? 0,
+                    wbsMaster.WorkBreakdownStructures?.Sum(w => w.Tasks?.Count ?? 0) ?? 0);
 
                 var command = new SetWBSCommand(projectId, wbsMaster);
                 var savedData = await _mediator.Send(command);
