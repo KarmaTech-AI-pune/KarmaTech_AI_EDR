@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -335,35 +335,46 @@ namespace EDR.Domain.Extensions
                     await context.SaveChangesAsync();
 
                     // Seed WBS Tasks
-                    var tasks = new[]
+                    // First, find the corresponding WBS Options to correctly link them
+                    var l1Option = context.WBSOptions.FirstOrDefault(wo => wo.Value == "inception_report");
+                    var l1OptionId = l1Option?.Id ?? 1;
+
+                    var l2Option = context.WBSOptions.FirstOrDefault(wo => wo.Value == "design" && wo.ParentId == l1OptionId);
+                    var l2OptionId = l2Option?.Id ?? 8;
+
+                    var l3Option = context.WBSOptions.FirstOrDefault(wo => wo.Value == "process_design" && wo.ParentId == l2OptionId);
+                    var l3OptionId = l3Option?.Id ?? 31;
+
+                    var l1Task = new WBSTask
                     {
-                        new WBSTask
-                        {
-                            Title = "Project Planning",
-                            Description = "Initial project planning phase",
-                            Level = WBSTaskLevel.Level1,
-                            WorkBreakdownStructureId = wbs.Id,
-                            WBSOptionId = context.WBSOptions.FirstOrDefault(wo => wo.Value == "inception_report")?.Id ?? 1
-                        },
-                        new WBSTask
-                        {
-                            Title = "Design",
-                            Description = "Design phase activities",
-                            Level = WBSTaskLevel.Level2,
-                            WorkBreakdownStructureId = wbs.Id,
-                            WBSOptionId = context.WBSOptions.FirstOrDefault(wo => wo.Value == "design" && wo.ParentId == 1)?.Id ?? 8
-                        },
-                        new WBSTask
-                        {
-                            Title = "Development",
-                            Description = "Development phase activities",
-                            Level = WBSTaskLevel.Level3,
-                            WorkBreakdownStructureId = wbs.Id,
-                            WBSOptionId = context.WBSOptions.FirstOrDefault(wo => wo.Value == "process_design")?.Id ?? 31
-                        }
+                        Title = "Project Planning",
+                        Description = "Initial project planning phase",
+                        Level = WBSTaskLevel.Level1,
+                        WorkBreakdownStructureId = wbs.Id,
+                        WBSOptionId = l1OptionId
                     };
 
-                    context.WBSTasks.AddRange(tasks);
+                    var l2Task = new WBSTask
+                    {
+                        Title = "Design",
+                        Description = "Design phase activities",
+                        Level = WBSTaskLevel.Level2,
+                        WorkBreakdownStructureId = wbs.Id,
+                        WBSOptionId = l2OptionId,
+                        Parent = l1Task
+                    };
+
+                    var l3Task = new WBSTask
+                    {
+                        Title = "Development",
+                        Description = "Development phase activities",
+                        Level = WBSTaskLevel.Level3,
+                        WorkBreakdownStructureId = wbs.Id,
+                        WBSOptionId = l3OptionId,
+                        Parent = l2Task
+                    };
+
+                    context.WBSTasks.AddRange(l1Task, l2Task, l3Task);
                     await context.SaveChangesAsync();
 
                     // Assign users to WBS tasks
