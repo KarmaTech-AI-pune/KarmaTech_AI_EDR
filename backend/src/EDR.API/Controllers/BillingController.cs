@@ -170,7 +170,23 @@ namespace EDR.API.Controllers
             try
             {
                 var tenants = await _context.Tenants
-                    .Select(t => new { id = t.Id, name = !string.IsNullOrWhiteSpace(t.CompanyName) ? t.CompanyName : t.Name })
+                    .Include(t => t.SubscriptionPlan)
+                    .Select(t => new
+                    {
+                        id = t.Id,
+                        name = !string.IsNullOrWhiteSpace(t.CompanyName) ? t.CompanyName : t.Name,
+                        tenantName = t.Name,
+                        companyName = t.CompanyName,
+                        contactEmail = t.ContactEmail,
+                        contactPhone = t.ContactPhone,
+                        domain = t.Domain,
+                        subscriptionPlanName = t.SubscriptionPlan != null ? t.SubscriptionPlan.Name : null,
+                        subscriptionMonthlyPrice = t.SubscriptionPlan != null ? t.SubscriptionPlan.MonthlyPrice : (decimal?)null,
+                        maxUsers = t.MaxUsers,
+                        maxProjects = t.MaxProjects,
+                        status = t.Status.ToString(),
+                        isIsolated = t.IsIsolated
+                    })
                     .ToListAsync();
                 return Ok(tenants);
             }

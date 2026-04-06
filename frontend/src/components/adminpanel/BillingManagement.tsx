@@ -29,8 +29,9 @@ import {
   Tooltip,
   Snackbar,
 } from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
 import { billingApi, BillingDashboardData, CreateInvoicePayload, TenantOption } from '../../services/billingApi';
+import { generateInvoicePdf } from '../../utils/invoicePdfGenerator';
 
 const STATUSES = ['Paid', 'Pending', 'Overdue'];
 
@@ -64,6 +65,9 @@ const BillingManagement = () => {
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [editingInvoiceId, setEditingInvoiceId] = useState<number | null>(null);
+  const [pdfLoadingId, setPdfLoadingId] = useState<number | null>(null);
+  // Cached tenant list (populated on first open of modal) reused for PDF generation
+  const [tenantCache, setTenantCache] = useState<TenantOption[]>([]);
 
   const fetchBillingData = async () => {
     setLoading(true);
@@ -111,10 +115,34 @@ const BillingManagement = () => {
       const tenantList = await billingApi.getTenants();
       console.log('Fetched tenants:', tenantList);
       setTenants(tenantList);
+      setTenantCache(tenantList); // keep a cache for PDF generation
       if (tenantList.length > 0) setForm(f => ({ ...f, tenantId: f.tenantId || tenantList[0].id }));
     } catch (err) {
       console.error('Failed to load tenants:', err);
       showSnackbar('Failed to load tenants.', 'error');
+    }
+  };
+
+  const handleDownloadPdf = async (invoice: typeof billingData.invoices[0]) => {
+    setPdfLoadingId(invoice.id);
+    try {
+      // Use cached tenants; if not yet loaded, fetch now
+      let allTenants = tenantCache;
+      if (allTenants.length === 0) {
+        allTenants = await billingApi.getTenants();
+        setTenantCache(allTenants);
+      }
+      const tenant = allTenants.find(t => t.id === invoice.tenantId);
+      if (!tenant) {
+        showSnackbar('Tenant information not found for this invoice.', 'error');
+        return;
+      }
+      await generateInvoicePdf(invoice, tenant);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      showSnackbar('Failed to generate PDF. Please try again.', 'error');
+    } finally {
+      setPdfLoadingId(null);
     }
   };
 
@@ -260,6 +288,20 @@ const BillingManagement = () => {
                     {invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString('en-IN') : '-'}
                   </TableCell>
                   <TableCell align="center">
+                    <Tooltip title="Download PDF Invoice">
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={() => handleDownloadPdf(invoice)}
+                          disabled={pdfLoadingId === invoice.id}
+                        >
+                          {pdfLoadingId === invoice.id
+                            ? <CircularProgress size={16} color="inherit" />
+                            : <PictureAsPdfIcon fontSize="small" />}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                     <Tooltip title="Edit Invoice">
                       <IconButton
                         size="small"
