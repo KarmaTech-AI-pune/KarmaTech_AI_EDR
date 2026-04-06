@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -16,7 +16,10 @@ import {
   Checkbox,
   SelectChangeEvent,
   FormControlLabel,
+  IconButton,
+  InputAdornment,
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { AuthUser } from '../../../models/userModel';
 import { Role } from '../../../models/roleModel';
 import { useRoles } from '../../../hooks/useRoles';
@@ -55,8 +58,9 @@ const UserDialog: React.FC<UserDialogProps> = ({
   const selectedRoleNames = formData.roles;
 
   // 🔹 keep errors in local state
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
-  const [submitted, setSubmitted] = React.useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { value: standardRateValue, setValue: setStandardRateValue, handleChange: handleRateChange } =
     useNumericInput(formData.standardRate);
@@ -182,13 +186,25 @@ const UserDialog: React.FC<UserDialogProps> = ({
               <TextField
                 name="password"
                 label="Password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required={!editingUser}
                 value={formData.password}
                 onChange={handleInputChange}
                 fullWidth
                 error={submitted && !!errors.password}
                 helperText={submitted ? errors.password : ""}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(prev => !prev)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
               <TextField
                 name="standardRate"
@@ -245,6 +261,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
       )}
     </Dialog>
   );
+  
 };
 
 export default UserDialog;
