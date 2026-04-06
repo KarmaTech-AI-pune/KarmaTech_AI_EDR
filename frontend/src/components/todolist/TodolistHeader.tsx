@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Typography, TextField, InputAdornment, Chip, Box, IconButton, Avatar, AvatarGroup, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
-import { Search, Add } from '@mui/icons-material';
+import { Search, Add, Edit } from '@mui/icons-material';
 import { SprintEmployee, SprintPlanDto } from '../../data/todolistData';
 
 interface TodolistHeaderProps {
@@ -13,6 +13,7 @@ interface TodolistHeaderProps {
   sprintPlan?: SprintPlanDto | null;
   onCompleteSprint?: () => void;
   onCreateSprint?: () => void;
+  onUpdateSprint?: (updatedPlan: Partial<SprintPlanDto>) => void | Promise<void>;
 }
 
 export const TodolistHeader: React.FC<TodolistHeaderProps> = ({
@@ -25,8 +26,11 @@ export const TodolistHeader: React.FC<TodolistHeaderProps> = ({
   sprintPlan,
   onCompleteSprint,
   onCreateSprint,
+  onUpdateSprint,
 }) => {
   const [openConfirm, setOpenConfirm] = useState(false);
+  const [openEditSprint, setOpenEditSprint] = useState(false);
+  const [editSprintData, setEditSprintData] = useState<Partial<SprintPlanDto>>({});
 
   const handleCompleteClick = () => {
     setOpenConfirm(true);
@@ -37,6 +41,25 @@ export const TodolistHeader: React.FC<TodolistHeaderProps> = ({
       onCompleteSprint();
     }
     setOpenConfirm(false);
+  };
+
+  const handleEditSprintClick = () => {
+    if (sprintPlan) {
+      setEditSprintData({
+        sprintName: sprintPlan.sprintName,
+        sprintGoal: sprintPlan.sprintGoal,
+        startDate: new Date(sprintPlan.startDate).toISOString().split('T')[0],
+        endDate: new Date(sprintPlan.endDate).toISOString().split('T')[0],
+      });
+      setOpenEditSprint(true);
+    }
+  };
+
+  const handleSaveSprintEdit = () => {
+    if (onUpdateSprint) {
+      onUpdateSprint(editSprintData);
+    }
+    setOpenEditSprint(false);
   };
 
   return (
@@ -53,9 +76,16 @@ export const TodolistHeader: React.FC<TodolistHeaderProps> = ({
                [Sprint Name]
                [Dates - Goal]
            */}
-          <Typography variant="body1" sx={{ fontWeight: 500 }}>
-            <strong>Sprint Name:</strong> {sprintPlan.sprintName}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              <strong>Sprint Name:</strong> {sprintPlan.sprintName}
+            </Typography>
+            {onUpdateSprint && (
+              <IconButton size="small" onClick={handleEditSprintClick} sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
+                <Edit fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
           {sprintPlan.sprintNumber !== undefined && (
             <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
               <strong>Sprint Number:</strong> {sprintPlan.sprintNumber}
@@ -176,6 +206,56 @@ export const TodolistHeader: React.FC<TodolistHeaderProps> = ({
           <Button onClick={() => setOpenConfirm(false)}>Cancel</Button>
           <Button onClick={handleConfirmComplete} color="primary" autoFocus>
             Complete Sprint
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Sprint Dialog */}
+      <Dialog open={openEditSprint} onClose={() => setOpenEditSprint(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Sprint</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+          <TextField
+            label="Sprint Name"
+            name="sprintName"
+            value={editSprintData.sprintName || ''}
+            onChange={(e) => setEditSprintData({ ...editSprintData, sprintName: e.target.value })}
+            fullWidth
+            required
+          />
+          <TextField
+            label="Sprint Goal"
+            name="sprintGoal"
+            value={editSprintData.sprintGoal || ''}
+            onChange={(e) => setEditSprintData({ ...editSprintData, sprintGoal: e.target.value })}
+            fullWidth
+            multiline
+            rows={3}
+          />
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              label="Start Date"
+              name="startDate"
+              type="date"
+              value={editSprintData.startDate || ''}
+              onChange={(e) => setEditSprintData({ ...editSprintData, startDate: e.target.value })}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label="End Date"
+              name="endDate"
+              type="date"
+              value={editSprintData.endDate || ''}
+              onChange={(e) => setEditSprintData({ ...editSprintData, endDate: e.target.value })}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenEditSprint(false)}>Cancel</Button>
+          <Button onClick={handleSaveSprintEdit} variant="contained" color="primary">
+            Save
           </Button>
         </DialogActions>
       </Dialog>

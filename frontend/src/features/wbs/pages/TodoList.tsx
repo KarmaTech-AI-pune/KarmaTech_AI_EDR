@@ -37,6 +37,7 @@ export default function TodoList() {
     sprintPlan,
     completeSprint,
     navigateToSprint,
+    updateSprintPlan,
   } = useTodolistIssues();
 
   const {
@@ -142,6 +143,7 @@ export default function TodoList() {
         sprintPlan={sprintPlan}
         onCompleteSprint={completeSprint}
         onCreateSprint={handleCreateSprint}
+        onUpdateSprint={updateSprintPlan}
       />
 
       <Box sx={{ py: 3 }}>
