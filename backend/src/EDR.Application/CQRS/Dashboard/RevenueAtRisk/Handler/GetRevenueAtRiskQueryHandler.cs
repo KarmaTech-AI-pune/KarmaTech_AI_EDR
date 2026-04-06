@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,6 +30,7 @@ namespace EDR.Application.CQRS.Dashboard.RevenueAtRisk.Handler
                 select new { Project = p, JobStartForm = jsf }
             ).ToListAsync(cancellationToken);
 
+            var now = DateTime.Now;
             var delayedProjects = await (
                 from p in _context.Projects
                 join mp in _context.MonthlyProgresses on p.Id equals mp.ProjectId // Changed p.ProjectId to p.Id
@@ -37,8 +38,7 @@ namespace EDR.Application.CQRS.Dashboard.RevenueAtRisk.Handler
                 join jsf in _context.JobStartForms on p.Id equals jsf.ProjectId into ps_jsf_delayed
                 from jsf in ps_jsf_delayed.DefaultIfEmpty()
                 where s.CompletionDateAsPerContract.HasValue &&
-                      EF.Functions.DateDiffDay(s.CompletionDateAsPerContract.Value,
-                          s.ExpectedCompletionDate ?? DateTime.Now) > 15
+                      (s.ExpectedCompletionDate ?? now) > s.CompletionDateAsPerContract.Value.AddDays(15)
                 select new { Project = p, JobStartForm = jsf }
             ).ToListAsync(cancellationToken);
 
