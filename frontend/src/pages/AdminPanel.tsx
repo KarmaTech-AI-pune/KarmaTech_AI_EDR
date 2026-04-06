@@ -8,6 +8,7 @@ import {
   IconButton,
   Drawer,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import { useTenantContext } from '../hooks/useTenantContext';
 import { authApi } from '../services/authApi';
@@ -45,6 +46,7 @@ const AdminPanel: React.FC = () => {
   const { isSuperAdmin } = useTenantContext();
   const [hasSystemAdminPermission, setHasSystemAdminPermission] = useState(false);
   const [hasTenantAdminPermission, setHasTenantAdminPermission] = useState(false);
+  const [isLoadingPermissions, setIsLoadingPermissions] = useState(true);
   const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'features' | 'release' | 'settings'>('settings');
 
 
@@ -76,6 +78,8 @@ const AdminPanel: React.FC = () => {
         }
       } catch (error) {
         console.error('Error checking permissions:', error);
+      } finally {
+        setIsLoadingPermissions(false);
       }
     };
     checkPermissions();
@@ -208,7 +212,12 @@ const AdminPanel: React.FC = () => {
           </IconButton>
         </Box>
         <List sx={{ width: '100%', p: 2 }}>
-          {visibleMenuItems.map((item) => (
+          {isLoadingPermissions ? (
+            <Box display="flex" justifyContent="center" py={3}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            visibleMenuItems.map((item) => (
             <ListItemButton
               key={item.id}
               onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'generalSettings' | 'features' | 'migrations' | 'release' | 'settings')}
@@ -245,7 +254,8 @@ const AdminPanel: React.FC = () => {
                 />
               )}
             </ListItemButton>
-          ))}
+          ))
+          )}
         </List>
       </Drawer>
 
