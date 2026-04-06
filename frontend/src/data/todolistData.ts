@@ -204,11 +204,6 @@ const apiService = {
     await axiosInstance.delete(`/api/sprint-tasks/subtasks/${subtaskId}`);
   },
 
-  async fetchProjectSchedule(projectId: number): Promise<any> {
-    const response = await axiosInstance.get(`/api/project-schedule/${projectId}`);
-    return response.data;
-  },
-
   async fetchNextSprint(projectId: number, currentSprintId: number): Promise<SprintPlanDto | null> {
     try {
       const response = await axiosInstance.get<SprintPlanDto>(`/api/sprint-tasks/next`, {
@@ -656,21 +651,6 @@ export const fetchIssuesForSprintAPI = async (sprintId: number, projectId?: numb
     throw error;
   }
 };
-
-export const fetchActiveSprintIdAPI = async (projectId: number): Promise<number | null> => {
-  try {
-    const projectSchedule = await apiService.fetchProjectSchedule(projectId);
-    // ProjectScheduleDto has sprintId
-    return projectSchedule.sprintId || null;
-  } catch (error: any) {
-    if (error.response && error.response.status === 404) {
-      return null;
-    }
-    console.error('Failed to fetch project schedule:', error);
-    throw error;
-  }
-};
-
 export const fetchNextSprintAPI = async (projectId: number, currentSprintId: number): Promise<SprintPlanDto | null> => {
   return await apiService.fetchNextSprint(projectId, currentSprintId);
 };

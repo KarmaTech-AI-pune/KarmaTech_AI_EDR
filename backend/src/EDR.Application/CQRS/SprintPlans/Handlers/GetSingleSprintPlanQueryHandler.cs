@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.SprintPlans.Queries;
@@ -27,31 +27,60 @@ namespace EDR.Application.CQRS.SprintPlans.Handlers
         {
             _logger.LogInformation("Attempting to retrieve SprintPlan with ID: {SprintId}, ProjectId filter: {ProjectId}", request.SprintId, request.ProjectId);
 
-            var sprintPlanEntity = await _context.SprintPlans
-                .Include(sp => sp.SprintTasks!)
-                    .ThenInclude(st => st.Subtasks!)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(sp => sp.SprintId == request.SprintId, cancellationToken);
+            SprintPlan? sprintPlanEntity = null;
 
-            if (sprintPlanEntity == null)
+            if (request.SprintId == 0)
             {
-                _logger.LogWarning("SprintPlan with ID {SprintId} not found.", request.SprintId);
-                return null;
+                if (!request.ProjectId.HasValue)
+                {
+                    _logger.LogWarning("ProjectId is required when requesting the active sprint (SprintId = 0).");
+                    return null;
+                }
+
+                _logger.LogInformation("SprintId is 0. Attempting to fetch the active/planned sprint for Project ID: {ProjectId}", request.ProjectId);
+
+                sprintPlanEntity = await _context.SprintPlans
+                    .Include(sp => sp.SprintTasks!)
+                        .ThenInclude(st => st.Subtasks!)
+                    .AsNoTracking()
+                    .Where(sp => sp.ProjectId == request.ProjectId.Value && sp.Status == 0 && sp.TenantId == (_context.TenantId ?? 0))
+                    .OrderBy(sp => sp.SprintId)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (sprintPlanEntity == null)
+                {
+                    _logger.LogWarning("No active/planned sprint found for Project ID {ProjectId}.", request.ProjectId);
+                    return null;
+                }
+            }
+            else
+            {
+                sprintPlanEntity = await _context.SprintPlans
+                    .Include(sp => sp.SprintTasks!)
+                        .ThenInclude(st => st.Subtasks!)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(sp => sp.SprintId == request.SprintId, cancellationToken);
+
+                if (sprintPlanEntity == null)
+                {
+                    _logger.LogWarning("SprintPlan with ID {SprintId} not found.", request.SprintId);
+                    return null;
+                }
+
+                // Project validation: Ensure sprint belongs to the requested project
+                if (request.ProjectId.HasValue && sprintPlanEntity.ProjectId != request.ProjectId.Value)
+                {
+                    _logger.LogWarning(
+                        "SprintPlan {SprintId} belongs to Project {ActualProjectId}, " +
+                        "but was requested for Project {RequestedProjectId}. Returning null.",
+                        request.SprintId,
+                        sprintPlanEntity.ProjectId,
+                        request.ProjectId.Value);
+                    return null;  // Treat as not found for security
+                }
             }
 
-            // Project validation: Ensure sprint belongs to the requested project
-            if (request.ProjectId.HasValue && sprintPlanEntity.ProjectId != request.ProjectId.Value)
-            {
-                _logger.LogWarning(
-                    "SprintPlan {SprintId} belongs to Project {ActualProjectId}, " +
-                    "but was requested for Project {RequestedProjectId}. Returning null.",
-                    request.SprintId,
-                    sprintPlanEntity.ProjectId,
-                    request.ProjectId.Value);
-                return null;  // Treat as not found for security
-            }
-
-            _logger.LogInformation("SprintPlan with ID {SprintId} found. Converting to DTO.", request.SprintId);
+            _logger.LogInformation("SprintPlan with ID {SprintId} found. Converting to DTO.", sprintPlanEntity.SprintId);
 
             // Convert to DTO
             var sprintPlanDto = new SprintPlanDto
@@ -142,7 +171,7 @@ namespace EDR.Application.CQRS.SprintPlans.Handlers
                 // Step 3: Get the maximum number of employees required by any previous sprint in this project
                 var maxRequiredEmployees = await _context.SprintPlans
                     .Where(sp => sp.ProjectId == sprintPlanEntity.ProjectId 
-                              && sp.SprintId < request.SprintId 
+                              && sp.SprintId < sprintPlanEntity.SprintId 
                               && sp.TenantId == (_context.TenantId ?? 0))
                     .MaxAsync(sp => (int?)sp.RequiredSprintEmployees, cancellationToken) ?? 0;
 
