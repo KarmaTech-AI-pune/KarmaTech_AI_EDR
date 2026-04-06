@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Grid, Box, CircularProgress, Alert, Typography, useTheme } from "@mui/material";
 import { dashboardService } from "../../services/dashboardService";
 import { useProject } from "../../context/ProjectContext";
-import { programApi } from "../../services/api/programApi";
+import { programApi } from "../../services/programApi";
 
 // Components
 import MetricsGrid from "../../components/dashboard/MetricsGrid";

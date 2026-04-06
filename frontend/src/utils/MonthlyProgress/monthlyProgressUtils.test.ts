@@ -5,7 +5,7 @@
  * and nested object value setting for monthly progress tracking.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   formatCurrency,
   getCurrentMonthYear,
@@ -497,7 +497,7 @@ describe('Monthly Progress Utilities', () => {
       it('should not modify original data object', () => {
         // Arrange
         const data = createSampleData();
-        const originalData = JSON.parse(JSON.stringify(data));
+        // originalData removed to fix unused variable error
 
         // Act
         const result = calculateTotals(data);
@@ -559,7 +559,7 @@ describe('Monthly Progress Utilities', () => {
         setNestedValue(obj, 'age', 25);
 
         // Assert
-        expect(obj.age).toBe(25);
+        expect((obj as any).age).toBe(25);
       });
 
       it('should overwrite existing value', () => {
@@ -583,7 +583,7 @@ describe('Monthly Progress Utilities', () => {
         setNestedValue(obj, 'user.profile.name', 'John');
 
         // Assert
-        expect(obj.user.profile.name).toBe('John');
+        expect((obj as any).user.profile.name).toBe('John');
       });
 
       it('should create intermediate objects if they do not exist', () => {
