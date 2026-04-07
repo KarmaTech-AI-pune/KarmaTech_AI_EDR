@@ -162,7 +162,7 @@ const CostToCompleteAndEAC: React.FC = () => {
     setValue('ctcAndEac.eacStaff', calculatedValues.eacStaff);
     setValue('ctcAndEac.totalEAC', calculatedValues.totalEAC);
     setValue('ctcAndEac.grossProfitPercentage', calculatedValues.grossProfitPercentage);
-    setValue('ctcAndEac.expectedGrossProfitPercentage', expectedGrossProfitPercentage);
+    setValue('ctcAndEac.expectedGrossProfitPercentage', expectedGrossProfitPercentage ?? 0);
     setValue('budgetTable.currentBudgetInMIS.profitPercentage', calculatedValues.grossProfitPercentage);
     setValue('budgetTable.currentBudgetInMIS.cost', calculatedValues.totalEAC);
   }, [calculatedValues, expectedGrossProfitPercentage, setValue]);
@@ -208,7 +208,7 @@ const CostToCompleteAndEAC: React.FC = () => {
       title: "Gross Profit",
       control,
       fields: [
-        { name: "expectedGrossProfitPercentage", label: "Expected GP %", readOnly: true, value: expectedGrossProfitPercentage ?? undefined },
+        { name: "expectedGrossProfitPercentage", label: "Expected GP %", readOnly: true, value: expectedGrossProfitPercentage ?? 0 },
         { name: "grossProfitPercentage", label: "Current GP %", readOnly: true, value: calculatedValues.grossProfitPercentage ?? 0 },
       ],
     },
