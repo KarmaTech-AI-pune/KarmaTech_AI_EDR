@@ -1,20 +1,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EDR.Application.CQRS.Dashboard.TotalRevenueExpected.Queries;
-using EDR.Application.CQRS.Dashboard.TotalRevenueActual.Queries;
-using EDR.Application.CQRS.Dashboard.PendingApproval.Query;
-using EDR.Application.CQRS.Dashboard.ProfitMargin.Query;
-using EDR.Application.CQRS.Dashboard.RevenueAtRisk.Query;
-using EDR.Application.CQRS.Dashboard.ProjectsAtRisk.Query;
+using EDR.Application.CQRS.Dashboard.Dashboard.Queries;
 using EDR.Application.Dtos.Dashboard;
-using EDR.Application.CQRS.Dashboard.Cashflow.Queries;
-using EDR.Application.CQRS.Dashboard.Regional.Queries;
-using EDR.Application.CQRS.Dashboard.NpvProfitability.Queries;
-using EDR.Application.CQRS.Dashboard.MilestoneBilling.Queries;
-using EDR.Application.CQRS.Dashboard.TaskPriorityMatrix.Queries;
 using EDR.Application.CQRS.Dashboard;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using System;
 
 namespace EDR.API.Controllers
 {
@@ -40,7 +33,7 @@ namespace EDR.API.Controllers
         }
 
         [HttpGet("total-revenue-expected")]
-        public async Task<ActionResult<TotalRevenueExpectedDto>> GetTotalRevenueExpected() // Reverted DTO name
+        public async Task<ActionResult<TotalRevenueExpectedDto>> GetTotalRevenueExpected()
         {
             var query = new GetTotalRevenueExpectedQuery();
             var totalRevenueExpected = await _mediator.Send(query);
@@ -49,7 +42,7 @@ namespace EDR.API.Controllers
         }
 
         [HttpGet("total-revenue-actual")]
-        public async Task<ActionResult<TotalRevenueActualDto>> GetTotalRevenueActual() // Reverted DTO name
+        public async Task<ActionResult<TotalRevenueActualDto>> GetTotalRevenueActual()
         {
             var query = new GetTotalRevenueActualQuery();
             var totalRevenueActual = await _mediator.Send(query);
@@ -124,49 +117,6 @@ namespace EDR.API.Controllers
             var query = new GetTaskPriorityMatrixQuery();
             var result = await _mediator.Send(query);
             return Ok(result);
-        }
-
-        [HttpGet("project/{projectId}")]
-        [ProducesResponseType(typeof(ProjectDashboardDto), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ProjectDashboardDto>> GetProjectDashboard(int projectId)
-        {
-            var query = new GetProjectDashboardQuery { ProjectId = projectId };
-            var result = await _mediator.Send(query);
-
-            if (result == null)
-            {
-                return NotFound(new { message = $"Project with ID {projectId} not found." });
-            }
-
-            return Ok(result);
-        }
-
-        [HttpGet("program/{programId}")]
-        [ProducesResponseType(typeof(ProgramDashboardDto), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ProgramDashboardDto>> GetProgramDashboard(int programId)
-        {
-            try
-            {
-                Console.WriteLine($"[DashboardController] Received request for program dashboard. ProgramId: {programId}");
-                
-                var query = new GetProgramDashboardQuery { ProgramId = programId };
-                var result = await _mediator.Send(query);
-
-                if (result == null)
-                {
-                    Console.WriteLine($"[DashboardController] Program dashboard result is null for ProgramId: {programId}");
-                    return NotFound(new { message = $"Program with ID {programId} not found." });
-                }
-
-                Console.WriteLine($"[DashboardController] Returning success for program dashboard. ProgramId: {programId}");
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[DashboardController] Exception in GetProgramDashboard: {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
-                return StatusCode(500, new { message = ex.Message, detail = ex.ToString() });
-            }
         }
     }
 }

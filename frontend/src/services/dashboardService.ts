@@ -179,7 +179,7 @@ export const dashboardService = {
     },
 
     getProjectDashboard: async (projectId: number): Promise<ProjectDashboardDto> => {
-        const response = await axiosInstance.get<ProjectDashboardDto>(`api/Dashboard/project/${projectId}`);
+        const response = await axiosInstance.get<ProjectDashboardDto>(`api/ProjectDashboard/project/${projectId}`);
         return response.data;
     },
 
@@ -189,7 +189,7 @@ export const dashboardService = {
     },
 
     getProgramDashboard: async (programId: number): Promise<any> => {
-        const response = await axiosInstance.get<any>(`api/Dashboard/program/${programId}`);
+        const response = await axiosInstance.get<any>(`api/ProgramDashboard/program/${programId}`);
         return response.data;
     }
 };
