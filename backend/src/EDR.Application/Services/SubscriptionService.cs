@@ -15,6 +15,9 @@ namespace EDR.Application.Services
         private readonly TenantDbContext _context;
         private readonly ProjectManagementContext _projectManagementContext;
         private readonly ILogger<SubscriptionService> _logger;
+        private readonly IEmailService _emailService;
+        private readonly IEmailTemplateService _emailTemplateService;
+        private readonly IPdfInvoiceGenerator _pdfInvoiceGenerator;
         private readonly string _razorpayKeyId;
         private readonly string _razorpayKeySecret;
         private readonly string _webhookSecret;
@@ -23,14 +26,21 @@ namespace EDR.Application.Services
         public SubscriptionService(TenantDbContext context,
             ProjectManagementContext projectManagementContext,
             IConfiguration configuration,
+             IEmailService emailService,
+             IEmailTemplateService emailTemplateService,
+             IPdfInvoiceGenerator pdfInvoiceGenerator,
              ILogger<SubscriptionService> logger)
         {
             _context = context;
             _logger = logger;
+            _emailService = emailService;
+            _emailTemplateService = emailTemplateService;
+            _pdfInvoiceGenerator = pdfInvoiceGenerator;
             _razorpayKeyId = configuration["Razorpay:KeyId"];
             _razorpayKeySecret = configuration["Razorpay:KeySecret"];
             _webhookSecret = configuration["Razorpay:WebhookSecret"] ?? "whsec_your_webhook_secret";
-            _isDevelopment = configuration["ASPNETCORE_ENVIRONMENT"] == "Development";
+            var env = configuration["DNS:Env"];
+            _isDevelopment = (configuration["ASPNETCORE_ENVIRONMENT"] == "Development") || (env is "Development" or "Dev");
             _projectManagementContext = projectManagementContext;
         }
 
@@ -105,7 +115,7 @@ namespace EDR.Application.Services
                     var mockInvoice = new TenantInvoice
                     {
                         TenantId = tenant.Id,
-                        InvoiceId = "inv_mock_" + Guid.NewGuid().ToString("N"),
+                        InvoiceId = DateTime.Now.ToString("yyyyMMddHHmmss"),
                         Amount = plan.MonthlyPrice,
                         Status = "Pending",
                         DueDate = DateTime.UtcNow
@@ -113,6 +123,10 @@ namespace EDR.Application.Services
                     _context.TenantInvoices.Add(mockInvoice);
 
                     await _context.SaveChangesAsync();
+
+                    // Send email notification with PDF
+                    await SendInvoiceEmailAsync(tenant.Id, mockInvoice.InvoiceId);
+                    
                     return true;
                 }
 
@@ -159,6 +173,10 @@ namespace EDR.Application.Services
                 _context.TenantInvoices.Add(autoInvoice);
 
                 await _context.SaveChangesAsync();
+
+                // Send email notification with PDF
+                await SendInvoiceEmailAsync(tenant.Id, autoInvoice.InvoiceId);
+
                 return true;
             }
             catch (Exception ex)
@@ -871,6 +889,73 @@ namespace EDR.Application.Services
                 },
                 _ => new LimitationsStructureDto()
             };
+        }
+        public async Task<bool> SendInvoiceEmailAsync(int tenantId, string invoiceId)
+        {
+            try
+            {
+                var tenant = await _context.Tenants
+                    .Include(t => t.SubscriptionPlan)
+                    .FirstOrDefaultAsync(t => t.Id == tenantId);
+
+                var invoice = await _context.TenantInvoices
+                    .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId);
+
+                if (tenant == null || invoice == null)
+                {
+                    _logger.LogWarning("Cannot send invoice email: Tenant {TenantId} or Invoice {InvoiceId} not found.", tenantId, invoiceId);
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(tenant.ContactEmail))
+                {
+                    _logger.LogWarning("Cannot send invoice email: Tenant {TenantId} has no contact email.", tenantId);
+                    return false;
+                }
+
+                // 1. Generate PDF
+                _logger.LogInformation("Generating PDF invoice for Tenant {TenantId}, Invoice {InvoiceId}", tenantId, invoiceId);
+                var pdfPath = await _pdfInvoiceGenerator.GenerateInvoicePdfAsync(invoice, tenant);
+                _logger.LogInformation("Generated PDF at {Path}", pdfPath);
+
+                // 2. Prepare Email Template
+                _logger.LogInformation("Loading email template 'InvoiceEmail'");
+                var template = await _emailTemplateService.GetTemplateAsync("InvoiceEmail");
+                var parameters = new Dictionary<string, string>
+                {
+                    { "CompanyName", "KarmaTech AI EDR" },
+                    { "ContactPerson", tenant.CompanyName ?? tenant.Name },
+                    { "InvoiceId", invoice.InvoiceId },
+                    { "InvoiceDate", invoice.CreatedAt.ToString("MMMM dd, yyyy") },
+                    { "Amount", invoice.Amount.ToString("N2") },
+                    { "Currency", "INR" },
+                    { "DueDate", invoice.DueDate.ToString("MMMM dd, yyyy") },
+                    { "CurrentYear", DateTime.Now.Year.ToString() }
+                };
+
+                var renderedBody = _emailTemplateService.RenderTemplate(template, parameters);
+
+                // 3. Send Email
+                _logger.LogInformation("Sending email to {To}", tenant.ContactEmail);
+                var emailMessage = new Domain.Models.EmailMessage
+                {
+                    To = tenant.ContactEmail,
+                    Subject = $"Invoice from KarmaTech AI EDR - {invoice.InvoiceId}",
+                    Body = renderedBody,
+                    IsHtml = true,
+                    Attachments = new List<string> { pdfPath }
+                };
+
+                await _emailService.SendEmailAsync(emailMessage);
+
+                _logger.LogInformation("Successfully sent invoice email for Invoice {InvoiceId} to {Email}", invoiceId, tenant.ContactEmail);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending invoice email for Invoice {InvoiceId}", invoiceId);
+                return false;
+            }
         }
     }
 }

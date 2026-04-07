@@ -113,6 +113,7 @@ namespace EDR.Application.Extensions
             
             // Feature Authorization Service
             services.AddScoped<IFeatureAuthorizationService, FeatureAuthorizationService>();
+            services.AddScoped<IPdfInvoiceGenerator, PdfInvoiceGenerator>();
 
             return services;
         }

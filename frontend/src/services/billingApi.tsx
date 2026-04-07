@@ -36,6 +36,17 @@ export interface CreateInvoicePayload {
 export interface TenantOption {
     id: number;
     name: string;
+    tenantName?: string;
+    companyName?: string | null;
+    contactEmail?: string | null;
+    contactPhone?: string | null;
+    domain?: string | null;
+    subscriptionPlanName?: string | null;
+    subscriptionMonthlyPrice?: number | null;
+    maxUsers?: number;
+    maxProjects?: number;
+    status?: string;
+    isIsolated?: boolean;
 }
 
 export const billingApi = {

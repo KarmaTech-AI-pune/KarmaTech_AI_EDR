@@ -306,10 +306,10 @@ describe('JobStart Form Styles', () => {
       const whiteBg = '#fff';
       const textFieldRoot = textFieldStyle['& .MuiOutlinedInput-root'] as any;
       const accordionSummary = accordionStyle['& .MuiAccordionSummary-root'] as any;
-      const accordionDetails = accordionStyle['& .MuiAccordionDetails-root'] as any;
+      const accordionDetails = (accordionStyle as any)['& .MuiAccordionDetails-root'] as any;
 
       // Assert
-      expect(summaryRowStyle.bgcolor).toBe(lightGrayBg);
+      expect((summaryRowStyle as any).bgcolor).toBe(lightGrayBg);
       expect(accordionSummary.backgroundColor).toBe(lightGrayBg);
       expect(textFieldRoot.backgroundColor).toBe(whiteBg);
       expect(accordionDetails.backgroundColor).toBe(whiteBg);
@@ -328,7 +328,7 @@ describe('JobStart Form Styles', () => {
 
     it('should have appropriate minimum heights for interactive elements', () => {
       // Arrange
-      const accordionSummary = accordionStyle['& .MuiAccordionSummary-root'] as any;
+      const accordionSummary = (accordionStyle as any)['& .MuiAccordionSummary-root'] as any;
 
       // Assert
       expect(accordionSummary.minHeight).toBe('48px'); // Meets minimum touch target size
@@ -336,7 +336,7 @@ describe('JobStart Form Styles', () => {
 
     it('should have adequate padding for readability', () => {
       // Assert
-      expect(tableCellStyle.padding).toBe('12px 16px'); // Adequate spacing
+      expect((tableCellStyle as any).padding).toBe('12px 16px'); // Adequate spacing
     });
   });
 
@@ -362,9 +362,9 @@ describe('JobStart Form Styles', () => {
 
     it('should use valid MUI pseudo-selectors', () => {
       // Arrange
-      const textFieldRoot = textFieldStyle['& .MuiOutlinedInput-root'] as any;
-      const accordionSummary = accordionStyle['& .MuiAccordionSummary-root'] as any;
-      const accordionContent = accordionStyle['& .MuiAccordionSummary-content'] as any;
+      const textFieldRoot = (textFieldStyle as any)['& .MuiOutlinedInput-root'] as any;
+      const accordionSummary = (accordionStyle as any)['& .MuiAccordionSummary-root'] as any;
+      const accordionContent = (accordionStyle as any)['& .MuiAccordionSummary-content'] as any;
 
       // Assert
       expect(textFieldRoot).toHaveProperty('&:hover fieldset');
@@ -423,6 +423,7 @@ describe('JobStart Form Styles', () => {
 
     it('should provide comprehensive styling for JobStart form components', () => {
       // Assert - Should cover main UI components used in JobStart forms
+      // @ts-ignore
       const componentTypes = [
         'TextField', // textFieldStyle
         'Table', // tableHeaderStyle, tableCellStyle, summaryRowStyle
