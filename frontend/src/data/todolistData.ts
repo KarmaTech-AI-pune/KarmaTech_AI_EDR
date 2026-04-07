@@ -369,12 +369,10 @@ export const fetchIssuesFromAPI = async (projectId: number): Promise<Issue[]> =>
     const taskSummaries = await apiService.fetchSprintTasksByProject(projectId);
 
     // Then fetch detailed information for each task
-    const issues: Issue[] = [];
-    for (const summary of taskSummaries) {
+    const issuePromises = taskSummaries.map(async (summary) => {
       try {
         const detailedTask = await apiService.fetchSprintTaskDetails(summary.taskid);
-        const issue = await transformSprintTaskToIssue(detailedTask);
-        issues.push(issue);
+        return await transformSprintTaskToIssue(detailedTask);
       } catch (error) {
         console.error(`Failed to fetch details for task ${summary.taskid}:`, error);
         // Create a basic issue from summary data as fallback
@@ -399,9 +397,11 @@ export const fetchIssuesFromAPI = async (projectId: number): Promise<Issue[]> =>
           createdDate: new Date().toISOString(),
           updatedDate: new Date().toISOString(),
         };
-        issues.push(basicIssue);
+        return basicIssue;
       }
-    }
+    });
+
+    const issues = await Promise.all(issuePromises);
 
     return issues;
   } catch (error) {
@@ -635,13 +635,17 @@ export const fetchIssuesForSprintAPI = async (sprintId: number, projectId?: numb
     const issues: Issue[] = [];
 
     if (sprintPlan.sprintTasks && sprintPlan.sprintTasks.length > 0) {
-      for (const taskDto of sprintPlan.sprintTasks) {
+      const issuePromises = sprintPlan.sprintTasks.map(async (taskDto) => {
         try {
-          const issue = await transformSprintTaskToIssue(taskDto);
-          issues.push(issue);
+          return await transformSprintTaskToIssue(taskDto);
         } catch (error) {
           console.error(`Failed to transform task ${taskDto.taskid}:`, error);
+          return null;
         }
+      });
+      const resolvedIssues = await Promise.all(issuePromises);
+      for (const issue of resolvedIssues) {
+          if (issue) issues.push(issue);
       }
     }
 
