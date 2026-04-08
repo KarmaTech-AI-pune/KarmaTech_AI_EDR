@@ -345,6 +345,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               type="text"
               value={estimatedFee.value}
               onChange={estimatedFee.getChangeHandler(syncCurrencyToFormData('estimatedProjectFee'))}
+              required
             // disabled={formData.feeType === 'Percentage'}
             />
           </Grid>
