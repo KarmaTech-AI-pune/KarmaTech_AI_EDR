@@ -6,6 +6,7 @@ namespace EDR.Application.Dtos.ProjectDashboard
     {
         public int ProjectId { get; set; }
         public string ProjectName { get; set; }
+        public string Currency { get; set; }
         
         // Revenue Metrics
         public decimal TotalRevenueExpected { get; set; }

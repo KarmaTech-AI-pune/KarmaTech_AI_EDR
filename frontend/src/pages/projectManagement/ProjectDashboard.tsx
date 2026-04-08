@@ -62,6 +62,7 @@ const ProjectDashboard: React.FC = () => {
   // Map Backend DTO to UI Metrics
   const financialMetrics: FinancialMetrics = {
     totalRevenue: data.totalRevenueExpected,
+    currency: data.currency,
     totalRevenueActual: data.totalRevenueActual,
     totalRevenueChange: parseFloat(data.revenueChangeDescription.split("%")[0]) || 0,
     totalRevenueChangeType: data.revenueChangeType,
@@ -162,7 +163,7 @@ const ProjectDashboard: React.FC = () => {
             <Grid container spacing={3}>
               {/* Cashflow Chart */}
               <Grid item xs={12}>
-                <CashflowChart data={mappedCashflow} />
+                <CashflowChart data={mappedCashflow} currencyCode={data.currency} />
               </Grid>
 
               {/* NPV & Profitability */}
@@ -175,6 +176,7 @@ const ProjectDashboard: React.FC = () => {
                     lowProfitProjectsCount: data.profitMargin < 10 ? 1 : 0,
                     whatIfAnalysis: data.whatIfAnalysis || "Not enough data for analysis",
                   }}
+                  currencyCode={data.currency}
                 />
               </Grid>
             </Grid>
@@ -187,7 +189,7 @@ const ProjectDashboard: React.FC = () => {
             <PendingApprovals approvals={mappedPendingApprovals} onEscalate={() => {}} onRemind={() => {}} />
           </Grid>
           <Grid item xs={12} md={6}>
-            <MilestoneBillingTracker milestones={mappedMilestones} onSendNotice={() => {}} onFollowUp={() => {}} />
+            <MilestoneBillingTracker milestones={mappedMilestones} onSendNotice={() => {}} onFollowUp={() => {}} currencyCode={data.currency} />
           </Grid>
         </Grid>
       </Container>

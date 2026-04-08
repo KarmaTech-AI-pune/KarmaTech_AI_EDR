@@ -20,12 +20,14 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { CashflowData } from '../../data/types/dashboard';
+import { getCurrencySymbol } from '../../utils/formatters';
 
 interface CashflowChartProps {
   data: CashflowData[];
+  currencyCode?: string;
 }
 
-const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
+const CashflowChart: React.FC<CashflowChartProps> = ({ data, currencyCode }) => {
   const [timeframe, setTimeframe] = React.useState('This Year');
 
   const handleTimeframeChange = (event: SelectChangeEvent) => {
@@ -56,7 +58,7 @@ const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
                 display: 'block'
               }}
             >
-              {entry.name}: ${entry.value}K
+              {entry.name}: {getCurrencySymbol(currencyCode)}{entry.value}K
             </Typography>
           ))}
         </Box>
@@ -107,7 +109,7 @@ const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#666' }}
-                tickFormatter={(value) => `$${value}K`}
+                tickFormatter={(value) => `${getCurrencySymbol(currencyCode)}${value}K`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend 

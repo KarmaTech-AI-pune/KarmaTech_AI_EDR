@@ -39,6 +39,7 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
             {
                 ProjectId = project.Id,
                 ProjectName = project.Name,
+                Currency = project.Currency ?? "USD",
                 
                 // Revenue (Actual)
                 TotalRevenueActual = totalRevenueActual.TotalRevenue,

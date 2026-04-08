@@ -14,7 +14,7 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
       <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Total Revenue-Expected"
-          value={formatCurrency(metrics.totalRevenue)}
+          value={formatCurrency(metrics.totalRevenue, metrics.currency)}
           change={`${metrics.totalRevenueChange}% vs last quater`}
           changeType={metrics.totalRevenueChangeType}
           icon="revenue"
@@ -24,7 +24,7 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
       <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Total Revenue-Actual"
-          value={formatCurrency(metrics.totalRevenueActual || metrics.totalRevenue)}
+          value={formatCurrency(metrics.totalRevenueActual || metrics.totalRevenue, metrics.currency)}
           change={`${metrics.totalRevenueChange}% vs last quater`}
           changeType={metrics.totalRevenueChangeType}
           icon="revenue"
@@ -44,7 +44,7 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
       <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Revenue at Risk"
-          value={formatCurrency(metrics.revenueAtRisk)}
+          value={formatCurrency(metrics.revenueAtRisk, metrics.currency)}
           change={`${metrics.revenueAtRiskChange} projects affected`}
           changeType={metrics.revenueAtRiskChangeType}
           icon="risk"

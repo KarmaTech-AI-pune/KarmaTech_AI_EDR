@@ -106,6 +106,7 @@ export interface MilestoneBillingDto {
 export interface ProjectDashboardDto {
     projectId: number;
     projectName: string;
+    currency?: string;
     totalRevenueExpected: number;
     revenueChangeDescription: string;
     revenueChangeType: 'positive' | 'negative' | 'neutral';

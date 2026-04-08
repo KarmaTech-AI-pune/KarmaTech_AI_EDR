@@ -23,6 +23,7 @@ export interface RegionalData {
 
 export interface FinancialMetrics {
   totalRevenue: number;
+  currency?: string;
   totalRevenueActual?: number;
   totalRevenueChange: number;
   totalRevenueChangeType: 'positive' | 'negative' | 'neutral';
