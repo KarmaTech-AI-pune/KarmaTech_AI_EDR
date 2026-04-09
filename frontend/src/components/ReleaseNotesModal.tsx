@@ -51,6 +51,26 @@ import {
 import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/releaseNotesApi';
 
 const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
+  '1.5.0': {
+    version: '1.5.0',
+    releaseDate: '2026-04-09',
+    environment: 'production',
+    features: [
+      { id: 501, changeType: 'Feature', description: 'Multi-Tenant Architecture & Billing: Implemented robust multi-tenant architecture with subscription management, Razorpay billing integration, PDF invoice generation, and email notification service.', commitSha: '0ab63813' },
+      { id: 502, changeType: 'Feature', description: 'Project & Task Management: Added TimeTrackingWidget and IssueDetailModal for advanced task time management. Implemented WorkBreakdownStructureForm and comprehensive WBS CQRS handlers.', commitSha: '4b1aff30' },
+      { id: 503, changeType: 'Feature', description: 'Dashboard & UI Enhancements: Added task priority matrix and gross profit tracking to dashboard. Implemented loading states for admin components and password visibility toggle in UserDialog.', commitSha: 'bb4845b3' },
+      { id: 504, changeType: 'Feature', description: 'Database & Architecture: Introduced comprehensive EF Core database context, initial schema migrations, and SeedExtensions for default tenant, roles, and permissions initialization.', commitSha: 'b3ffa66e' },
+    ],
+    bugFixes: [
+      { id: 505, changeType: 'BugFix', description: 'Performance: Removed redundant API calls to improve application responsiveness.', commitSha: 'e508db25' },
+      { id: 506, changeType: 'BugFix', description: 'Cost Calculation: Fixed CostToCompleteAndEAC handling of null expectedGrossProfitPercentage values.', commitSha: '31386c08' },
+      { id: 507, changeType: 'BugFix', description: 'General: Addressed remaining hours calculation issues and resolved various frontend TypeScript integration errors.', commitSha: '7bcb5fa0' },
+    ],
+    improvements: [
+      { id: 508, changeType: 'Improvement', description: 'Testing: Added resilient E2E testing with robust async selectors. Refactored CostToCompleteAndEAC core tests for comprehensive coverage, and integrated updated test suites in GitHub Actions.', commitSha: 'cb3bead1' },
+    ],
+    breakingChanges: [],
+  },
   '1.4.0': {
     version: '1.4.0',
     releaseDate: '2026-03-26',
