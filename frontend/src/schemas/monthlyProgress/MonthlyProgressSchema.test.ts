@@ -128,6 +128,7 @@ describe('MonthlyProgressSchema', () => {
         eacStaff: 270,
         totalEAC: 420,
         grossProfitPercentage: 20,
+        expectedGrossProfitPercentage: null,
       };
       expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
     });
@@ -144,6 +145,40 @@ describe('MonthlyProgressSchema', () => {
         eacStaff: null,
         totalEAC: null,
         grossProfitPercentage: null,
+        expectedGrossProfitPercentage: null,
+      };
+      expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
+    });
+
+    it('should accept expectedGrossProfitPercentage when provided', () => {
+      const data = {
+        ctcODC: 100, ctcStaff: 200, ctcSubtotal: 300,
+        actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null,
+        eacOdc: 150, eacStaff: 270, totalEAC: 420,
+        grossProfitPercentage: 20,
+        expectedGrossProfitPercentage: 25,
+      };
+      expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
+    });
+
+    it('should accept null expectedGrossProfitPercentage (no JobStartForm)', () => {
+      const data = {
+        ctcODC: null, ctcStaff: null, ctcSubtotal: null,
+        actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null,
+        eacOdc: null, eacStaff: null, totalEAC: null,
+        grossProfitPercentage: null,
+        expectedGrossProfitPercentage: null,
+      };
+      expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
+    });
+
+    it('should accept negative grossProfitPercentage (loss scenario)', () => {
+      const data = {
+        ctcODC: 100, ctcStaff: 200, ctcSubtotal: 300,
+        actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null,
+        eacOdc: 150, eacStaff: 270, totalEAC: 420,
+        grossProfitPercentage: -15,
+        expectedGrossProfitPercentage: null,
       };
       expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
     });
@@ -513,7 +548,7 @@ describe('MonthlyProgressSchema', () => {
           priorCumulativeTotal: 300, actualSubtotal: 120, totalCumulativeOdc: 150, totalCumulativeStaff: 270, totalCumulativeCost: 420,
         },
         ctcAndEac: {
-          ctcODC: 100, ctcStaff: 200, ctcSubtotal: 300, actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: 120, eacOdc: 150, eacStaff: 270, totalEAC: 420, grossProfitPercentage: 20,
+          ctcODC: 100, ctcStaff: 200, ctcSubtotal: 300, actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: 120, eacOdc: 150, eacStaff: 270, totalEAC: 420, grossProfitPercentage: 20, expectedGrossProfitPercentage: null,
         },
         schedule: {
           dateOfIssueWOLOI: '01-01-2023', completionDateAsPerContract: '31-12-2023', completionDateAsPerExtension: null, expectedCompletionDate: null,
@@ -551,7 +586,7 @@ describe('MonthlyProgressSchema', () => {
           priorCumulativeTotal: null, actualSubtotal: null, totalCumulativeOdc: null, totalCumulativeStaff: null, totalCumulativeCost: null,
         },
         ctcAndEac: {
-          ctcODC: null, ctcStaff: null, ctcSubtotal: null, actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null, eacOdc: null, eacStaff: null, totalEAC: null, grossProfitPercentage: null,
+          ctcODC: null, ctcStaff: null, ctcSubtotal: null, actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null, eacOdc: null, eacStaff: null, totalEAC: null, grossProfitPercentage: null, expectedGrossProfitPercentage: null,
         },
         schedule: {
           dateOfIssueWOLOI: null, completionDateAsPerContract: null, completionDateAsPerExtension: null, expectedCompletionDate: null,
@@ -617,3 +652,132 @@ describe('MonthlyProgressSchema', () => {
     });
   });
 });
+
+  // ─── Missing Tests Added Below ───────────────────────────────────────────────
+
+  describe('financialAndContractSchema — additional', () => {
+    it('should accept contractType: percentage', () => {
+      expect(() => financialAndContractSchema.parse({
+        net: null, serviceTax: null, feeTotal: null,
+        budgetOdcs: null, budgetStaff: null, budgetSubTotal: null,
+        contractType: 'percentage',
+      })).not.toThrow();
+    });
+
+    it('should accept serviceTax at boundary 0', () => {
+      expect(() => financialAndContractSchema.parse({
+        net: 1000, serviceTax: 0, feeTotal: null,
+        budgetOdcs: null, budgetStaff: null, budgetSubTotal: null,
+        contractType: 'lumpsum',
+      })).not.toThrow();
+    });
+
+    it('should accept serviceTax at boundary 100', () => {
+      expect(() => financialAndContractSchema.parse({
+        net: 1000, serviceTax: 100, feeTotal: null,
+        budgetOdcs: null, budgetStaff: null, budgetSubTotal: null,
+        contractType: 'lumpsum',
+      })).not.toThrow();
+    });
+  });
+
+  describe('scheduleSchema — additional', () => {
+    it('should reject MM/DD/YYYY format', () => {
+      expect(() => scheduleSchema.parse({
+        dateOfIssueWOLOI: '01/01/2025',
+        completionDateAsPerContract: null,
+        completionDateAsPerExtension: null,
+        expectedCompletionDate: null,
+      })).toThrow(z.ZodError);
+    });
+
+    it('should reject partial date string', () => {
+      expect(() => scheduleSchema.parse({
+        dateOfIssueWOLOI: '01-2025',
+        completionDateAsPerContract: null,
+        completionDateAsPerExtension: null,
+        expectedCompletionDate: null,
+      })).toThrow(z.ZodError);
+    });
+  });
+
+  describe('BudgetRowSchema — additional', () => {
+    it('should accept 0 for revenueFee and cost', () => {
+      expect(() => BudgetRowSchema.parse({ revenueFee: 0, cost: 0, profitPercentage: 0 })).not.toThrow();
+    });
+
+    it('should accept negative profitPercentage (loss scenario)', () => {
+      expect(() => BudgetRowSchema.parse({ revenueFee: 1000, cost: 1200, profitPercentage: -20 })).not.toThrow();
+    });
+
+    it('should transform null to null correctly', () => {
+      const result = BudgetRowSchema.parse({ revenueFee: null, cost: null, profitPercentage: null });
+      expect(result.revenueFee).toBeNull();
+      expect(result.cost).toBeNull();
+    });
+
+    it('should transform number values correctly', () => {
+      const result = BudgetRowSchema.parse({ revenueFee: 1000, cost: 800, profitPercentage: 20 });
+      expect(result.revenueFee).toBe(1000);
+      expect(result.cost).toBe(800);
+    });
+  });
+
+  describe('changeOrderSchema — additional', () => {
+    it('should accept status: Submitted', () => {
+      expect(() => changeOrderSchema.parse({
+        contractTotal: 1000, cost: 200, fee: 300,
+        summaryDetails: 'Details', status: 'Submitted',
+      })).not.toThrow();
+    });
+
+    it('should accept status: Proposed', () => {
+      expect(() => changeOrderSchema.parse({
+        contractTotal: 1000, cost: 200, fee: 300,
+        summaryDetails: 'Details', status: 'Proposed',
+      })).not.toThrow();
+    });
+  });
+
+  describe('currentMonthActionSchema — additional', () => {
+    it('should accept priority: M', () => {
+      expect(() => currentMonthActionSchema.parse({
+        actions: 'Task', date: '01-01-2025', comments: null, priority: 'M',
+      })).not.toThrow();
+    });
+
+    it('should accept priority: L', () => {
+      expect(() => currentMonthActionSchema.parse({
+        actions: 'Task', date: '01-01-2025', comments: null, priority: 'L',
+      })).not.toThrow();
+    });
+
+    it('should reject wrong date format', () => {
+      expect(() => currentMonthActionSchema.parse({
+        actions: 'Task', date: '2025-01-01', comments: null, priority: 'H',
+      })).toThrow(z.ZodError);
+    });
+  });
+
+  describe('manpowerSchema — additional', () => {
+    it('should parse successfully when optional fields are omitted', () => {
+      // consumed, approved, extraHours, extraCost are optional — omitting them is valid
+      expect(() => manpowerSchema.parse({
+        workAssignment: 'Task', assignee: 'John', rate: 100,
+        planned: 160, payment: 5000, balance: 80,
+        nextMonthPlanning: 160, manpowerComments: null,
+      })).not.toThrow();
+    });
+
+    it('should use provided values for consumed, approved, extraHours, extraCost', () => {
+      const result = manpowerSchema.parse({
+        workAssignment: 'Task', assignee: 'John', rate: 100,
+        planned: 160, consumed: 80, approved: 70, extraHours: 5, extraCost: 500,
+        payment: 5000, balance: 80, nextMonthPlanning: 160, manpowerComments: null,
+      });
+      expect(result.consumed).toBe(80);
+      expect(result.approved).toBe(70);
+      expect(result.extraHours).toBe(5);
+      expect(result.extraCost).toBe(500);
+    });
+  });

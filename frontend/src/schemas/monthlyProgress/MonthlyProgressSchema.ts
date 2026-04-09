@@ -33,6 +33,7 @@ export const ctcAndEacSchema = z.object({
   eacStaff: z.number().nullable(),
   totalEAC: z.number().nullable(),
   grossProfitPercentage: z.number().nullable(),
+  expectedGrossProfitPercentage: z.number().nullable(),
 });
 
 // Date format validation (DD-MM-YYYY)

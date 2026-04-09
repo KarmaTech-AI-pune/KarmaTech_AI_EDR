@@ -26,6 +26,7 @@ import {
   Alert,
   Tooltip,
   Avatar,
+  CircularProgress,
   } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -67,6 +68,7 @@ const TenantUsersManagement = () => {
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadTenants();
@@ -89,6 +91,8 @@ const TenantUsersManagement = () => {
     } catch (error) {
       console.error('Error loading tenants:', error);
       setError('Failed to load tenants');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -237,6 +241,12 @@ const TenantUsersManagement = () => {
       <Typography variant="h4" gutterBottom>
         Tenant Users Management
       </Typography>
+
+      {loading && (
+        <Box display="flex" justifyContent="center" py={4}>
+          <CircularProgress />
+        </Box>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>

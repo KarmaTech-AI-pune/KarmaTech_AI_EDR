@@ -104,8 +104,8 @@ describe('MonthlyBudgetTable Component', () => {
 
     it('displays zero values as dash', () => {
       render(<MonthlyBudgetTable data={mockData} />);
-      // Feb-25 has 0 revenue, should show as dash
-      const cells = screen.getAllByText('-');
+      // Feb-25 has 0 revenue, should show as em dash
+      const cells = screen.getAllByText('—');
       expect(cells.length).toBeGreaterThan(0);
     });
 
@@ -143,8 +143,8 @@ describe('MonthlyBudgetTable Component', () => {
         ],
       };
       render(<MonthlyBudgetTable data={dataWithZero} />);
-      // Verify zero is displayed as dash
-      const dashes = screen.getAllByText('-');
+      // Verify zero is displayed as em dash
+      const dashes = screen.getAllByText('—');
       expect(dashes.length).toBeGreaterThan(0);
     });
   });
@@ -211,7 +211,7 @@ describe('MonthlyBudgetTable Component', () => {
 
     it('displays dash for null percentages', () => {
       render(<MonthlyBudgetTable data={mockData} />);
-      const dashes = screen.getAllByText('-');
+      const dashes = screen.getAllByText('—');
       expect(dashes.length).toBeGreaterThan(0);
     });
   });
@@ -327,8 +327,13 @@ describe('MonthlyBudgetTable Component', () => {
           })),
       };
       render(<MonthlyBudgetTable data={manyMonthsData} />);
+      // Pagination shows 6 months per page — page 1 shows Month-1 to Month-6
       expect(screen.getByText('Month-1')).toBeInTheDocument();
-      expect(screen.getByText('Month-12')).toBeInTheDocument();
+      expect(screen.getByText('Month-6')).toBeInTheDocument();
+      // Month-12 is on page 2, not visible on page 1
+      expect(screen.queryByText('Month-12')).not.toBeInTheDocument();
+      // Pagination chip should show total count
+      expect(screen.getByText('1–6 of 12 months')).toBeInTheDocument();
     });
 
     it('handles missing summary data gracefully', () => {
@@ -416,8 +421,8 @@ describe('MonthlyBudgetTable Component', () => {
         ],
       };
       const { container } = render(<MonthlyBudgetTable data={dataWithZero} />);
-      // Verify zero is displayed as dash
-      const dashes = screen.getAllByText('-');
+      // Verify zero is displayed as em dash
+      const dashes = screen.getAllByText('—');
       expect(dashes.length).toBeGreaterThan(0);
     });
 
@@ -700,8 +705,8 @@ describe('MonthlyBudgetTable Component', () => {
         ],
       };
       render(<MonthlyBudgetTable data={incompleteData} />);
-      // Should display dash for zero values
-      const dashes = screen.getAllByText('-');
+      // Should display em dash for zero values
+      const dashes = screen.getAllByText('—');
       expect(dashes.length).toBeGreaterThan(0);
     });
   });

@@ -1,10 +1,12 @@
 /**
  * MonthlyBudgetTable Component
- * Displays monthly budget data with months as columns (horizontal layout)
- * Matches the exact structure from the provided image
+ * - Pagination: 6 months per page
+ * - 1 month: stretches to fill full width
+ * - 2–6 months: share available space equally
+ * - 7+ months: paginated, each column min 120px, scroll if needed
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Paper,
   Table,
@@ -15,94 +17,74 @@ import {
   TableRow,
   Typography,
   Box,
+  IconButton,
+  Chip,
 } from '@mui/material';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { MonthlyBudgetData } from '../types/cashflow';
 
 interface MonthlyBudgetTableProps {
   data?: MonthlyBudgetData;
 }
 
+const MONTHS_PER_PAGE = 6;
+const LABEL_COL_WIDTH = 210;
+const MONTH_COL_MIN_WIDTH = 120;
+
+const highlightDescriptions = ['Total', 'Sub total', 'Total Project Cost', 'Quoted Price'];
+
 export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) => {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  const [page, setPage] = useState(0);
 
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('en-IN').format(value);
-  };
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 
-  // Row definitions matching the image
+  const formatNumber = (value: number) =>
+    new Intl.NumberFormat('en-IN').format(value);
+
   const budgetRows = [
-    { key: 'totalHours', label: 'Total Hours', format: formatNumber },
-    { key: 'purePersonnel', label: 'Pure Personnel', format: formatCurrency },
-    { key: 'totalODCs', label: 'Total ODCs', format: formatCurrency },
-    { key: 'totalProjectCost', label: 'Total Project Cost', format: formatCurrency },
+    { key: 'totalHours',             label: 'Total Hours',              format: formatNumber   },
+    { key: 'purePersonnel',          label: 'Pure Personnel',           format: formatCurrency },
+    { key: 'totalODCs',              label: 'Total ODCs',               format: formatCurrency },
+    { key: 'totalProjectCost',       label: 'Total Project Cost',       format: formatCurrency },
     { key: 'cumulativeMonthlyCosts', label: 'Cumulative Monthly Costs', format: formatCurrency },
-    { key: 'revenue', label: 'Revenue', format: formatCurrency },
-    { key: 'cumulativeRevenue', label: 'Cumulative Revenue', format: formatCurrency },
-    { key: 'cashFlow', label: 'Cash Flow', format: formatCurrency },
+    { key: 'revenue',                label: 'Revenue',                  format: formatCurrency },
+    { key: 'cumulativeRevenue',      label: 'Cumulative Revenue',       format: formatCurrency },
+    { key: 'cashFlow',               label: 'Cash Flow',                format: formatCurrency },
   ];
 
-  // Get summary data from API (dynamic)
   const summary = data?.summary;
-
-  // Summary rows (Description, Percentage, Totals in INR) - Dynamic from API
   const summaryData = summary ? [
-    { description: 'Pure manpower cost', percentage: null, total: summary.pureManpowerCost },
-    { description: 'Other ODC', percentage: null, total: summary.otherODC },
-    { description: 'Total', percentage: null, total: summary.total },
-    { description: 'Manpower Contingencies', percentage: summary.manpowerContingencies.percentage, total: summary.manpowerContingencies.amount },
-    { description: 'ODC Contingencies', percentage: summary.odcContingencies.percentage, total: summary.odcContingencies.amount },
-    { description: 'Sub total', percentage: null, total: summary.subTotal },
-    { description: 'Profit', percentage: summary.profit.percentage, total: summary.profit.amount },
-    { description: 'Total Project Cost', percentage: null, total: summary.totalProjectCost },
-    { description: 'GST', percentage: summary.gst.percentage, total: summary.gst.amount },
-    { description: 'Quoted Price', percentage: null, total: summary.quotedPrice },
+    { description: 'Pure manpower cost',     percentage: null,                                     total: summary.pureManpowerCost              },
+    { description: 'Other ODC',              percentage: null,                                     total: summary.otherODC                      },
+    { description: 'Total',                  percentage: null,                                     total: summary.total                         },
+    { description: 'Manpower Contingencies', percentage: summary.manpowerContingencies.percentage, total: summary.manpowerContingencies.amount  },
+    { description: 'ODC Contingencies',      percentage: summary.odcContingencies.percentage,      total: summary.odcContingencies.amount       },
+    { description: 'Sub total',              percentage: null,                                     total: summary.subTotal                      },
+    { description: 'Profit',                 percentage: summary.profit.percentage,                total: summary.profit.amount                 },
+    { description: 'Total Project Cost',     percentage: null,                                     total: summary.totalProjectCost              },
+    { description: 'GST',                    percentage: summary.gst.percentage,                   total: summary.gst.amount                    },
+    { description: 'Quoted Price',           percentage: null,                                     total: summary.quotedPrice                   },
   ] : [];
 
-  // Get dynamic months from data
   const months = data?.months || [];
-  
-  // Extract unique month labels from the data (dynamic)
-  const monthLabels = months.length > 0 
-    ? months.map(m => m.month) 
-    : [];
+  const allMonthLabels = months.map(m => m.month);
+  const totalMonths = allMonthLabels.length;
+  const totalPages = Math.ceil(totalMonths / MONTHS_PER_PAGE);
+  const startIdx = page * MONTHS_PER_PAGE;
+  const visibleMonthLabels = allMonthLabels.slice(startIdx, startIdx + MONTHS_PER_PAGE);
 
-  // Show empty state if no data
-  if (monthLabels.length === 0) {
+  // Empty state
+  if (totalMonths === 0) {
     return (
-      <Paper
-        elevation={0}
-        sx={{
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2,
-          overflow: 'hidden',
-          mb: 3,
-        }}
-      >
-        <Box
-          sx={{
-            px: 3,
-            py: 2.5,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: '#fafafa',
-          }}
-        >
+      <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden', mb: 3 }}>
+        <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid', borderColor: 'divider', backgroundColor: '#fafafa' }}>
           <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
             Monthly Budget Breakdown
           </Typography>
         </Box>
-        <Box
-          sx={{
-            p: 6,
-            textAlign: 'center',
-          }}
-        >
+        <Box sx={{ p: 6, textAlign: 'center' }}>
           <Typography variant="body1" color="text.secondary">
             No monthly budget data available. Please ensure WBS data is configured for this project.
           </Typography>
@@ -111,72 +93,117 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
     );
   }
 
+  // Table sizing logic:
+  // - width: '100%'  → always stretch to container
+  // - minWidth       → only enforced when months overflow (prevents squeeze)
+  // When months <= 6: no minWidth pressure, columns share space equally → looks good with 1 month too
+  // When months > 6 (paginated): minWidth ensures each column is at least 120px
+  const needsMinWidth = visibleMonthLabels.length > 3;
+  const tableMinWidth = needsMinWidth
+    ? LABEL_COL_WIDTH + visibleMonthLabels.length * MONTH_COL_MIN_WIDTH
+    : undefined;
+
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 2,
-        overflow: 'hidden',
-        mb: 3,
-      }}
-    >
-      {/* Table Title */}
+    <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden', mb: 3 }}>
+
+      {/* Header: title + pagination */}
       <Box
         sx={{
           px: 3,
-          py: 2.5,
+          py: 2,
           borderBottom: '1px solid',
           borderColor: 'divider',
           backgroundColor: '#fafafa',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1,
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
           Monthly Budget Breakdown
         </Typography>
+
+        {totalPages > 1 && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton
+              size="small"
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 0}
+              sx={{ border: '1px solid', borderColor: 'divider' }}
+            >
+              <ChevronLeftIcon fontSize="small" />
+            </IconButton>
+
+            <Chip
+              label={`${startIdx + 1}–${Math.min(startIdx + MONTHS_PER_PAGE, totalMonths)} of ${totalMonths} months`}
+              size="small"
+              sx={{ fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#e0f2fe', color: '#374151' }}
+            />
+
+            <IconButton
+              size="small"
+              onClick={() => setPage(p => p + 1)}
+              disabled={page >= totalPages - 1}
+              sx={{ border: '1px solid', borderColor: 'divider' }}
+            >
+              <ChevronRightIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        )}
       </Box>
 
       {/* Main Budget Table */}
-      <TableContainer sx={{ maxHeight: 600, overflowX: 'auto' }}>
-        <Table stickyHeader sx={{ minWidth: 1400 }}>
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <Table
+          stickyHeader
+          sx={{
+            tableLayout: 'fixed',
+            width: '100%',
+            ...(tableMinWidth ? { minWidth: tableMinWidth } : {}),
+          }}
+        >
+          <colgroup>
+            {/* Label column — always fixed */}
+            <col style={{ width: LABEL_COL_WIDTH }} />
+            {/* Month columns — no fixed width, share remaining space equally */}
+            {visibleMonthLabels.map(m => <col key={m} />)}
+          </colgroup>
+
           <TableHead>
-            <TableRow sx={{ backgroundColor: '#e0f2fe' }}>
-              {/* First column header */}
+            <TableRow>
               <TableCell
                 sx={{
                   fontWeight: 700,
-                  fontSize: '0.875rem',
+                  fontSize: '0.8rem',
                   color: '#374151',
                   py: 1.5,
                   px: 2,
-                  minWidth: 180,
                   position: 'sticky',
                   left: 0,
                   backgroundColor: '#e0f2fe',
                   zIndex: 3,
-                  borderRight: '1px solid',
-                  borderColor: 'divider',
+                  borderRight: '2px solid #bfdbfe',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 Months
               </TableCell>
-
-              {/* Month columns - Dynamic based on data */}
-              {monthLabels.map((month) => (
+              {visibleMonthLabels.map(month => (
                 <TableCell
                   key={month}
                   align="center"
                   sx={{
                     fontWeight: 700,
-                    fontSize: '0.75rem',
+                    fontSize: '0.8rem',
                     color: '#374151',
                     py: 1.5,
-                    px: 1.5,
-                    minWidth: 100,
+                    px: 1,
                     backgroundColor: '#e0f2fe',
                     borderRight: '1px solid',
                     borderColor: 'divider',
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   {month}
@@ -184,191 +211,114 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
               ))}
             </TableRow>
           </TableHead>
-          <TableBody>
-            {budgetRows.map((row, rowIndex) => (
-              <TableRow
-                key={row.key}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: '#f9fafb',
-                  },
-                  backgroundColor: rowIndex === 4 ? '#bfdbfe' : '#ffffff',
-                }}
-              >
-                {/* Row label */}
-                <TableCell
-                  sx={{
-                    fontWeight: row.key === 'cashFlow' ? 700 : 600,
-                    fontSize: '0.875rem',
-                    color: '#374151',
-                    py: 1.5,
-                    px: 2,
-                    position: 'sticky',
-                    left: 0,
-                    backgroundColor: rowIndex === 4 ? '#bfdbfe' : '#ffffff',
-                    zIndex: 2,
-                    borderRight: '1px solid',
-                    borderColor: 'divider',
-                  }}
-                >
-                  {row.label}
-                </TableCell>
 
-                {/* Month values - Dynamic based on data */}
-                {monthLabels.map((month) => {
-                  const monthData = months.find(m => m.month === month);
-                  const value = monthData ? (monthData[row.key as keyof typeof monthData] as number) : 0;
-                  const isNegative = value < 0;
-                  const isPositive = value > 0;
-                  
-                  // Special color logic for Cash Flow row
-                  let textColor = '#374151'; // default
-                  if (value === 0) {
-                    textColor = '#9ca3af'; // gray for zero
-                  } else if (row.key === 'cashFlow') {
-                    // Cash Flow row: green for positive, red for negative
-                    textColor = isPositive ? '#16a34a' : '#dc2626';
-                  } else {
-                    // Other rows: red for negative, default for positive
-                    textColor = isNegative ? '#dc2626' : '#374151';
-                  }
-                  
-                  return (
-                    <TableCell
-                      key={`${row.key}-${month}`}
-                      align="center"
-                      sx={{
-                        fontSize: '0.8rem',
-                        color: textColor,
-                        py: 1.5,
-                        px: 1.5,
-                        fontFamily: 'monospace',
-                        fontWeight: row.key === 'cashFlow' ? 700 : 400,
-                        backgroundColor: rowIndex === 4 ? '#bfdbfe' : 'inherit',
-                        borderRight: '1px solid',
-                        borderColor: 'divider',
-                      }}
-                    >
-                      {value === 0 ? '-' : row.format(value)}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+          <TableBody>
+            {budgetRows.map((row, rowIndex) => {
+              const isHighlightRow = rowIndex === 4;
+              const isCashFlow = row.key === 'cashFlow';
+              const rowBg = isHighlightRow ? '#bfdbfe' : '#ffffff';
+
+              return (
+                <TableRow
+                  key={row.key}
+                  sx={{ '&:hover': { backgroundColor: '#f9fafb' }, backgroundColor: rowBg }}
+                >
+                  <TableCell
+                    sx={{
+                      fontWeight: isCashFlow ? 700 : 600,
+                      fontSize: '0.8rem',
+                      color: '#374151',
+                      py: 1.25,
+                      px: 2,
+                      position: 'sticky',
+                      left: 0,
+                      backgroundColor: rowBg,
+                      zIndex: 2,
+                      borderRight: '2px solid #bfdbfe',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {row.label}
+                  </TableCell>
+
+                  {visibleMonthLabels.map(month => {
+                    const monthData = months.find(m => m.month === month);
+                    const value = monthData ? (monthData[row.key as keyof typeof monthData] as number) : 0;
+                    const isNegative = value < 0;
+                    const isPositive = value > 0;
+
+                    let textColor = '#374151';
+                    if (value === 0)       textColor = '#9ca3af';
+                    else if (isCashFlow)   textColor = isPositive ? '#16a34a' : '#dc2626';
+                    else if (isNegative)   textColor = '#dc2626';
+
+                    return (
+                      <TableCell
+                        key={`${row.key}-${month}`}
+                        align="center"
+                        sx={{
+                          fontSize: '0.78rem',
+                          color: textColor,
+                          py: 1.25,
+                          px: 1.5,
+                          fontFamily: 'monospace',
+                          fontWeight: isCashFlow ? 700 : 400,
+                          backgroundColor: isHighlightRow ? '#bfdbfe' : 'inherit',
+                          borderRight: '1px solid',
+                          borderColor: 'divider',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {value === 0 ? '—' : row.format(value)}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Summary Section (Description, Percentage, Totals in INR) - Dynamic from API */}
+      {/* Summary Section */}
       {summaryData.length > 0 && (
-        <Box sx={{ borderTop: '2px solid', borderColor: 'divider', mt: 2 }}>
-          <Table sx={{ minWidth: 600 }}>
+        <Box sx={{ borderTop: '2px solid', borderColor: 'divider' }}>
+          <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
+            <colgroup>
+              <col style={{ width: '60%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '20%' }} />
+            </colgroup>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#e0f2fe' }}>
-                <TableCell
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: '0.75rem',
-                    color: '#374151',
-                    py: 1.5,
-                    px: 2,
-                    width: '60%',
-                  }}
-                >
-                  Description
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: '0.75rem',
-                    color: '#374151',
-                    py: 1.5,
-                    px: 2,
-                    width: '20%',
-                  }}
-                >
-                  Percentage
-                </TableCell>
-                <TableCell
-                  align="right"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: '0.75rem',
-                    color: '#374151',
-                    py: 1.5,
-                    px: 2,
-                    width: '20%',
-                  }}
-                >
-                  Totals in INR
-                </TableCell>
+              <TableRow>
+                {['Description', 'Percentage', 'Totals in INR'].map((h, i) => (
+                  <TableCell
+                    key={h}
+                    align={i === 0 ? 'left' : i === 1 ? 'center' : 'right'}
+                    sx={{ fontWeight: 700, fontSize: '0.78rem', color: '#374151', py: 1.25, px: 2, backgroundColor: '#e0f2fe' }}
+                  >
+                    {h}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>
-              {summaryData.map((item, index) => (
-                <TableRow
-                  key={index}
-                  sx={{
-                    backgroundColor: 
-                      item.description === 'Total' || 
-                      item.description === 'Sub total' || 
-                      item.description === 'Total Project Cost' ||
-                      item.description === 'Quoted Price'
-                        ? '#bfdbfe'
-                        : '#ffffff',
-                  }}
-                >
-                  <TableCell
-                    sx={{
-                      fontSize: '0.875rem',
-                      color: '#374151',
-                      py: 1.5,
-                      px: 2,
-                      fontWeight: 
-                        item.description === 'Total' || 
-                        item.description === 'Sub total' || 
-                        item.description === 'Total Project Cost' ||
-                        item.description === 'Quoted Price'
-                          ? 700
-                          : 400,
-                    }}
-                  >
-                    {item.description}
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontSize: '0.875rem',
-                      color: '#374151',
-                      py: 1.5,
-                      px: 2,
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {item.percentage ? `${item.percentage}%` : '-'}
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{
-                      fontSize: '0.875rem',
-                      color: '#374151',
-                      py: 1.5,
-                      px: 2,
-                      fontFamily: 'monospace',
-                      fontWeight: 
-                        item.description === 'Total' || 
-                        item.description === 'Sub total' || 
-                        item.description === 'Total Project Cost' ||
-                        item.description === 'Quoted Price'
-                          ? 700
-                          : 400,
-                    }}
-                  >
-                    {formatCurrency(item.total)}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {summaryData.map((item, index) => {
+                const isHighlight = highlightDescriptions.includes(item.description);
+                return (
+                  <TableRow key={index} sx={{ backgroundColor: isHighlight ? '#bfdbfe' : '#ffffff' }}>
+                    <TableCell sx={{ fontSize: '0.8rem', color: '#374151', py: 1.25, px: 2, fontWeight: isHighlight ? 700 : 400 }}>
+                      {item.description}
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontSize: '0.8rem', color: '#374151', py: 1.25, px: 2, fontFamily: 'monospace' }}>
+                      {item.percentage ? `${item.percentage}%` : '—'}
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontSize: '0.8rem', color: '#374151', py: 1.25, px: 2, fontFamily: 'monospace', fontWeight: isHighlight ? 700 : 400 }}>
+                      {formatCurrency(item.total)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Box>

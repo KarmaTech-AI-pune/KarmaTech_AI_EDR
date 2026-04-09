@@ -19,6 +19,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-04-09
+
+### ✨ Features
+- **Multi-Tenant Architecture & Billing**: Implemented robust multi-tenant architecture with subscription management, Razorpay billing integration, PDF invoice generation, and email notification service.
+- **Project & Task Management**: Added `TimeTrackingWidget` and `IssueDetailModal` for advanced task time management. Implemented `WorkBreakdownStructureForm` and comprehensive WBS CQRS handlers.
+- **Dashboard & UI Enhancements**: Added task priority matrix and gross profit tracking to dashboard. Implemented loading states for admin components and password visibility toggle in UserDialog.
+- **Database & Architecture**: Introduced comprehensive EF Core database context, initial schema migrations, and `SeedExtensions` for default tenant, roles, and permissions initialization.
+
+### 🐛 Bug Fixes
+- **Performance**: Removed redundant API calls to improve application responsiveness.
+- **Cost Calculation**: Fixed `CostToCompleteAndEAC` handling of null `expectedGrossProfitPercentage` values.
+- **General**: Addressed remaining hours calculation issues and resolved various frontend TypeScript integration errors.
+
+### 🚀 Improvements
+- **Testing**: Added resilient E2E testing with robust async selectors. Refactored `CostToCompleteAndEAC` core tests for comprehensive coverage, and integrated updated test suites in GitHub Actions.
+
 ## [1.4.0] - 2026-03-26
 
 ### ✨ Features

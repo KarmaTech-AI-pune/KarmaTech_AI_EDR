@@ -13,6 +13,7 @@ import {
   Chip,
   Box,
   SelectChangeEvent,
+  CircularProgress,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,6 +32,7 @@ const UsersManagement = () => {
   const [users, setUsers] = useState<AuthUser[]>([]);
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
   const [snackbar, setSnackbar] = useState<{
@@ -64,6 +66,8 @@ const UsersManagement = () => {
       console.log(fetchedUsers)
     } catch (error) {
       console.error('Error loading users:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -208,6 +212,11 @@ const UsersManagement = () => {
         </Button>
       </Box>
 
+      {loading ? (
+        <Box display="flex" justifyContent="center" py={4}>
+          <CircularProgress />
+        </Box>
+      ) : (
       <TableContainer component={Paper} sx={{ mb: 4 }}>
         <Table sx={{ '& td, th': { padding: '4px 8px', fontSize: '0.875rem' } }}>
           <TableHead>
@@ -256,6 +265,7 @@ const UsersManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      )}
 
       <UserDialog
         open={open}
