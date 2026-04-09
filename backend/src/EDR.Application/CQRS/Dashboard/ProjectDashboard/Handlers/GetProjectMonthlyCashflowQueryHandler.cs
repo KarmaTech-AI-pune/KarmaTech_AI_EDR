@@ -14,10 +14,12 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
     public class GetProjectMonthlyCashflowQueryHandler : IRequestHandler<GetProjectMonthlyCashflowQuery, List<MonthlyCashflowDto>>
     {
         private readonly IProjectDashboardRepository _projectDashboardRepository;
+        private readonly IMediator _mediator;
 
-        public GetProjectMonthlyCashflowQueryHandler(IProjectDashboardRepository projectDashboardRepository)
+        public GetProjectMonthlyCashflowQueryHandler(IProjectDashboardRepository projectDashboardRepository, IMediator mediator)
         {
             _projectDashboardRepository = projectDashboardRepository;
+            _mediator = mediator;
         }
 
         public async Task<List<MonthlyCashflowDto>> Handle(GetProjectMonthlyCashflowQuery request, CancellationToken cancellationToken)
@@ -25,41 +27,48 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
             var project = await _projectDashboardRepository.GetProjectByIdAsync(request.ProjectId, cancellationToken);
             if (project == null) return new List<MonthlyCashflowDto>();
 
-            var totalRevenueExpected = project.EstimatedProjectFee ?? 0;
-            
-            var plannedHoursRows = await _projectDashboardRepository.GetWbsPlannedHoursByProjectIdAsync(request.ProjectId, cancellationToken);
-            var projectTotalPlannedHours = plannedHoursRows.Sum(ph => ph.PlannedHours);
+            // Get budget data from the source of truth (Budget Table logic)
+            var budgetQuery = new EDR.Application.CQRS.Cashflow.Queries.GetAllCashflowsQuery { ProjectId = request.ProjectId };
+            var budgetResult = await _mediator.Send(budgetQuery, cancellationToken);
             
             var progressReports = await _projectDashboardRepository.GetMonthlyProgressesByProjectIdAsync(request.ProjectId, cancellationToken);
 
-            var allMonths = new HashSet<(int Year, int Month)>();
-            foreach (var ph in plannedHoursRows) { if (int.TryParse(ph.Year, out int y) && TryParseMonth(ph.Month, out int m)) allMonths.Add((y, m)); }
-            foreach (var mp in progressReports) { allMonths.Add((mp.Year, mp.Month)); }
-
-            var cashflow = allMonths.OrderBy(x => x.Year).ThenBy(x => x.Month).Select(mo => {
-                var monthPlannedHours = plannedHoursRows
-                    .Where(ph => ph.Year == mo.Year.ToString() && IsSameMonth(ph.Month, mo.Month))
-                    .Sum(ph => ph.PlannedHours);
-                
-                decimal plannedRev = projectTotalPlannedHours > 0 ? (decimal)((monthPlannedHours / projectTotalPlannedHours) * (double)totalRevenueExpected) : 0;
-                decimal actualRev = progressReports.Where(mp => mp.Year == mo.Year && mp.Month == mo.Month).Sum(mp => mp.FinancialDetails?.FeeTotal ?? 0);
-
-                return new MonthlyCashflowDto {
-                    Month = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(mo.Month),
-                    Planned = Math.Round(plannedRev, 2),
-                    Actual = Math.Round(actualRev, 2),
-                    Variance = Math.Round(actualRev - plannedRev, 2)
-                };
-            }).ToList();
-
-            if (!cashflow.Any())
+            if (budgetResult?.Cashflows == null || !budgetResult.Cashflows.Any())
             {
                 var now = DateTime.Now;
+                var fallback = new List<MonthlyCashflowDto>();
                 for (int i = 5; i >= 0; i--) {
                     var date = now.AddMonths(-i);
-                    cashflow.Add(new MonthlyCashflowDto { Month = date.ToString("MMM"), Planned = 0, Actual = 0, Variance = 0 });
+                    fallback.Add(new MonthlyCashflowDto { Month = date.ToString("MMM"), Planned = 0, Actual = 0, Variance = 0 });
                 }
+                return fallback;
             }
+
+            var cashflow = budgetResult.Cashflows.Select(cf => {
+                // Determine year/month for actual progress mapping
+                int year = DateTime.Now.Year;
+                int month = 1;
+                if (DateTime.TryParse(cf.Month, out DateTime dt))
+                {
+                    year = dt.Year;
+                    month = dt.Month;
+                }
+
+                decimal plannedCashFlow = cf.CashFlow ?? 0;
+                
+                // Fetch actual revenue from completed milestones in the specific month's progress report
+                decimal actualRevenue = progressReports
+                    .Where(mp => mp.Year == year && mp.Month == month)
+                    .SelectMany(mp => mp.ProgressDeliverables ?? new List<EDR.Domain.Entities.ProgressDeliverable>())
+                    .Sum(pd => pd.PaymentDue ?? 0);
+
+                return new MonthlyCashflowDto {
+                    Month = cf.Month,
+                    Planned = Math.Round(plannedCashFlow, 2),
+                    Actual = Math.Round(actualRevenue, 2),
+                    Variance = Math.Round(plannedCashFlow + actualRevenue, 2)
+                };
+            }).ToList();
 
             return cashflow;
         }
