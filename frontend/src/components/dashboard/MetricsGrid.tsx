@@ -24,7 +24,7 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
       <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Total Revenue-Actual"
-          value={formatCurrency(metrics.totalRevenueActual || metrics.totalRevenue, metrics.currency)}
+          value={formatCurrency(metrics.totalRevenueActual, metrics.currency)}
           change={`${metrics.totalRevenueChange}% vs last quater`}
           changeType={metrics.totalRevenueChangeType}
           icon="revenue"

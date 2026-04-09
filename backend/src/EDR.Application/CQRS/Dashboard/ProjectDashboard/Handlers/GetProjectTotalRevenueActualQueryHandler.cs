@@ -26,10 +26,17 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
             var allJsf = await _projectDashboardRepository.GetJobStartFormsByProjectIdAsync(request.ProjectId, cancellationToken);
             var progressReports = await _projectDashboardRepository.GetMonthlyProgressesByProjectIdAsync(request.ProjectId, cancellationToken);
 
-            var totalRevenueActual = progressReports.Sum(mp => mp.FinancialDetails?.FeeTotal ?? 0);
+            var currentDate = DateTime.Now;
+            
+            var latestMonthlyProgress = progressReports
+                .OrderByDescending(mp => mp.Year).ThenByDescending(mp => mp.Month)
+                .FirstOrDefault();
+
+            var totalRevenueActual = latestMonthlyProgress?.ProgressDeliverables
+                .Where(pd => pd.PaymentReceivedDate.HasValue && pd.PaymentReceivedDate.Value <= currentDate)
+                .Sum(pd => pd.PaymentDue ?? 0) ?? 0;
 
             // Quarterly Changes
-            var currentDate = DateTime.Now;
             var currentYear = currentDate.Year;
             var currentMonth = currentDate.Month;
             var currentQuarter = (currentMonth - 1) / 3 + 1;

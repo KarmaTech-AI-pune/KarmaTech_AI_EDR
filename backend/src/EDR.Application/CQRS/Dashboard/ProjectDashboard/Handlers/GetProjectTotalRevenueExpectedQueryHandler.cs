@@ -25,7 +25,7 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
 
             var allJsf = await _projectDashboardRepository.GetJobStartFormsByProjectIdAsync(request.ProjectId, cancellationToken);
 
-            var totalRevenueExpected = project.EstimatedProjectFee ?? 0;
+            var totalRevenueExpected = (project.EstimatedProjectCost ?? 0) + (project.EstimatedProjectFee ?? 0);
 
             // Quarterly Changes
             var currentDate = DateTime.Now;
