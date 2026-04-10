@@ -38,19 +38,19 @@ const Signup: React.FC = () => {
   const planParam = searchParams.get('plan');
   
   // Validate and normalize the plan parameter
-  const getValidPlan = (planParam?: string | null): 'starter' | 'professional' | 'enterprises' => {
-    if (!planParam) return 'starter';
+  const getValidPlan = (planParam?: string | null): 'Operate' | 'Automate' | 'Autonomous' => {
+    if (!planParam) return 'Operate';
     
     const normalizedPlan = planParam.toLowerCase();
     switch (normalizedPlan) {
-      case 'starter':
-        return 'starter';
-      case 'professional':
-        return 'professional';
-      case 'enterprises':
-        return 'enterprises';
+      case 'operate':
+        return 'Operate';
+      case 'automate':
+        return 'Automate';
+      case 'autonomous':
+        return 'Autonomous';
       default:
-        return 'starter';
+        return 'Operate';
     }
   };
 
@@ -66,7 +66,7 @@ const Signup: React.FC = () => {
       phoneNumber: '',
       emailAddress: '',
       subdomain: '',
-      subscriptionPlan: 'Operate',
+      subscriptionPlan: selectedPlan,
     },
     mode: 'all',
   });
