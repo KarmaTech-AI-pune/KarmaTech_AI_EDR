@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using EDR.Application.Services.IContract;
@@ -109,11 +109,12 @@ namespace EDR.Application.Services
 
                 foreach (var scriptFileName in migrationScripts)
                 {
-                    var scriptPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+                    var scriptPath = GetCorrectCaseFilePath(_migrationScriptsPath, scriptFileName);
 
-                    if (!File.Exists(scriptPath))
+                    if (string.IsNullOrEmpty(scriptPath))
                     {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        var fullPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", fullPath);
                         continue;
                     }
 
@@ -221,11 +222,12 @@ namespace EDR.Application.Services
 
                 foreach (var scriptFileName in migrationScripts)
                 {
-                    var scriptPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+                    var scriptPath = GetCorrectCaseFilePath(_migrationScriptsPath, scriptFileName);
 
-                    if (!File.Exists(scriptPath))
+                    if (string.IsNullOrEmpty(scriptPath))
                     {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        var fullPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", fullPath);
                         continue;
                     }
 
@@ -320,9 +322,9 @@ namespace EDR.Application.Services
                 var migrationScripts = new[]
                 {
                     "01_DropIndex.Sql",
-                    "03_PMWorkFlow.Sql",
-                    "04_OpportunityStatuses.Sql",
-                    "05_Setup_user.Sql",
+                    "03_Setup_user.Sql",
+                    "04_PMWorkFlow.Sql",
+                    "05_OpportunityStatuses.Sql",
                     "BDScoring_PostgresSQL.Sql"
                 };
 
@@ -331,11 +333,12 @@ namespace EDR.Application.Services
 
                 foreach (var scriptFileName in migrationScripts)
                 {
-                    var scriptPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+                    var scriptPath = GetCorrectCaseFilePath(_nonIsolatedTenetScriptPath, scriptFileName);
 
-                    if (!File.Exists(scriptPath))
+                    if (string.IsNullOrEmpty(scriptPath))
                     {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        var fullPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", fullPath);
                         continue;
                     }
 
@@ -431,11 +434,12 @@ namespace EDR.Application.Services
 
                 foreach (var scriptFileName in migrationScripts)
                 {
-                    var scriptPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+                    var scriptPath = GetCorrectCaseFilePath(_nonIsolatedTenetScriptPath, scriptFileName);
 
-                    if (!File.Exists(scriptPath))
+                    if (string.IsNullOrEmpty(scriptPath))
                     {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        var fullPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", fullPath);
                         continue;
                     }
 
@@ -489,6 +493,19 @@ namespace EDR.Application.Services
                     userEmail);
                 return false;
             }
+        }
+
+        private string? GetCorrectCaseFilePath(string directory, string fileName)
+        {
+            if (!Directory.Exists(directory)) return null;
+
+            // Direct check first (efficient for Windows or if correctly cased on Linux)
+            var directPath = Path.Combine(directory, fileName);
+            if (File.Exists(directPath)) return directPath;
+
+            // Case-insensitive search
+            var files = Directory.GetFiles(directory);
+            return files.FirstOrDefault(f => Path.GetFileName(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
         }
 
         private string ReplacePlaceholdersSQL(string scriptContent, int tenantId, string targetDatabaseName,

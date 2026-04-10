@@ -120,6 +120,9 @@ const CostToCompleteAndEAC: React.FC = () => {
   const ctcStaff = watch('ctcAndEac.ctcStaff');
   const actualctcODC = watch('ctcAndEac.actualctcODC');
 
+  // Expected gross profit comes from the original JobStartForm profit percentage (nullable)
+  const expectedGrossProfitPercentage = watch('budgetTable.originalBudget.profitPercentage') ?? null;
+
   const calculatedValues = useMemo(() => {
     const calculatedCtcODC = (budgetOdcs ?? 0) - totalCumulativeOdcs;
     const calculatedCtcStaff = (budgetStaff ?? 0) - totalCumulativeStaff;
@@ -133,6 +136,7 @@ const CostToCompleteAndEAC: React.FC = () => {
     const eacStaff = totalCumulativeStaff + calculatedActualCtcStaff;
     const totalEAC = eacOdc + eacStaff;
     
+    // Current gross profit: based on actual EAC vs net fee
     const grossProfitPercentage = calculateGrossPercentage(net, totalEAC);
 
     return {
@@ -158,9 +162,10 @@ const CostToCompleteAndEAC: React.FC = () => {
     setValue('ctcAndEac.eacStaff', calculatedValues.eacStaff);
     setValue('ctcAndEac.totalEAC', calculatedValues.totalEAC);
     setValue('ctcAndEac.grossProfitPercentage', calculatedValues.grossProfitPercentage);
+    setValue('ctcAndEac.expectedGrossProfitPercentage', expectedGrossProfitPercentage ?? 0);
     setValue('budgetTable.currentBudgetInMIS.profitPercentage', calculatedValues.grossProfitPercentage);
     setValue('budgetTable.currentBudgetInMIS.cost', calculatedValues.totalEAC);
-  }, [calculatedValues, setValue]);
+  }, [calculatedValues, expectedGrossProfitPercentage, setValue]);
 
   const sections: SectionProps[] = [
     {
@@ -203,7 +208,8 @@ const CostToCompleteAndEAC: React.FC = () => {
       title: "Gross Profit",
       control,
       fields: [
-        { name: "grossProfitPercentage", label: "Gross Profit %", readOnly: true, value: calculatedValues.grossProfitPercentage ?? 0 },
+        { name: "expectedGrossProfitPercentage", label: "Expected GP %", readOnly: true, value: expectedGrossProfitPercentage ?? 0 },
+        { name: "grossProfitPercentage", label: "Current GP %", readOnly: true, value: calculatedValues.grossProfitPercentage ?? 0 },
       ],
     },
   ];

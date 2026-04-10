@@ -96,13 +96,7 @@ const WBSFormContent: React.FC = () => {
         return;
       }
 
-      if (!combinedWbsData || combinedWbsData.length === 0 || combinedWbsData == undefined) {
-        setSnackbarMessage("Add levels to save the tasks");
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
-        setSaveLoading(false);
-        return;
-      }
+      // We allow empty combinedWbsData to support deleting all tasks to clear the WBS structure.
 
       await WBSStructureAPI.setProjectWBS(projectId, combinedWbsData, wbsHeaderId);
       reloadWBSData();

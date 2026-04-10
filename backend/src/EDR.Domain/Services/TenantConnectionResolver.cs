@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using EDR.Domain.Database;
 using System;
 using System.Threading.Tasks;
@@ -31,22 +31,24 @@ namespace EDR.Domain.Services
 
         public async Task<string> GetConnectionStringAsync(int tenantId)
         {
-            // For admin user (usually ID 1), always return the default connection string
-            if (tenantId == 1)
+            // For system admins (ID 0 or 1), always return the default connection string
+            if (tenantId <= 1)
             {
                 return _defaultConnectionString;
             }
 
             var tenantDb = await _tenantDbContext.TenantDatabases
-                .FirstOrDefaultAsync(t => t.Id == tenantId);
+                .FirstOrDefaultAsync(t => t.TenantId == tenantId);
 
             if (tenantDb == null)
             {
-                throw new Exception($"Tenant {tenantId} not found");
+                // Fallback to default if no specific database mapping is found
+                return _defaultConnectionString;
             }
 
-            // For all other tenants, use the default connection string
-            return _defaultConnectionString;
+            return !string.IsNullOrEmpty(tenantDb.ConnectionString) 
+                ? tenantDb.ConnectionString 
+                : _defaultConnectionString;
         }
 
         public async Task<string> GetConnectionStringByDomainAsync(string domain)

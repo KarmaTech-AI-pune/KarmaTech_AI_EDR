@@ -617,8 +617,7 @@ describe('BudgetUpdateDialog Component', () => {
       );
       
       const costInput = screen.getByLabelText(/Estimated Project Cost/);
-      await user.clear(costInput);
-      await user.type(costInput, '150000.50');
+      fireEvent.change(costInput, { target: { value: '150000.50' } });
       
       const submitButton = screen.getByRole('button', { name: /Update Budget/i });
       await user.click(submitButton);
@@ -652,11 +651,10 @@ describe('BudgetUpdateDialog Component', () => {
       );
       
       const costInput = screen.getByLabelText(/Estimated Project Cost/);
-      await user.clear(costInput);
-      await user.type(costInput, '150000');
+      fireEvent.change(costInput, { target: { value: '150000' } });
       
       const reasonInput = screen.getByLabelText(/Reason for Change/);
-      await user.type(reasonInput, 'Budget change due to <script> & "quotes"');
+      fireEvent.change(reasonInput, { target: { value: 'Budget change due to <script> & "quotes"' } });
       
       const submitButton = screen.getByRole('button', { name: /Update Budget/i });
       await user.click(submitButton);
@@ -690,11 +688,10 @@ describe('BudgetUpdateDialog Component', () => {
       );
       
       const costInput = screen.getByLabelText(/Estimated Project Cost/);
-      await user.clear(costInput);
-      await user.type(costInput, '150000');
+      fireEvent.change(costInput, { target: { value: '150000' } });
       
       const reasonInput = screen.getByLabelText(/Reason for Change/);
-      await user.type(reasonInput, '   Scope expansion   ');
+      fireEvent.change(reasonInput, { target: { value: '   Scope expansion   ' } });
       
       const submitButton = screen.getByRole('button', { name: /Update Budget/i });
       await user.click(submitButton);
@@ -728,11 +725,10 @@ describe('BudgetUpdateDialog Component', () => {
       );
       
       const costInput = screen.getByLabelText(/Estimated Project Cost/);
-      await user.clear(costInput);
-      await user.type(costInput, '150000');
+      fireEvent.change(costInput, { target: { value: '150000' } });
       
       const reasonInput = screen.getByLabelText(/Reason for Change/);
-      await user.type(reasonInput, '   ');
+      fireEvent.change(reasonInput, { target: { value: '   ' } });
       
       const submitButton = screen.getByRole('button', { name: /Update Budget/i });
       await user.click(submitButton);

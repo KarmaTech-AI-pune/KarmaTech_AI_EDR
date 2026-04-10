@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -85,10 +85,13 @@ namespace EDR.API.Controllers
                     _logger.LogInformation($"Login attempt for tenant: {tenant}");
                 }
 
-                var (success, user, token) = await _authService.ValidateUserAsync(model.Email, model.Password);
+                var authResult = await _authService.ValidateUserAsync(model.Email, model.Password);
 
-                if (success)
+                if (authResult.Success)
                 {
+                    var user = authResult.User;
+                    var token = authResult.Token;
+                   
                     // Check if 2FA is required for this user
                    
                     if (await _twoFactorService.IsOtpRequiredAsync(model.Email))
@@ -161,7 +164,7 @@ namespace EDR.API.Controllers
                     });
                 }
 
-                return Unauthorized(new { success = false, message = "Invalid credentials" });
+                return Unauthorized(new { success = false, message = authResult.Message ?? "Invalid credentials" });
             }
             catch (Exception ex)
             {

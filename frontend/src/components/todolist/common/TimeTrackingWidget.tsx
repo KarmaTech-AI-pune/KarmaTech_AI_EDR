@@ -100,7 +100,11 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                 <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2 }}>
                     Employee Work Log
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary" display="block">Estimated Hours</Typography>
+                        <Typography variant="body2" fontWeight="bold">{originalEstimate}h</Typography>
+                    </Box>
                     <Box sx={{ textAlign: 'right' }}>
                         <Typography variant="caption" color="text.secondary" display="block">Remaining Hours</Typography>
                         <Typography variant="body2" fontWeight="bold">{remainingEstimate}h</Typography>
@@ -256,7 +260,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                         </Grid>
                                         <Grid item xs={12}>
                                             <TextField
-                                                label="Commite"
+                                                label="Comment"
                                                 multiline
                                                 rows={2}
                                                 placeholder="Briefly describe what you worked on..."
@@ -270,7 +274,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                         {recentLogs && recentLogs.length > 0 && (
                                             <Grid item xs={12}>
                                                 <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ display: 'block', mb: 1, mt: 1 }}>
-                                                    Previous Commite
+                                                    Previous Comment
                                                 </Typography>
                                                 <Box sx={{
                                                     maxHeight: 150,
@@ -346,7 +350,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
 
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            label="Reporting Hours"
+                                            label="Approved Hours"
                                             type="number"
                                             value={logTimeSpent}
                                             onChange={(e) => {
@@ -369,7 +373,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            label="Approved Hours"
+                                            label="Total Approved Hours"
                                             type="number"
                                             value={timeSpent + (parseFloat(logTimeSpent as string) || 0)}
                                             fullWidth
@@ -402,7 +406,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                     </Grid>
                                     <Grid item xs={12}>
                                         <TextField
-                                            label="Commite"
+                                            label="Comments"
                                             multiline
                                             rows={2}
                                             placeholder="Update message..."
@@ -416,7 +420,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                     {recentLogs && recentLogs.length > 0 && (
                                         <Grid item xs={12}>
                                             <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ display: 'block', mb: 1, mt: 1 }}>
-                                                Previous Commite
+                                                Previous Comment
                                             </Typography>
                                             <Box sx={{
                                                 maxHeight: 150,

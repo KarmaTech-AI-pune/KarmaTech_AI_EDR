@@ -20,6 +20,7 @@ vi.mock('./projectApi', () => ({
 vi.mock('./monthlyProgressApi', () => ({
   MonthlyProgressAPI: {
     getManpowerResources: vi.fn(),
+    getAssigneeProgress: vi.fn(),
     getMonthlyReportByYearMonth: vi.fn(),
   },
 }));
@@ -52,6 +53,7 @@ describe('monthlyProgressDataService', () => {
       vi.mocked(WBSStructureAPI.getProjectWBS).mockRejectedValue(new Error('fail'));
       vi.mocked(projectApi.getById).mockRejectedValue(new Error('fail'));
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockRejectedValue(new Error('fail'));
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockRejectedValue(new Error('fail'));
 
       const result = await getAggregatedMonthlyProgressData('1');
 
@@ -72,6 +74,7 @@ describe('monthlyProgressDataService', () => {
       vi.mocked(WBSStructureAPI.getProjectWBS).mockRejectedValue(new Error('fail'));
       vi.mocked(projectApi.getById).mockRejectedValue(new Error('fail'));
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockRejectedValue(new Error('fail'));
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockRejectedValue(new Error('fail'));
 
       const result = await getAggregatedMonthlyProgressData('1');
 
@@ -86,14 +89,22 @@ describe('monthlyProgressDataService', () => {
       vi.mocked(getJobStartFormByProjectId).mockRejectedValue(new Error('fail'));
       vi.mocked(WBSStructureAPI.getProjectWBS).mockResolvedValue({
         wbsHeaderId: 1,
+        workBreakdownStructures: [
+          {
+            tasks: [
+              { taskType: 0, totalCost: 5000 },
+              { taskType: 1, totalCost: 2000 },
+            ]
+          }
+        ],
         tasks: [
           { taskType: 0, totalCost: 5000 },
           { taskType: 1, totalCost: 2000 },
         ],
-        workBreakdownStructures: [],
       } as any);
       vi.mocked(projectApi.getById).mockRejectedValue(new Error('fail'));
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockRejectedValue(new Error('fail'));
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockRejectedValue(new Error('fail'));
 
       const result = await getAggregatedMonthlyProgressData('1');
 
@@ -111,33 +122,70 @@ describe('monthlyProgressDataService', () => {
         endDate: '2023-12-31',
       } as any);
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockRejectedValue(new Error('fail'));
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockRejectedValue(new Error('fail'));
 
       const result = await getAggregatedMonthlyProgressData('1');
 
-      expect(result.schedule?.dateOfIssueWOLOI).toBe('2023-01-01');
-      expect(result.schedule?.completionDateAsPerContract).toBe('2023-12-31');
+      expect(result.schedule?.dateOfIssueWOLOI).toBe('01-01-2023');
+      expect(result.schedule?.completionDateAsPerContract).toBe('31-12-2023');
       expect(result.financialAndContractDetails?.contractType).toBe('timeAndExpense');
     });
 
     it('populates manpower data', async () => {
+      const currentDate = new Date();
+      const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
+      const currentYear = currentDate.getFullYear();
+
       vi.mocked(getJobStartFormByProjectId).mockRejectedValue(new Error('fail'));
-      vi.mocked(WBSStructureAPI.getProjectWBS).mockRejectedValue(new Error('fail'));
+      vi.mocked(WBSStructureAPI.getProjectWBS).mockResolvedValue({
+        wbsHeaderId: 1,
+        workBreakdownStructures: [
+          {
+            tasks: [
+              {
+                taskType: 0, // Staff task
+                title: 'Design',
+                assignedUserName: 'John',
+                costRate: 100,
+                plannedHours: [
+                  {
+                    month: currentMonth,
+                    year: currentYear,
+                    plannedHours: 40
+                  }
+                ]
+              },
+            ]
+          }
+        ],
+        tasks: []
+      } as any);
       vi.mocked(projectApi.getById).mockRejectedValue(new Error('fail'));
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockResolvedValue({
-        resources: [
-          {
-            taskTitle: 'Design',
-            employeeName: 'John',
-            monthlyHours: [],
-          },
-        ],
+        // Mock manpower resources response
+        resources: []
       } as any);
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockResolvedValue([
+        {
+          assigneeId: '1',
+          assigneeName: 'John',
+          month: `${currentMonth} ${currentYear}`,
+          estimatedHours: 40,
+          actualHours: 35,
+          remainingHours: 5,
+          employeeLoggedHours: 38
+        }
+      ] as any);
 
       const result = await getAggregatedMonthlyProgressData('1');
 
       expect(result.manpowerPlanning?.manpower).toHaveLength(1);
       expect(result.manpowerPlanning?.manpower[0].workAssignment).toBe('Design');
       expect(result.manpowerPlanning?.manpower[0].assignee).toBe('John');
+      expect(result.manpowerPlanning?.manpower[0].rate).toBe(100);
+      expect(result.manpowerPlanning?.manpower[0].planned).toBe(40);
+      expect(result.manpowerPlanning?.manpower[0].consumed).toBe(38);
+      expect(result.manpowerPlanning?.manpower[0].approved).toBe(35);
     });
 
     it('defaults contractType to lumpsum when project feeType is missing', async () => {
@@ -145,6 +193,7 @@ describe('monthlyProgressDataService', () => {
       vi.mocked(WBSStructureAPI.getProjectWBS).mockRejectedValue(new Error('fail'));
       vi.mocked(projectApi.getById).mockResolvedValue({ startDate: null, endDate: null } as any);
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockRejectedValue(new Error('fail'));
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockRejectedValue(new Error('fail'));
 
       const result = await getAggregatedMonthlyProgressData('1');
 
@@ -159,6 +208,7 @@ describe('monthlyProgressDataService', () => {
       vi.mocked(WBSStructureAPI.getProjectWBS).mockRejectedValue(new Error('fail'));
       vi.mocked(projectApi.getById).mockRejectedValue(new Error('fail'));
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockRejectedValue(new Error('fail'));
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockRejectedValue(new Error('fail'));
 
       const result = await getMonthlyProgressData('1', 2023, 6);
       expect(result).toBeDefined();
@@ -179,6 +229,7 @@ describe('monthlyProgressDataService', () => {
       vi.mocked(WBSStructureAPI.getProjectWBS).mockRejectedValue(new Error('fail'));
       vi.mocked(projectApi.getById).mockRejectedValue(new Error('fail'));
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockRejectedValue(new Error('fail'));
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockRejectedValue(new Error('fail'));
 
       const result = await getMonthlyProgressData('1', 2023, 6);
       expect(result).toBeDefined();
@@ -200,6 +251,7 @@ describe('monthlyProgressDataService', () => {
       vi.mocked(WBSStructureAPI.getProjectWBS).mockRejectedValue(new Error('fail'));
       vi.mocked(projectApi.getById).mockRejectedValue(new Error('fail'));
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockRejectedValue(new Error('fail'));
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockRejectedValue(new Error('fail'));
 
       const result = await getMonthlyProgressData('1', 2023, 6);
       expect(result.actualCost?.priorCumulativeOdc).toBe(100);
@@ -214,6 +266,7 @@ describe('monthlyProgressDataService', () => {
       vi.mocked(WBSStructureAPI.getProjectWBS).mockRejectedValue(new Error('fail'));
       vi.mocked(projectApi.getById).mockRejectedValue(new Error('fail'));
       vi.mocked(MonthlyProgressAPI.getManpowerResources).mockRejectedValue(new Error('fail'));
+      vi.mocked(MonthlyProgressAPI.getAssigneeProgress).mockRejectedValue(new Error('fail'));
 
       await getMonthlyProgressData('1', 2023, 1);
 

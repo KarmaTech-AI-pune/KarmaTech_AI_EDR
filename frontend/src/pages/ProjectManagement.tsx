@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -11,11 +12,12 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import { ProjectManagementProjectList } from '../components/project/ProjectManagementProjectList.tsx';
 import { ProjectInitializationDialog } from '../components/project/ProjectInitializationDialog.tsx';
 import { Pagination } from '../components/Pagination';
 import { projectApi } from '../services/projectApi';
-import { programApi } from '../services/api/programApi';
+import { programApi } from '../services/programApi';
 import { UserWithRole } from '../types';
 import { Project } from '../models';
 import { PermissionType } from '../models';
@@ -26,6 +28,7 @@ import { useProject } from '../context/ProjectContext';
 import { Program } from '../types/program';
 
 export const ProjectManagement: React.FC = () => {
+  const navigate = useNavigate();
   const { programId } = useProject();
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canViewProjects, setCanViewProjects] = useState(false);
@@ -291,21 +294,44 @@ export const ProjectManagement: React.FC = () => {
             )} */}
           </Box>
 
-          {canCreateProject && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddCircleOutlineIcon />}
-              onClick={handleCreateProject}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                px: 3
-              }}
-            >
-              Initialize Project
-            </Button>
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {programId && (
+              <Button
+                variant="outlined"
+                startIcon={<AssessmentIcon />}
+                onClick={() => navigate('/program-management/dashboard')}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  px: 3,
+                  borderColor: '#ff9800',
+                  color: '#ff9800',
+                  '&:hover': {
+                    borderColor: '#f57c00',
+                    backgroundColor: 'rgba(255, 152, 0, 0.04)'
+                  }
+                }}
+              >
+                Program Dashboard
+              </Button>
+            )}
+
+            {canCreateProject && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddCircleOutlineIcon />}
+                onClick={handleCreateProject}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  px: 3
+                }}
+              >
+                Initialize Project
+              </Button>
+            )}
+          </Box>
         </Box>
 
         <ProjectInitializationDialog

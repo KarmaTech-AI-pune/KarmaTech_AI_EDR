@@ -128,6 +128,7 @@ describe('MonthlyProgressSchema', () => {
         eacStaff: 270,
         totalEAC: 420,
         grossProfitPercentage: 20,
+        expectedGrossProfitPercentage: null,
       };
       expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
     });
@@ -144,6 +145,40 @@ describe('MonthlyProgressSchema', () => {
         eacStaff: null,
         totalEAC: null,
         grossProfitPercentage: null,
+        expectedGrossProfitPercentage: null,
+      };
+      expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
+    });
+
+    it('should accept expectedGrossProfitPercentage when provided', () => {
+      const data = {
+        ctcODC: 100, ctcStaff: 200, ctcSubtotal: 300,
+        actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null,
+        eacOdc: 150, eacStaff: 270, totalEAC: 420,
+        grossProfitPercentage: 20,
+        expectedGrossProfitPercentage: 25,
+      };
+      expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
+    });
+
+    it('should accept null expectedGrossProfitPercentage (no JobStartForm)', () => {
+      const data = {
+        ctcODC: null, ctcStaff: null, ctcSubtotal: null,
+        actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null,
+        eacOdc: null, eacStaff: null, totalEAC: null,
+        grossProfitPercentage: null,
+        expectedGrossProfitPercentage: null,
+      };
+      expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
+    });
+
+    it('should accept negative grossProfitPercentage (loss scenario)', () => {
+      const data = {
+        ctcODC: 100, ctcStaff: 200, ctcSubtotal: 300,
+        actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null,
+        eacOdc: 150, eacStaff: 270, totalEAC: 420,
+        grossProfitPercentage: -15,
+        expectedGrossProfitPercentage: null,
       };
       expect(() => ctcAndEacSchema.parse(data)).not.toThrow();
     });
@@ -152,10 +187,10 @@ describe('MonthlyProgressSchema', () => {
   describe('scheduleSchema', () => {
     it('should validate a correct schedule object', () => {
       const data = {
-        dateOfIssueWOLOI: '2023-01-01',
-        completionDateAsPerContract: '2023-12-31',
-        completionDateAsPerExtension: '2024-01-31',
-        expectedCompletionDate: '2024-02-28',
+        dateOfIssueWOLOI: '01-01-2023',
+        completionDateAsPerContract: '31-12-2023',
+        completionDateAsPerExtension: '31-01-2024',
+        expectedCompletionDate: '28-02-2024',
       };
       expect(() => scheduleSchema.parse(data)).not.toThrow();
     });
@@ -172,7 +207,7 @@ describe('MonthlyProgressSchema', () => {
 
     it('should reject invalid date string format', () => {
       const data = {
-        dateOfIssueWOLOI: '01-01-2023', // Invalid format
+        dateOfIssueWOLOI: '2023-01-01', // Invalid format (should be DD-MM-YYYY)
         completionDateAsPerContract: null,
         completionDateAsPerExtension: null,
         expectedCompletionDate: null,
@@ -262,8 +297,13 @@ describe('MonthlyProgressSchema', () => {
       const data = {
         workAssignment: 'Task A',
         assignee: 'John Doe',
+        rate: 100,
         planned: 100,
         consumed: 50,
+        approved: 40,
+        extraHours: 10,
+        extraCost: 1000,
+        payment: 5000,
         balance: 50,
         nextMonthPlanning: 20,
         manpowerComments: 'Comments here',
@@ -275,8 +315,13 @@ describe('MonthlyProgressSchema', () => {
       const data = {
         workAssignment: null,
         assignee: null,
+        rate: null,
         planned: null,
         consumed: null,
+        approved: null,
+        extraHours: null,
+        extraCost: null,
+        payment: null,
         balance: null,
         nextMonthPlanning: null,
         manpowerComments: null,
@@ -289,12 +334,16 @@ describe('MonthlyProgressSchema', () => {
     it('should validate a correct manpower planning object', () => {
       const data = {
         manpower: [
-          { workAssignment: 'Task A', assignee: 'John', planned: 100, consumed: 50, balance: 50, nextMonthPlanning: 20, manpowerComments: '' },
-          { workAssignment: 'Task B', assignee: 'Jane', planned: 80, consumed: 30, balance: 50, nextMonthPlanning: 10, manpowerComments: '' },
+          { workAssignment: 'Task A', assignee: 'John', rate: 100, planned: 100, consumed: 50, approved: 40, extraHours: 10, extraCost: 1000, payment: 5000, balance: 50, nextMonthPlanning: 20, manpowerComments: '' },
+          { workAssignment: 'Task B', assignee: 'Jane', rate: 120, planned: 80, consumed: 30, approved: 25, extraHours: 5, extraCost: 600, payment: 3600, balance: 50, nextMonthPlanning: 10, manpowerComments: '' },
         ],
         manpowerTotal: {
           plannedTotal: 180,
           consumedTotal: 80,
+          approvedTotal: 65,
+          extraHoursTotal: 15,
+          extraCostTotal: 1600,
+          paymentTotal: 8600,
           balanceTotal: 100,
           nextMonthPlanningTotal: 30,
         },
@@ -308,6 +357,10 @@ describe('MonthlyProgressSchema', () => {
         manpowerTotal: {
           plannedTotal: null,
           consumedTotal: null,
+          approvedTotal: null,
+          extraHoursTotal: null,
+          extraCostTotal: null,
+          paymentTotal: null,
           balanceTotal: null,
           nextMonthPlanningTotal: null,
         },
@@ -320,12 +373,12 @@ describe('MonthlyProgressSchema', () => {
     it('should validate a correct deliverable entry', () => {
       const data = {
         milestone: 'Milestone 1',
-        dueDateContract: '2023-06-30',
-        dueDatePlanned: '2023-06-25',
-        achievedDate: '2023-06-28',
+        dueDateContract: '30-06-2023',
+        dueDatePlanned: '25-06-2023',
+        achievedDate: '28-06-2023',
         paymentDue: 5000,
-        invoiceDate: '2023-07-01',
-        paymentReceivedDate: '2023-07-15',
+        invoiceDate: '01-07-2023',
+        paymentReceivedDate: '15-07-2023',
         deliverableComments: 'Completed on time',
       };
       expect(() => deliverableSchema.parse(data)).not.toThrow();
@@ -350,7 +403,7 @@ describe('MonthlyProgressSchema', () => {
     it('should validate a correct progress deliverable object', () => {
       const data = {
         deliverables: [
-          { milestone: 'M1', dueDateContract: '2023-01-01', dueDatePlanned: '2023-01-01', achievedDate: '2023-01-01', paymentDue: 100, invoiceDate: '2023-01-01', paymentReceivedDate: '2023-01-01', deliverableComments: '' },
+          { milestone: 'M1', dueDateContract: '01-01-2023', dueDatePlanned: '01-01-2023', achievedDate: '01-01-2023', paymentDue: 100, invoiceDate: '01-01-2023', paymentReceivedDate: '01-01-2023', deliverableComments: '' },
         ],
         totalPaymentDue: 100,
       };
@@ -437,7 +490,7 @@ describe('MonthlyProgressSchema', () => {
     it('should validate a correct last month action entry', () => {
       const data = {
         actions: 'Action taken last month',
-        date: '2023-07-31',
+        date: '31-07-2023',
         comments: 'Comments on action',
       };
       expect(() => lastMonthActionSchema.parse(data)).not.toThrow();
@@ -457,7 +510,7 @@ describe('MonthlyProgressSchema', () => {
     it('should validate a correct current month action entry', () => {
       const data = {
         actions: 'Action for current month',
-        date: '2023-08-15',
+        date: '15-08-2023',
         comments: 'Comments on current action',
         priority: 'H',
       };
@@ -477,7 +530,7 @@ describe('MonthlyProgressSchema', () => {
     it('should reject invalid priority', () => {
       const data = {
         actions: 'Action for current month',
-        date: '2023-08-15',
+        date: '15-08-2023',
         comments: 'Comments on current action',
         priority: 'X',
       };
@@ -495,10 +548,10 @@ describe('MonthlyProgressSchema', () => {
           priorCumulativeTotal: 300, actualSubtotal: 120, totalCumulativeOdc: 150, totalCumulativeStaff: 270, totalCumulativeCost: 420,
         },
         ctcAndEac: {
-          ctcODC: 100, ctcStaff: 200, ctcSubtotal: 300, actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: 120, eacOdc: 150, eacStaff: 270, totalEAC: 420, grossProfitPercentage: 20,
+          ctcODC: 100, ctcStaff: 200, ctcSubtotal: 300, actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: 120, eacOdc: 150, eacStaff: 270, totalEAC: 420, grossProfitPercentage: 20, expectedGrossProfitPercentage: null,
         },
         schedule: {
-          dateOfIssueWOLOI: '2023-01-01', completionDateAsPerContract: '2023-12-31', completionDateAsPerExtension: null, expectedCompletionDate: null,
+          dateOfIssueWOLOI: '01-01-2023', completionDateAsPerContract: '31-12-2023', completionDateAsPerExtension: null, expectedCompletionDate: null,
         },
         budgetTable: {
           originalBudget: { revenueFee: 1000, cost: 800, profitPercentage: 20 },
@@ -506,11 +559,11 @@ describe('MonthlyProgressSchema', () => {
           percentCompleteOnCosts: { revenueFee: 50, cost: 60 },
         },
         manpowerPlanning: {
-          manpower: [{ workAssignment: 'Task A', assignee: 'John', planned: 100, consumed: 50, balance: 50, nextMonthPlanning: 20, manpowerComments: '' }],
-          manpowerTotal: { plannedTotal: 100, consumedTotal: 50, balanceTotal: 50, nextMonthPlanningTotal: 20 },
+          manpower: [{ workAssignment: 'Task A', assignee: 'John', rate: 100, planned: 100, consumed: 50, approved: 40, extraHours: 10, extraCost: 1000, payment: 5000, balance: 50, nextMonthPlanning: 20, manpowerComments: '' }],
+          manpowerTotal: { plannedTotal: 100, consumedTotal: 50, approvedTotal: 40, extraHoursTotal: 10, extraCostTotal: 1000, paymentTotal: 5000, balanceTotal: 50, nextMonthPlanningTotal: 20 },
         },
         progressDeliverable: {
-          deliverables: [{ milestone: 'M1', dueDateContract: '2023-01-01', dueDatePlanned: '2023-01-01', achievedDate: '2023-01-01', paymentDue: 100, invoiceDate: '2023-01-01', paymentReceivedDate: '2023-01-01', deliverableComments: '' }],
+          deliverables: [{ milestone: 'M1', dueDateContract: '01-01-2023', dueDatePlanned: '01-01-2023', achievedDate: '01-01-2023', paymentDue: 100, invoiceDate: '01-01-2023', paymentReceivedDate: '01-01-2023', deliverableComments: '' }],
           totalPaymentDue: 100,
         },
         changeOrder: [{
@@ -518,8 +571,8 @@ describe('MonthlyProgressSchema', () => {
         }],
         programmeSchedule: [{ programmeDescription: 'Programme details' }],
         earlyWarnings: [{ warningsDescription: 'Warning details' }],
-        lastMonthActions: [{ actions: 'Action 1', date: '2023-07-31', comments: 'Comment 1' }],
-        currentMonthActions: [{ actions: 'Action 2', date: '2023-08-15', comments: 'Comment 2', priority: 'H' }],
+        lastMonthActions: [{ actions: 'Action 1', date: '31-07-2023', comments: 'Comment 1' }],
+        currentMonthActions: [{ actions: 'Action 2', date: '15-08-2023', comments: 'Comment 2', priority: 'H' }],
       };
       expect(() => MonthlyProgressSchema.parse(data)).not.toThrow();
     });
@@ -533,7 +586,7 @@ describe('MonthlyProgressSchema', () => {
           priorCumulativeTotal: null, actualSubtotal: null, totalCumulativeOdc: null, totalCumulativeStaff: null, totalCumulativeCost: null,
         },
         ctcAndEac: {
-          ctcODC: null, ctcStaff: null, ctcSubtotal: null, actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null, eacOdc: null, eacStaff: null, totalEAC: null, grossProfitPercentage: null,
+          ctcODC: null, ctcStaff: null, ctcSubtotal: null, actualctcODC: null, actualCtcStaff: null, actualCtcSubtotal: null, eacOdc: null, eacStaff: null, totalEAC: null, grossProfitPercentage: null, expectedGrossProfitPercentage: null,
         },
         schedule: {
           dateOfIssueWOLOI: null, completionDateAsPerContract: null, completionDateAsPerExtension: null, expectedCompletionDate: null,
@@ -545,7 +598,7 @@ describe('MonthlyProgressSchema', () => {
         },
         manpowerPlanning: {
           manpower: [],
-          manpowerTotal: { plannedTotal: null, consumedTotal: null, balanceTotal: null, nextMonthPlanningTotal: null },
+          manpowerTotal: { plannedTotal: null, consumedTotal: null, approvedTotal: null, extraHoursTotal: null, extraCostTotal: null, paymentTotal: null, balanceTotal: null, nextMonthPlanningTotal: null },
         },
         progressDeliverable: {
           deliverables: [],
@@ -599,3 +652,132 @@ describe('MonthlyProgressSchema', () => {
     });
   });
 });
+
+  // ─── Missing Tests Added Below ───────────────────────────────────────────────
+
+  describe('financialAndContractSchema — additional', () => {
+    it('should accept contractType: percentage', () => {
+      expect(() => financialAndContractSchema.parse({
+        net: null, serviceTax: null, feeTotal: null,
+        budgetOdcs: null, budgetStaff: null, budgetSubTotal: null,
+        contractType: 'percentage',
+      })).not.toThrow();
+    });
+
+    it('should accept serviceTax at boundary 0', () => {
+      expect(() => financialAndContractSchema.parse({
+        net: 1000, serviceTax: 0, feeTotal: null,
+        budgetOdcs: null, budgetStaff: null, budgetSubTotal: null,
+        contractType: 'lumpsum',
+      })).not.toThrow();
+    });
+
+    it('should accept serviceTax at boundary 100', () => {
+      expect(() => financialAndContractSchema.parse({
+        net: 1000, serviceTax: 100, feeTotal: null,
+        budgetOdcs: null, budgetStaff: null, budgetSubTotal: null,
+        contractType: 'lumpsum',
+      })).not.toThrow();
+    });
+  });
+
+  describe('scheduleSchema — additional', () => {
+    it('should reject MM/DD/YYYY format', () => {
+      expect(() => scheduleSchema.parse({
+        dateOfIssueWOLOI: '01/01/2025',
+        completionDateAsPerContract: null,
+        completionDateAsPerExtension: null,
+        expectedCompletionDate: null,
+      })).toThrow(z.ZodError);
+    });
+
+    it('should reject partial date string', () => {
+      expect(() => scheduleSchema.parse({
+        dateOfIssueWOLOI: '01-2025',
+        completionDateAsPerContract: null,
+        completionDateAsPerExtension: null,
+        expectedCompletionDate: null,
+      })).toThrow(z.ZodError);
+    });
+  });
+
+  describe('BudgetRowSchema — additional', () => {
+    it('should accept 0 for revenueFee and cost', () => {
+      expect(() => BudgetRowSchema.parse({ revenueFee: 0, cost: 0, profitPercentage: 0 })).not.toThrow();
+    });
+
+    it('should accept negative profitPercentage (loss scenario)', () => {
+      expect(() => BudgetRowSchema.parse({ revenueFee: 1000, cost: 1200, profitPercentage: -20 })).not.toThrow();
+    });
+
+    it('should transform null to null correctly', () => {
+      const result = BudgetRowSchema.parse({ revenueFee: null, cost: null, profitPercentage: null });
+      expect(result.revenueFee).toBeNull();
+      expect(result.cost).toBeNull();
+    });
+
+    it('should transform number values correctly', () => {
+      const result = BudgetRowSchema.parse({ revenueFee: 1000, cost: 800, profitPercentage: 20 });
+      expect(result.revenueFee).toBe(1000);
+      expect(result.cost).toBe(800);
+    });
+  });
+
+  describe('changeOrderSchema — additional', () => {
+    it('should accept status: Submitted', () => {
+      expect(() => changeOrderSchema.parse({
+        contractTotal: 1000, cost: 200, fee: 300,
+        summaryDetails: 'Details', status: 'Submitted',
+      })).not.toThrow();
+    });
+
+    it('should accept status: Proposed', () => {
+      expect(() => changeOrderSchema.parse({
+        contractTotal: 1000, cost: 200, fee: 300,
+        summaryDetails: 'Details', status: 'Proposed',
+      })).not.toThrow();
+    });
+  });
+
+  describe('currentMonthActionSchema — additional', () => {
+    it('should accept priority: M', () => {
+      expect(() => currentMonthActionSchema.parse({
+        actions: 'Task', date: '01-01-2025', comments: null, priority: 'M',
+      })).not.toThrow();
+    });
+
+    it('should accept priority: L', () => {
+      expect(() => currentMonthActionSchema.parse({
+        actions: 'Task', date: '01-01-2025', comments: null, priority: 'L',
+      })).not.toThrow();
+    });
+
+    it('should reject wrong date format', () => {
+      expect(() => currentMonthActionSchema.parse({
+        actions: 'Task', date: '2025-01-01', comments: null, priority: 'H',
+      })).toThrow(z.ZodError);
+    });
+  });
+
+  describe('manpowerSchema — additional', () => {
+    it('should parse successfully when optional fields are omitted', () => {
+      // consumed, approved, extraHours, extraCost are optional — omitting them is valid
+      expect(() => manpowerSchema.parse({
+        workAssignment: 'Task', assignee: 'John', rate: 100,
+        planned: 160, payment: 5000, balance: 80,
+        nextMonthPlanning: 160, manpowerComments: null,
+      })).not.toThrow();
+    });
+
+    it('should use provided values for consumed, approved, extraHours, extraCost', () => {
+      const result = manpowerSchema.parse({
+        workAssignment: 'Task', assignee: 'John', rate: 100,
+        planned: 160, consumed: 80, approved: 70, extraHours: 5, extraCost: 500,
+        payment: 5000, balance: 80, nextMonthPlanning: 160, manpowerComments: null,
+      });
+      expect(result.consumed).toBe(80);
+      expect(result.approved).toBe(70);
+      expect(result.extraHours).toBe(5);
+      expect(result.extraCost).toBe(500);
+    });
+  });

@@ -20,6 +20,7 @@ namespace EDR.Repositories.Interfaces
         bool IsSuperAdminFromClaims();
         
         // Tenant validation and management
+        Task<Tenant?> GetTenantByIdentifierAsync(string identifier);
         Task<Tenant> GetCurrentTenantAsync();
         Task<bool> ValidateTenantAccessAsync(string userId, int tenantId);
         Task<List<TenantUser>> GetTenantUsersByUserIdAsync(string userId);

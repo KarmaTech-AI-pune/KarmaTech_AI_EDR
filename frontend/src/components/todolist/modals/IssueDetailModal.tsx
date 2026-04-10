@@ -26,7 +26,7 @@ import { TimeTrackingWidget } from "../common/TimeTrackingWidget";
 import { projectApi } from '../../../services/projectApi';
 import { getUserById } from '../../../services/userApi';
 import { useProject } from '../../../context/ProjectContext';
-import { updateIssueTimeAPI } from "../../../data/todolistData";
+
 
 interface IssueDetailModalProps {
   showIssueDetail: Issue | null;
@@ -304,7 +304,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     if (showIssueDetail) {
       if (modalType === 'reporter') {
         const newActual = (showIssueDetail.actualHours || 0) + timeSpent;
-        const addedHours = timeSpent;
 
         // Optimistic update
         const updatedIssue = {
@@ -317,7 +316,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           ? projectManager.name
           : showIssueDetail.reporter?.name || 'Unknown';
 
-        const logActionText = `Commite by (${reporterDisplayName})`;
+        const logActionText = `Comment by (${reporterDisplayName}) approved ${timeSpent}h`;
         const workLogComment = description.trim()
           ? `${logActionText}: ${description}`
           : logActionText;
@@ -373,7 +372,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   const recentWorkLogs = showIssueDetail?.comments
     ? showIssueDetail.comments
-      .filter((c: Comment) => (c.hoursLogged && c.hoursLogged > 0) || c.text?.toLowerCase().includes('commite by'))
+      .filter((c: Comment) => (c.hoursLogged && c.hoursLogged > 0) || c.text?.toLowerCase().includes('comment by'))
       .map((c: Comment) => ({
         date: c.createdDate,
         employeeName: c.author?.name || 'Unknown',

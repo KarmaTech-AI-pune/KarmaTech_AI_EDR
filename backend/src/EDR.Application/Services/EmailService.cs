@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using EDR.Domain.Models;
 using EDR.Domain.Entities;
 using EDR.Domain.Database;
@@ -44,6 +44,11 @@ public class EmailService : IEmailService
         {
             var email = CreateMimeMessage(message);
             await SendEmailWithRetryAsync(email, message);
+            _logger.LogEmailOperation(
+                LogLevel.Information,
+                $"Successfully sent email to {message.To}",
+                message.Body
+            );
         }
         catch (Exception ex)
         {

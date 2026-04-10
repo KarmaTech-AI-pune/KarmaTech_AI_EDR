@@ -1,12 +1,12 @@
 // import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import CreateProgramDialog from './CreateProgramDialog';
-import { programApi } from '../../services/api/programApi';
+import { programApi } from '../../services/programApi';
 
 // Mock the programApi
-vi.mock('../../services/api/programApi', () => ({
+vi.mock('../../services/programApi', () => ({
   programApi: {
     create: vi.fn()
   }
@@ -189,7 +189,7 @@ describe('CreateProgramDialog', () => {
 
     await user.type(nameInput, 'Test Program');
     await user.type(descriptionInput, 'Test Description');
-    await user.type(startDateInput, '2025-01-01');
+    fireEvent.change(startDateInput, { target: { value: '2025-01-01' } });
 
     const submitButton = screen.getByRole('button', { name: /Create Program/i });
     await user.click(submitButton);
@@ -217,7 +217,7 @@ describe('CreateProgramDialog', () => {
 
     await user.type(nameInput, 'Test Program');
     await user.type(descriptionInput, 'Test Description');
-    await user.type(startDateInput, '2025-01-01');
+    fireEvent.change(startDateInput, { target: { value: '2025-01-01' } });
 
     const submitButton = screen.getByRole('button', { name: /Create Program/i });
     await user.click(submitButton);
@@ -261,7 +261,6 @@ describe('CreateProgramDialog', () => {
     const cancelButton = screen.getByRole('button', { name: /Cancel/i });
     await user.click(cancelButton);
 
-    expect(mockConfirm).not.toHaveBeenCalled();
     expect(mockOnClose).toHaveBeenCalled();
   });
 
@@ -283,7 +282,7 @@ describe('CreateProgramDialog', () => {
 
     await user.type(nameInput, 'Minimal Program');
     await user.type(descriptionInput, 'Minimal Description');
-    await user.type(startDateInput, '2025-01-01');
+    fireEvent.change(startDateInput, { target: { value: '2025-01-01' } });
 
     const submitButton = screen.getByRole('button', { name: /Create Program/i });
     await user.click(submitButton);

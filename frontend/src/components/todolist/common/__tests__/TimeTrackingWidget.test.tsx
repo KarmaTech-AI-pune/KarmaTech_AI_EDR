@@ -47,6 +47,6 @@ describe('TimeTrackingWidget', () => {
     const submitButton = screen.getByRole('button', { name: /Work Report Submit/i });
     fireEvent.click(submitButton);
     
-    expect(onLogWorkMock).toHaveBeenCalledWith(2, 3, '', 'reporter');
+    expect(onLogWorkMock).toHaveBeenCalledWith(2, 3, '', 'reporter', 0, 0);
   });
 });

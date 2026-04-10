@@ -51,7 +51,7 @@ namespace EDR.Domain.Entities
 
         // Navigation property
         [ForeignKey("ProjectId")]
-        [DeleteBehavior(DeleteBehavior.NoAction)]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public virtual Project Project { get; set; }
 
         // Workflow status

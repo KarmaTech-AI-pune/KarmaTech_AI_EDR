@@ -15,6 +15,8 @@ import { initializeCaches } from './utils/cacheInitializer'; // Import cache ini
 
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
+const router = createBrowserRouter(routes);
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<User | null>(null)
@@ -208,7 +210,6 @@ function App() {
     );
   }
 
-  const router = createBrowserRouter(routes);
 
   return (
     <projectManagementAppContext.Provider value={contextValue}>

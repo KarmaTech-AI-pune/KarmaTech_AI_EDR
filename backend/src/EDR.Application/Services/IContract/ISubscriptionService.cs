@@ -1,4 +1,4 @@
-﻿using EDR.Domain.Entities;
+using EDR.Domain.Entities;
 using EDR.Application.DTOs;
 
 namespace EDR.Application.Services.IContract
@@ -20,6 +20,7 @@ namespace EDR.Application.Services.IContract
         Task<SubscriptionFeaturesResponseDto> GetSubscriptionFeaturesByPlanIdAsync(int planId);
         Task<bool> AddFeatureToPlanAsync(int planId, int featureId);
         Task<bool> RemoveFeatureFromPlanAsync(int planId, int featureId);
+        Task<bool> SendInvoiceEmailAsync(int tenantId, string invoiceId);
     }
 }
 

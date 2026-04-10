@@ -17,6 +17,14 @@ export interface PendingFormsResponseDto {
     pendingForms: PendingFormDto[];
 }
 
+export interface TaskPriorityItemDto {
+    id: number;
+    title: string;
+    project: string;
+    assignee: string;
+    category: 'urgent_important' | 'important_not_urgent' | 'urgent_not_important' | 'neither';
+}
+
 export interface TotalRevenueExpectedDto {
     totalRevenue: number;
     changeDescription: string;
@@ -95,6 +103,29 @@ export interface MilestoneBillingDto {
     penalty: number;
 }
 
+export interface ProjectDashboardDto {
+    projectId: number;
+    projectName: string;
+    totalRevenueExpected: number;
+    revenueChangeDescription: string;
+    revenueChangeType: 'positive' | 'negative' | 'neutral';
+    totalRevenueActual: number;
+    profitMargin: number;
+    profitMarginChangeDescription: string;
+    profitMarginChangeType: 'positive' | 'negative' | 'neutral';
+    currentNpv: number;
+    whatIfAnalysis: string;
+    budgetTotal: number;
+    budgetSpent: number;
+    budgetPercentage: number;
+    pendingForms: PendingFormDto[];
+    milestones: MilestoneBillingDto[];
+    monthlyCashflow: MonthlyCashflowDto[];
+    projectsAtRisk: ProjectAtRiskDto[];
+    regionalPortfolio: RegionalPortfolioDto[];
+    taskPriorityMatrix: TaskPriorityItemDto[];
+}
+
 // Service object
 export const dashboardService = {
     getPendingForms: async (): Promise<PendingFormsResponseDto> => {
@@ -144,6 +175,21 @@ export const dashboardService = {
 
     getMilestoneBilling: async (): Promise<MilestoneBillingDto[]> => {
         const response = await axiosInstance.get<MilestoneBillingDto[]>('api/Dashboard/milestone-billing');
+        return response.data;
+    },
+
+    getProjectDashboard: async (projectId: number): Promise<ProjectDashboardDto> => {
+        const response = await axiosInstance.get<ProjectDashboardDto>(`api/Dashboard/project/${projectId}`);
+        return response.data;
+    },
+
+    getTaskPriorityMatrix: async (): Promise<TaskPriorityItemDto[]> => {
+        const response = await axiosInstance.get<TaskPriorityItemDto[]>('api/Dashboard/task-priority-matrix');
+        return response.data;
+    },
+
+    getProgramDashboard: async (programId: number): Promise<any> => {
+        const response = await axiosInstance.get<any>(`api/Dashboard/program/${programId}`);
         return response.data;
     }
 };

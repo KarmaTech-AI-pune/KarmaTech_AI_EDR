@@ -11,7 +11,9 @@ import {
   MenuItem,
   SelectChangeEvent,
   FormHelperText,
-  Backdrop
+  Backdrop,
+  CircularProgress,
+  Box,
 } from '@mui/material';
 import { AuthUser } from '../../models/userModel';
 import { getUsersByRole, getUserById } from '../../services/userApi';
@@ -39,6 +41,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
   const [reviewers, setReviewers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [manager, setManager] = useState<string | null>(null);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     const fetchReviewers = async () => {
@@ -89,8 +92,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
       }
     };
 
-    fetchReviewers();
-    checkManager();
+    Promise.all([fetchReviewers(), checkManager()]).finally(() => setLoadingData(false));
   }, [opportunityId]);
 
   const handleReviewerChange = (event: SelectChangeEvent<string>) => {
@@ -204,6 +206,11 @@ const SendForReview: React.FC<SendForReviewProps> = ({
     >
       <DialogTitle>Regional Manager</DialogTitle>
       <DialogContent onClick={stopEventPropagation}>
+        {loadingData ? (
+          <Box display="flex" justifyContent="center" py={3}>
+            <CircularProgress size={28} />
+          </Box>
+        ) : (
         <FormControl 
           fullWidth 
           margin="normal" 
@@ -250,6 +257,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
             </FormHelperText>
           )}
         </FormControl>
+        )}
       </DialogContent>
       <DialogActions onClick={stopEventPropagation}>
         <Button onClick={handleCancel} color="inherit">
