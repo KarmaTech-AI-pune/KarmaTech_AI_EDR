@@ -23,6 +23,8 @@ export interface ManpowerResourceDto {
 export interface AssigneeProgressDto {
   assigneeId: string | null;
   assigneeName: string;
+  roleId: string | null;
+  roleName: string;
   month: string;
   estimatedHours: number;
   actualHours: number;

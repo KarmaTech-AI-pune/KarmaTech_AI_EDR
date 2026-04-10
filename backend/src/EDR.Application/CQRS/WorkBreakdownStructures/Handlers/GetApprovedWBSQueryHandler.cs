@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using EDR.Application.Dtos;
 using EDR.Domain.Entities;
 using EDR.Domain.Enums;

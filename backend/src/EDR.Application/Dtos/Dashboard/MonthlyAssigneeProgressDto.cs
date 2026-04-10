@@ -6,6 +6,8 @@ namespace EDR.Application.Dtos.Dashboard
     {
         public Guid? AssigneeId { get; set; }
         public string AssigneeName { get; set; }
+        public Guid? RoleId { get; set; }
+        public string RoleName { get; set; }
         public string Month { get; set; }
         public decimal EstimatedHours { get; set; }
         public decimal ActualHours { get; set; }
