@@ -54,12 +54,12 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     createdAt: project?.createdAt || '',
     updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
-    estimatedProjectCost: project?.estimatedProjectCost || 0,
+    estimatedProjectCost: project?.estimatedProjectCost || null,
     // Parse dates to ensure consistent format
     startDate: formatDateForInput(project?.startDate) || formatDateForInput(new Date()), // Default to today's date if no project data
     endDate: formatDateForInput(project?.endDate) || '',
     currency: project?.currency || 'INR',
-    estimatedProjectFee: project?.estimatedProjectFee || 0,
+    estimatedProjectFee: project?.estimatedProjectFee || null,
     priority: project?.priority || '',
     regionalManagerId: project?.regionalManagerId || "",
     letterOfAcceptance: project?.letterOfAcceptance || false,
@@ -347,6 +347,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               onChange={estimatedFee.getChangeHandler(syncCurrencyToFormData('estimatedProjectFee'))}
               required
             // disabled={formData.feeType === 'Percentage'}
+            required
             />
           </Grid>
           {project && hasBudgetChanged() && (
