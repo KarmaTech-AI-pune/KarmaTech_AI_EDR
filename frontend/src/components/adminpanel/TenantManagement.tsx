@@ -28,6 +28,7 @@ import {
   Tooltip,
   Checkbox,
   FormControlLabel,
+  CircularProgress,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -59,6 +60,7 @@ const TenantManagement = () => {
     isIsolated: false,
   });
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadTenants();
@@ -72,6 +74,8 @@ const TenantManagement = () => {
     } catch (error) {
       console.error('Error loading tenants:', error);
       setError('Failed to load tenants');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -196,6 +200,13 @@ const TenantManagement = () => {
           {error}
         </Alert>
       )}
+
+      {loading ? (
+        <Box display="flex" justifyContent="center" py={4}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={3}>
@@ -344,6 +355,8 @@ const TenantManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      </>
+      )}
 
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle>

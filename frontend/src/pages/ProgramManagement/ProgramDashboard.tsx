@@ -86,9 +86,16 @@ const ProgramDashboard: React.FC = () => {
     totalRevenueActual: data.totalRevenueActual,
     totalRevenueChange: parseFloat(data.revenueChangeDescription?.split("%")[0]) || 0,
     totalRevenueChangeType: data.revenueChangeType,
-    profitMargin: data.profitMargin,
-    profitMarginChange: parseFloat(data.profitMarginChangeDescription?.split("%")[0]) || 0,
-    profitMarginChangeType: data.profitMarginChangeType,
+    expectedProfitMargin: {
+      value: data.profitMargin || 0,
+      change: parseFloat(data.profitMarginChangeDescription?.split("%")[0]) || 0,
+      changeType: data.profitMarginChangeType || "neutral",
+    },
+    actualProfitMargin: {
+      value: data.actualProfitMargin || 0,
+      change: parseFloat(data.actualProfitMarginChangeDescription?.split("%")[0]) || 0,
+      changeType: data.actualProfitMarginChangeType || "neutral",
+    },
     revenueAtRisk: 0,
     revenueAtRiskChange: 0,
     revenueAtRiskChangeType: "neutral",
@@ -124,16 +131,16 @@ const ProgramDashboard: React.FC = () => {
   }));
 
   const mappedProjectsAtRisk: Project[] = (data.projectsAtRisk || []).map((p: any) => ({
-    id: p.projectId.toString(),
-    name: p.projectName,
-    severity: p.priority as any,
-    status: p.status as any,
-    delay: p.delayDays,
-    region: p.region,
-    budget: p.budgetTotal,
-    spent: p.budgetSpent,
-    timeline: `${p.budgetPercentage}%`,
-    issues: p.issues,
+    id: (p.id || p.projectId || 0).toString(),
+    name: p.project || p.projectName || "Unknown",
+    severity: p.priority || "P3",
+    status: p.status || "falling_behind",
+    delay: p.delayDays || (p.delay === "delayed" ? 10 : 0),
+    region: p.region || "Global",
+    budget: p.budgetTotal || 0,
+    spent: p.budgetSpent || 0,
+    timeline: p.budgetPercentage !== undefined ? `${p.budgetPercentage}%` : "0%",
+    issues: p.issues || (p.delay === "delayed" ? ["Project is delayed"] : []),
   }));
 
   const mappedRegionalPortfolio = data.regionalPortfolio || [];

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
 using EDR.API.Configurations;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -29,6 +29,9 @@ namespace EDR.API.Extensions
                         Email = swaggerSettings.Contact?.Email
                     }
                 });
+
+                // Use full type names for Swagger schema IDs to resolve naming conflicts
+                options.CustomSchemaIds(x => x.FullName ?? x.Name);
 
                 // Add JWT Authentication
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

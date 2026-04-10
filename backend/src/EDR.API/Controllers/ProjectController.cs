@@ -281,34 +281,6 @@ namespace EDR.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets budget health status for a project
-        /// </summary>
-        [HttpGet("{id}/budget/health")]
-        [ProducesResponseType(typeof(BudgetHealthDto), 200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> GetBudgetHealth(int id)
-        {
-            try
-            {
-                var query = new GetBudgetHealthQuery { ProjectId = id };
-                var result = await _mediator.Send(query);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting budget health for project {ProjectId}", id);
-                
-                if (ex.Message.Contains("not found"))
-                {
-                    return NotFound(new { message = ex.Message });
-                }
-                
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
     }
 }
 

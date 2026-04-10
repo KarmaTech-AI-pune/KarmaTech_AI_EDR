@@ -1,9 +1,9 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.MonthlyProgress.Commands;
 using EDR.Application.CQRS.MonthlyProgress.Queries;
-using EDR.Application.CQRS.Dashboard.MonthlyProgress.Query; // Added for Assignee Progress
+using EDR.Application.CQRS.Dashboard.Dashboard.Queries; // Added for Assignee Progress
 using EDR.Application.DTOs;
 using EDR.Application.Dtos.Dashboard; // Added for MonthlyAssigneeProgressDto
 using Microsoft.AspNetCore.Authorization;

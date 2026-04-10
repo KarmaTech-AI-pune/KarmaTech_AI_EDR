@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useContext } from 'react';
 import {
   Box,
@@ -32,6 +32,30 @@ const subscriptionPlanOptions = [
 ];
 const theme = createTheme();
 const Signup: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  
+  // Get plan from query parameters (e.g., /signup?plan=professional)
+  const planParam = searchParams.get('plan');
+  
+  // Validate and normalize the plan parameter
+  const getValidPlan = (planParam?: string | null): 'Operate' | 'Automate' | 'Autonomous' => {
+    if (!planParam) return 'Operate';
+    
+    const normalizedPlan = planParam.toLowerCase();
+    switch (normalizedPlan) {
+      case 'operate':
+        return 'Operate';
+      case 'automate':
+        return 'Automate';
+      case 'autonomous':
+        return 'Autonomous';
+      default:
+        return 'Operate';
+    }
+  };
+
+  const selectedPlan = getValidPlan(planParam);
+
   const methods = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -42,13 +66,20 @@ const Signup: React.FC = () => {
       phoneNumber: '',
       emailAddress: '',
       subdomain: '',
-      subscriptionPlan: 'Operate',
+      subscriptionPlan: selectedPlan,
     },
     mode: 'all',
   });
 
-  const { handleSubmit, reset } = methods;
+  const { handleSubmit, reset, setValue } = methods;
   const navigate = useNavigate();
+
+  // Update form value when plan parameter changes
+  useEffect(() => {
+    setValue('subscriptionPlan', selectedPlan);
+  }, [selectedPlan, setValue]);
+
+
 
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
