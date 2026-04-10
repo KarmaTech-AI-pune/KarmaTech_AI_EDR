@@ -20,12 +20,14 @@ import ActionButton from '../shared/ActionButton';
 
 interface MilestoneBillingTrackerProps {
   milestones: MilestoneData[];
+  currencyCode?: string;
   onSendNotice: (id: number) => void;
   onFollowUp: (id: number) => void;
 }
 
 const MilestoneBillingTracker: React.FC<MilestoneBillingTrackerProps> = ({
   milestones,
+  currencyCode,
   onSendNotice,
   onFollowUp
 }) => {
@@ -70,7 +72,7 @@ const MilestoneBillingTracker: React.FC<MilestoneBillingTrackerProps> = ({
                   <TableRow key={milestone.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                     <TableCell sx={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{milestone.project}</TableCell>
                     <TableCell sx={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{milestone.milestone}</TableCell>
-                    <TableCell sx={{ fontWeight: 'medium', fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{formatCurrency(milestone.expectedAmount)}</TableCell>
+                    <TableCell sx={{ fontWeight: 'medium', fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{formatCurrency(milestone.expectedAmount, currencyCode)}</TableCell>
                     <TableCell>
                       <Chip
                         label={milestone.status}
@@ -87,7 +89,7 @@ const MilestoneBillingTracker: React.FC<MilestoneBillingTrackerProps> = ({
                       {milestone.daysDelayed > 0 ? `${milestone.daysDelayed} days` : '-'}
                     </TableCell>
                     <TableCell sx={{ color: milestone.penalty > 0 ? theme.palette.error.main : 'text.secondary', fontSize: isMobile ? '0.7rem' : '0.875rem' }}>
-                      {milestone.penalty > 0 ? formatCurrency(milestone.penalty) : '-'}
+                      {milestone.penalty > 0 ? formatCurrency(milestone.penalty, currencyCode) : '-'}
                     </TableCell>
                     <TableCell>
                       {milestone.status === 'Overdue' && (

@@ -10,7 +10,7 @@ import { SubscriptionData } from '../types/subscriptionType';
 import { getUserPlan } from '../dummyapi/subscriptionPlanData';
 
 export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
-  const response = await axiosInstance.get(`api/subscriptions/plans?includeFeatures=true`);
+  const response = await axiosInstance.get(`api/subscriptions/plans`);
   // Handle DTO response potentially wrapping plans
   return response.data.plans || response.data;
 };

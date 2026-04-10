@@ -21,14 +21,20 @@ export interface RegionalData {
   profit: number;
 }
 
+export interface ProfitMarginMetric {
+  value: number;
+  change: number;
+  changeType: 'positive' | 'negative' | 'neutral';
+}
+
 export interface FinancialMetrics {
   totalRevenue: number;
+  currency?: string;
   totalRevenueActual?: number;
   totalRevenueChange: number;
   totalRevenueChangeType: 'positive' | 'negative' | 'neutral';
-  profitMargin: number;
-  profitMarginChange: number;
-  profitMarginChangeType: 'positive' | 'negative' | 'neutral';
+  expectedProfitMargin: ProfitMarginMetric;
+  actualProfitMargin: ProfitMarginMetric;
   revenueAtRisk: number;
   revenueAtRiskChange: number;
   revenueAtRiskChangeType: 'positive' | 'negative' | 'neutral';

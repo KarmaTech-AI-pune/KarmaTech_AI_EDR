@@ -17,15 +17,18 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Cell
 } from 'recharts';
 import { CashflowData } from '../../data/types/dashboard';
+import { getCurrencySymbol } from '../../utils/formatters';
 
 interface CashflowChartProps {
   data: CashflowData[];
+  currencyCode?: string;
 }
 
-const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
+const CashflowChart: React.FC<CashflowChartProps> = ({ data, currencyCode }) => {
   const [timeframe, setTimeframe] = React.useState('This Year');
 
   const handleTimeframeChange = (event: SelectChangeEvent) => {
@@ -34,31 +37,57 @@ const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const { planned, actual, variance } = payload[0].payload;
+      const currency = getCurrencySymbol(currencyCode);
+
       return (
         <Box
           sx={{
-            backgroundColor: 'white',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
             p: 2,
-            border: '1px solid #ccc',
-            borderRadius: 1,
-            boxShadow: 2
+            border: '1px solid #e0e0e0',
+            borderRadius: 2,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            minWidth: 180
           }}
         >
-          <Typography variant="body2" fontWeight="medium" sx={{ mb: 1 }}>
+          <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1, borderBottom: '1px solid #eee', pb: 0.5 }}>
             {label}
           </Typography>
-          {payload.map((entry: any, index: number) => (
-            <Typography
-              key={index}
-              variant="caption"
-              sx={{ 
-                color: entry.color,
-                display: 'block'
-              }}
-            >
-              {entry.name}: ${entry.value}K
-            </Typography>
-          ))}
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="caption" color="text.secondary">Planned Revenue (Budget):</Typography>
+              <Typography variant="caption" fontWeight="bold" sx={{ color: planned < 0 ? '#d32f2f' : '#16a34a' }}>
+                {currency}{planned}K
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="caption" color="text.secondary">Actual Revenue (Progress):</Typography>
+              <Typography variant="caption" fontWeight="bold" sx={{ color: actual > 0 ? '#16a34a' : '#d32f2f' }}>
+                {currency}{actual}K
+              </Typography>
+            </Box>
+
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mt: 1,
+              pt: 0.5,
+              borderTop: '1px dashed #eee'
+            }}>
+              <Typography variant="caption" fontWeight="bold">Net Cash Flow:</Typography>
+              <Typography
+                variant="caption"
+                fontWeight="bold"
+                sx={{ color: variance >= 0 ? '#16a34a' : '#d32f2f' }}
+              >
+                {currency}{variance}K
+              </Typography>
+            </Box>
+          </Box>
         </Box>
       );
     }
@@ -84,7 +113,7 @@ const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
             </Select>
           </FormControl>
         </Box>
-
+        |
         <Box sx={{ height: 300, width: '100%' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -97,36 +126,47 @@ const CashflowChart: React.FC<CashflowChartProps> = ({ data }) => {
               }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="month" 
+              <XAxis
+                dataKey="month"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#666' }}
               />
-              <YAxis 
+              <YAxis
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#666' }}
-                tickFormatter={(value) => `$${value}K`}
+                tickFormatter={(value) => `${getCurrencySymbol(currencyCode)}${value}K`}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Legend 
+              <Legend
                 wrapperStyle={{ paddingTop: '20px' }}
                 iconType="rect"
               />
-              <Bar 
-                dataKey="planned" 
-                name="Planned Revenue"
-                fill="#1976d2" 
-                opacity={0.7}
+              <Bar
+                dataKey="planned"
+                name="Planned Revenue (Budget)"
                 radius={[2, 2, 0, 0]}
-              />
-              <Bar 
-                dataKey="actual" 
-                name="Actual Revenue"
-                fill="#4caf50" 
+              >
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.planned < 0 ? '#f44336' : '#90caf9'}
+                  />
+                ))}
+              </Bar>
+              <Bar
+                dataKey="actual"
+                name="Actual Revenue (Progress)"
                 radius={[2, 2, 0, 0]}
-              />
+              >
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.actual > 0 ? '#4caf50' : '#f44336'}
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </Box>

@@ -317,11 +317,16 @@ namespace EDR.Application.Services
                 .FirstOrDefaultAsync(p => p.Id == planId);
         }
 
-        public async Task<IEnumerable<SubscriptionPlan>> GetAllSubscriptionPlansAsync()
+        public async Task<IEnumerable<SubscriptionPlan>> GetAllSubscriptionPlansAsync(bool? isActiveOnly = null)
         {
-            return await _projectManagementContext.SubscriptionPlans
-                .Where(p => p.IsActive)
-                .ToListAsync();
+            var query = _projectManagementContext.SubscriptionPlans.AsQueryable();
+
+            if (isActiveOnly.HasValue && isActiveOnly.Value)
+            {
+                query = query.Where(p => p.IsActive);
+            }
+
+            return await query.ToListAsync();
         }
 
         private async Task HandleSubscriptionDeleted(JToken payload)
@@ -407,7 +412,7 @@ namespace EDR.Application.Services
         }
 
 
-        public async Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync()
+        public async Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync(bool? isActiveOnly = null)
         {
             // Get tenant counts from TenantDbContext (where Tenants are tracked)
             var tenantCounts = await _context.Tenants
@@ -416,8 +421,14 @@ namespace EDR.Application.Services
                 .Select(g => new { PlanId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.PlanId, x => x.Count);
 
-            var plans = await _projectManagementContext.SubscriptionPlans
-                .Where(p => p.IsActive)
+            var query = _projectManagementContext.SubscriptionPlans.AsQueryable();
+
+            if (isActiveOnly.HasValue && isActiveOnly.Value)
+            {
+                query = query.Where(p => p.IsActive);
+            }
+
+            var plans = await query
                 .Select(plan => new SubscriptionPlanDto
                 {
                     Id = plan.Id,

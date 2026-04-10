@@ -37,6 +37,18 @@ export interface TotalRevenueActualDto {
     changeType: string;
 }
 
+export interface ProjectExpectedProfitMarginDto {
+    expectedProfitMargin: number;
+    changeDescription: string;
+    changeType: string;
+}
+
+export interface ProjectActualProfitMarginDto {
+    actualProfitMargin: number;
+    changeDescription: string;
+    changeType: string;
+}
+
 export interface ProfitMarginDto {
     profitMargin: number;
     changeDescription: string;
@@ -106,13 +118,13 @@ export interface MilestoneBillingDto {
 export interface ProjectDashboardDto {
     projectId: number;
     projectName: string;
+    currency?: string;
     totalRevenueExpected: number;
     revenueChangeDescription: string;
     revenueChangeType: 'positive' | 'negative' | 'neutral';
     totalRevenueActual: number;
-    profitMargin: number;
-    profitMarginChangeDescription: string;
-    profitMarginChangeType: 'positive' | 'negative' | 'neutral';
+    expectedProfitMargin: ProjectExpectedProfitMarginDto;
+    actualProfitMargin: ProjectActualProfitMarginDto;
     currentNpv: number;
     whatIfAnalysis: string;
     budgetTotal: number;
@@ -179,7 +191,7 @@ export const dashboardService = {
     },
 
     getProjectDashboard: async (projectId: number): Promise<ProjectDashboardDto> => {
-        const response = await axiosInstance.get<ProjectDashboardDto>(`api/Dashboard/project/${projectId}`);
+        const response = await axiosInstance.get<ProjectDashboardDto>(`api/ProjectDashboard/project/${projectId}`);
         return response.data;
     },
 
@@ -189,7 +201,7 @@ export const dashboardService = {
     },
 
     getProgramDashboard: async (programId: number): Promise<any> => {
-        const response = await axiosInstance.get<any>(`api/Dashboard/program/${programId}`);
+        const response = await axiosInstance.get<any>(`api/ProgramDashboard/program/${programId}`);
         return response.data;
     }
 };

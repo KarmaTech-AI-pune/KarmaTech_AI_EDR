@@ -13,9 +13,10 @@ import { NpvProfitabilityDto } from '../../services/dashboardService';
 
 interface NPVProfitabilityProps {
   data: NpvProfitabilityDto | null;
+  currencyCode?: string;
 }
 
-const NPVProfitability: React.FC<NPVProfitabilityProps> = ({ data }) => {
+const NPVProfitability: React.FC<NPVProfitabilityProps> = ({ data, currencyCode }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -69,7 +70,7 @@ const NPVProfitability: React.FC<NPVProfitabilityProps> = ({ data }) => {
                 color="success.main"
                 sx={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }}
               >
-                {formatCurrency(data.currentNpv)}
+                {formatCurrency(data.currentNpv, currencyCode)}
               </Typography>
             </Box>
             <TrendingUp sx={{ fontSize: isMobile ? 32 : 40, color: theme.palette.success.main }} />
