@@ -81,6 +81,7 @@ const transformDataForMonthlyProgress = (
       eacStaff: null,
       totalEAC: null,
       grossProfitPercentage: null,
+      expectedGrossProfitPercentage: null,
     },
     budgetTable: {
       originalBudget: {
