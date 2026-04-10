@@ -5,30 +5,30 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using EDR.Application.CQRS.Dashboard.ProjectDashboard.Queries;
+using EDR.Application.Dtos.ProjectDashboard;
 using EDR.Repositories.Interfaces;
 
 namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
 {
-    public class GetProjectProfitMarginQueryHandler : IRequestHandler<GetProjectProfitMarginQuery, ProjectProfitMarginDto>
+    public class GetProjectExpectedProfitMarginQueryHandler : IRequestHandler<GetProjectExpectedProfitMarginQuery, ProjectExpectedProfitMarginDto>
     {
         private readonly IProjectDashboardRepository _projectDashboardRepository;
 
-        public GetProjectProfitMarginQueryHandler(IProjectDashboardRepository projectDashboardRepository)
+        public GetProjectExpectedProfitMarginQueryHandler(IProjectDashboardRepository projectDashboardRepository)
         {
             _projectDashboardRepository = projectDashboardRepository;
         }
 
-        public async Task<ProjectProfitMarginDto> Handle(GetProjectProfitMarginQuery request, CancellationToken cancellationToken)
+        public async Task<ProjectExpectedProfitMarginDto> Handle(GetProjectExpectedProfitMarginQuery request, CancellationToken cancellationToken)
         {
             var project = await _projectDashboardRepository.GetProjectByIdAsync(request.ProjectId, cancellationToken);
             if (project == null) return null;
 
             var allJsf = await _projectDashboardRepository.GetJobStartFormsByProjectIdAsync(request.ProjectId, cancellationToken);
-            var progressReports = await _projectDashboardRepository.GetMonthlyProgressesByProjectIdAsync(request.ProjectId, cancellationToken);
 
-            var profitMargin = allJsf.Any() ? (double)allJsf.Average(jsf => jsf.ProfitPercentage) : 0;
+            var expectedProfitMargin = allJsf.Any() ? (double)allJsf.Average(jsf => jsf.ProfitPercentage) : 0;
 
-            // Quarterly Changes
+            // Quarterly Changes logic (relative to JSF targets)
             var currentDate = DateTime.Now;
             var currentYear = currentDate.Year;
             var currentMonth = currentDate.Month;
@@ -47,11 +47,11 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
 
             var profitChange = prevQuarterProfit > 0 ? ((currentQuarterProfit - prevQuarterProfit) / prevQuarterProfit) * 100 : 0;
 
-            return new ProjectProfitMarginDto
+            return new ProjectExpectedProfitMarginDto
             {
-                ProfitMargin = Math.Round((decimal)profitMargin, 2),
-                ProfitMarginChangeDescription = $"{profitChange:F1}% vs last quarter",
-                ProfitMarginChangeType = profitChange > 0 ? "positive" : (profitChange < 0 ? "negative" : "neutral")
+                ExpectedProfitMargin = Math.Round((decimal)expectedProfitMargin, 2),
+                ChangeDescription = $"{profitChange:F1}% vs last quarter",
+                ChangeType = profitChange > 0 ? "positive" : (profitChange < 0 ? "negative" : "neutral")
             };
         }
     }

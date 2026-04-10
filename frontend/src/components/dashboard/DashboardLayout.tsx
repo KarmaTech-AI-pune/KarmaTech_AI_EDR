@@ -143,9 +143,16 @@ const DashboardLayout: React.FC = () => {
     totalRevenueActual: totalRevenueActual?.totalRevenue || 0,
     totalRevenueChange: 0, // Not in DTO
     totalRevenueChangeType: (totalRevenueExpected?.changeType?.toLowerCase() as any) || 'neutral',
-    profitMargin: profitMargin?.profitMargin || 0,
-    profitMarginChange: 0, // Not in DTO
-    profitMarginChangeType: (profitMargin?.changeType?.toLowerCase() as any) || 'neutral',
+    expectedProfitMargin: {
+      value: profitMargin?.profitMargin || 0,
+      change: 0,
+      changeType: (profitMargin?.changeType?.toLowerCase() as any) || 'neutral'
+    },
+    actualProfitMargin: {
+      value: profitMargin?.profitMargin || 0,
+      change: 0,
+      changeType: (profitMargin?.changeType?.toLowerCase() as any) || 'neutral'
+    },
     revenueAtRisk: revenueAtRisk?.revenueAtRisk || 0,
     revenueAtRiskChange: 0, // Not in DTO
     revenueAtRiskChangeType: (revenueAtRisk?.changeType?.toLowerCase() as any) || 'neutral',

@@ -26,7 +26,8 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
             // Aggregate data from granular handlers
             var totalRevenueActual = await _mediator.Send(new GetProjectTotalRevenueActualQuery { ProjectId = request.ProjectId }, cancellationToken);
             var totalRevenueExpected = await _mediator.Send(new GetProjectTotalRevenueExpectedQuery { ProjectId = request.ProjectId }, cancellationToken);
-            var profit = await _mediator.Send(new GetProjectProfitMarginQuery { ProjectId = request.ProjectId }, cancellationToken);
+            var expectedProfit = await _mediator.Send(new GetProjectExpectedProfitMarginQuery { ProjectId = request.ProjectId }, cancellationToken);
+            var actualProfit = await _mediator.Send(new GetProjectActualProfitMarginQuery { ProjectId = request.ProjectId }, cancellationToken);
             var npv = await _mediator.Send(new GetProjectNpvQuery { ProjectId = request.ProjectId }, cancellationToken);
             var pendingForms = await _mediator.Send(new GetProjectPendingFormsQuery { ProjectId = request.ProjectId }, cancellationToken);
             var milestones = await _mediator.Send(new GetProjectMilestonesQuery { ProjectId = request.ProjectId }, cancellationToken);
@@ -50,9 +51,8 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
                 TotalRevenueExpected = totalRevenueExpected.TotalRevenue,
 
                 // Profit
-                ProfitMargin = profit.ProfitMargin,
-                ProfitMarginChangeDescription = profit.ProfitMarginChangeDescription,
-                ProfitMarginChangeType = profit.ProfitMarginChangeType,
+                ExpectedProfitMargin = expectedProfit,
+                ActualProfitMargin = actualProfit,
 
                 // NPV
                 CurrentNpv = npv.CurrentNpv,

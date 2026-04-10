@@ -15,9 +15,8 @@ namespace EDR.Application.Dtos.ProjectDashboard
         public decimal TotalRevenueActual { get; set; }
         
         // Profit Metrics
-        public decimal ProfitMargin { get; set; }
-        public string ProfitMarginChangeDescription { get; set; }
-        public string ProfitMarginChangeType { get; set; }
+        public ProjectExpectedProfitMarginDto ExpectedProfitMargin { get; set; }
+        public ProjectActualProfitMarginDto ActualProfitMargin { get; set; }
         
         // NPV Data
         public decimal CurrentNpv { get; set; }

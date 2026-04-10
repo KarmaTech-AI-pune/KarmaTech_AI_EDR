@@ -37,6 +37,18 @@ export interface TotalRevenueActualDto {
     changeType: string;
 }
 
+export interface ProjectExpectedProfitMarginDto {
+    expectedProfitMargin: number;
+    changeDescription: string;
+    changeType: string;
+}
+
+export interface ProjectActualProfitMarginDto {
+    actualProfitMargin: number;
+    changeDescription: string;
+    changeType: string;
+}
+
 export interface ProfitMarginDto {
     profitMargin: number;
     changeDescription: string;
@@ -111,9 +123,8 @@ export interface ProjectDashboardDto {
     revenueChangeDescription: string;
     revenueChangeType: 'positive' | 'negative' | 'neutral';
     totalRevenueActual: number;
-    profitMargin: number;
-    profitMarginChangeDescription: string;
-    profitMarginChangeType: 'positive' | 'negative' | 'neutral';
+    expectedProfitMargin: ProjectExpectedProfitMarginDto;
+    actualProfitMargin: ProjectActualProfitMarginDto;
     currentNpv: number;
     whatIfAnalysis: string;
     budgetTotal: number;

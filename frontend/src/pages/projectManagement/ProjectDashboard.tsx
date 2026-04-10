@@ -66,9 +66,16 @@ const ProjectDashboard: React.FC = () => {
     totalRevenueActual: data.totalRevenueActual,
     totalRevenueChange: parseFloat(data.revenueChangeDescription.split("%")[0]) || 0,
     totalRevenueChangeType: data.revenueChangeType,
-    profitMargin: data.profitMargin,
-    profitMarginChange: parseFloat(data.profitMarginChangeDescription.split("%")[0]) || 0,
-    profitMarginChangeType: data.profitMarginChangeType,
+    expectedProfitMargin: {
+      value: data.expectedProfitMargin?.expectedProfitMargin || 0,
+      change: parseFloat(data.expectedProfitMargin?.changeDescription?.split("%")[0]) || 0,
+      changeType: data.expectedProfitMargin?.changeType as any || "neutral",
+    },
+    actualProfitMargin: {
+      value: data.actualProfitMargin?.actualProfitMargin || 0,
+      change: parseFloat(data.actualProfitMargin?.changeDescription?.split("%")[0]) || 0,
+      changeType: data.actualProfitMargin?.changeType as any || "neutral",
+    },
     revenueAtRisk: 0,
     revenueAtRiskChange: 0,
     revenueAtRiskChangeType: "neutral",
@@ -171,9 +178,9 @@ const ProjectDashboard: React.FC = () => {
                 <NPVProfitability
                   data={{
                     currentNpv: data.currentNpv || 0,
-                    highProfitProjectsCount: data.profitMargin >= 20 ? 1 : 0,
-                    mediumProfitProjectsCount: data.profitMargin >= 10 && data.profitMargin < 20 ? 1 : 0,
-                    lowProfitProjectsCount: data.profitMargin < 10 ? 1 : 0,
+                    highProfitProjectsCount: (data.actualProfitMargin?.actualProfitMargin || 0) >= 20 ? 1 : 0,
+                    mediumProfitProjectsCount: (data.actualProfitMargin?.actualProfitMargin || 0) >= 10 && (data.actualProfitMargin?.actualProfitMargin || 0) < 20 ? 1 : 0,
+                    lowProfitProjectsCount: (data.actualProfitMargin?.actualProfitMargin || 0) < 10 ? 1 : 0,
                     whatIfAnalysis: data.whatIfAnalysis || "Not enough data for analysis",
                   }}
                   currencyCode={data.currency}

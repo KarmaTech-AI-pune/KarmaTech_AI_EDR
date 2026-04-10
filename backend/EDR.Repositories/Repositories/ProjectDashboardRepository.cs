@@ -46,6 +46,7 @@ namespace EDR.Repositories.Repositories
                 .Include(mp => mp.ContractAndCost)
                 .Include(mp => mp.FinancialDetails)
                 .Include(mp => mp.ProgressDeliverables)
+                .Include(mp => mp.CTCEAC)
                 .Where(mp => mp.ProjectId == projectId)
                 .ToListAsync(ct);
         }

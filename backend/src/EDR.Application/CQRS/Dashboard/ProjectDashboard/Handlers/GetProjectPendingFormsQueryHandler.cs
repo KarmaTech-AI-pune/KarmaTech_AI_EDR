@@ -34,11 +34,22 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
                 .Where(jsf => jsf.Header == null || jsf.Header.StatusId != (int)PMWorkflowStatusEnum.Approved)
                 .Select(jsf => new PendingFormDto
                 {
+                    FormId = jsf.FormId,
+                    ProjectId = project.Id,
+                    ProjectName = project.Name,
+                    FormType = "Job Start Form",
+                    FormName = $"Job Start Form - {jsf.FormTitle}",
+                    HoldingUserName = jsf.Header != null && jsf.Header.JobStartFormHistories.Any()
+                        ? jsf.Header.JobStartFormHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo?.Name ?? "Admin"
+                        : "Internal Process",
+                    StatusId = jsf.Header == null ? 0 : jsf.Header.StatusId,
+                    
+                    // Backward compatibility
                     Id = jsf.FormId,
                     Project = project.Name,
                     FormTitle = jsf.FormTitle,
-                    Duration = jsf.Header != null && jsf.Header.JobStartFormHistories.Any() 
-                        ? jsf.Header.JobStartFormHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
+                    Duration = jsf.Header != null && jsf.Header.JobStartFormHistories.Any()
+                        ? jsf.Header.JobStartFormHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo?.Name ?? "Admin"
                         : "Internal Process",
                     Status = jsf.Header == null ? "0" : jsf.Header.StatusId.ToString()
                 }));
@@ -49,11 +60,22 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
                 .Where(h => h.StatusId != (int)PMWorkflowStatusEnum.Approved)
                 .Select(h => new PendingFormDto
                 {
+                    FormId = h.Id,
+                    ProjectId = project.Id,
+                    ProjectName = project.Name,
+                    FormType = "WBS Task",
+                    FormName = (h.TaskType == TaskType.Manpower) ? "Manpower Task" : (h.TaskType == TaskType.ODC) ? "ODC Task" : "WBS Planned Hour",
+                    HoldingUserName = (h.WBSHistories != null && h.WBSHistories.Any(hist => hist.AssignedTo != null))
+                        ? h.WBSHistories.Where(hist => hist.AssignedTo != null).OrderByDescending(hist => hist.ActionDate).FirstOrDefault().AssignedTo.Name
+                        : "Internal Process",
+                    StatusId = h.StatusId,
+
+                    // Backward compatibility
                     Id = h.Id,
                     Project = project.Name,
                     FormTitle = (h.TaskType == TaskType.Manpower) ? "Manpower Task" : (h.TaskType == TaskType.ODC) ? "ODC Task" : "WBS Planned Hour",
-                    Duration = (h.WBSHistories != null && h.WBSHistories.Any(hist => hist.AssignedTo != null)) 
-                        ? h.WBSHistories.Where(hist => hist.AssignedTo != null).OrderByDescending(hist => hist.ActionDate).FirstOrDefault().AssignedTo.Name 
+                    Duration = (h.WBSHistories != null && h.WBSHistories.Any(hist => hist.AssignedTo != null))
+                        ? h.WBSHistories.Where(hist => hist.AssignedTo != null).OrderByDescending(hist => hist.ActionDate).FirstOrDefault().AssignedTo.Name
                         : "Internal Process",
                     Status = h.StatusId.ToString()
                 }));
@@ -64,11 +86,22 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
                 .Where(pc => pc.WorkflowStatusId != (int)PMWorkflowStatusEnum.Approved)
                 .Select(pc => new PendingFormDto
                 {
+                    FormId = pc.Id,
+                    ProjectId = project.Id,
+                    ProjectName = project.Name,
+                    FormType = "Project Closure",
+                    FormName = "Project Closure",
+                    HoldingUserName = pc.WorkflowHistories != null && pc.WorkflowHistories.Any()
+                        ? pc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo?.Name ?? "Admin"
+                        : "Internal Process",
+                    StatusId = pc.WorkflowStatusId,
+
+                    // Backward compatibility
                     Id = pc.Id,
                     Project = project.Name,
                     FormTitle = "Project Closure",
                     Duration = pc.WorkflowHistories != null && pc.WorkflowHistories.Any()
-                        ? pc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
+                        ? pc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo?.Name ?? "Admin"
                         : "Internal Process",
                     Status = pc.WorkflowStatusId.ToString()
                 }));
@@ -79,11 +112,22 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
                 .Where(cc => cc.WorkflowStatusId != (int)PMWorkflowStatusEnum.Approved)
                 .Select(cc => new PendingFormDto
                 {
+                    FormId = cc.Id,
+                    ProjectId = project.Id,
+                    ProjectName = project.Name,
+                    FormType = "Change Control",
+                    FormName = "Change Control",
+                    HoldingUserName = cc.WorkflowHistories != null && cc.WorkflowHistories.Any()
+                        ? cc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo?.Name ?? "Admin"
+                        : "Internal Process",
+                    StatusId = cc.WorkflowStatusId,
+
+                    // Backward compatibility
                     Id = cc.Id,
                     Project = project.Name,
                     FormTitle = "Change Control",
                     Duration = cc.WorkflowHistories != null && cc.WorkflowHistories.Any()
-                        ? cc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
+                        ? cc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo?.Name ?? "Admin"
                         : "Internal Process",
                     Status = cc.WorkflowStatusId.ToString()
                 }));
