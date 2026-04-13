@@ -44,33 +44,38 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
                 TotalProjects = projects.Count,
                 
                 // Revenue (Actual)
-                TotalRevenueActual = totalRevenueActual.TotalRevenue,
-                RevenueChangeDescription = totalRevenueActual.ChangeDescription,
-                RevenueChangeType = totalRevenueActual.ChangeType,
+                TotalRevenueActual = totalRevenueActual?.TotalRevenue ?? 0,
+                CompletedMilestonesCount = totalRevenueActual?.CompletedMilestonesCount ?? 0,
+                RevenueChangeDescription = totalRevenueActual?.ChangeDescription ?? "0% vs last quarter",
+                RevenueChangeType = totalRevenueActual?.ChangeType ?? "neutral",
 
                 // Revenue (Expected)
-                TotalRevenueExpected = totalRevenueExpected.TotalRevenue,
+                TotalRevenueExpected = totalRevenueExpected?.TotalRevenue ?? 0,
 
                 // Profit
-                ProfitMargin = profit.ProfitMargin,
-                ProfitMarginChangeDescription = profit.ProfitMarginChangeDescription,
-                ProfitMarginChangeType = profit.ProfitMarginChangeType,
+                ExpectedProfitMargin = profit?.ExpectedProfitMargin ?? 0,
+                ExpectedProfitMarginChangeDescription = profit?.ExpectedProfitMarginChangeDescription ?? "0% improvement",
+                ExpectedProfitMarginChangeType = profit?.ExpectedProfitMarginChangeType ?? "neutral",
+
+                ActualProfitMargin = profit?.ActualProfitMargin ?? 0,
+                ActualProfitMarginChangeDescription = profit?.ActualProfitMarginChangeDescription ?? "0% improvement",
+                ActualProfitMarginChangeType = profit?.ActualProfitMarginChangeType ?? "neutral",
 
                 // NPV & Profitability
-                CurrentNpv = npv.CurrentNpv,
-                HighProfitProjectsCount = npv.HighProfitProjectsCount,
-                MediumProfitProjectsCount = npv.MediumProfitProjectsCount,
-                LowProfitProjectsCount = npv.LowProfitProjectsCount,
-                WhatIfAnalysis = npv.WhatIfAnalysis,
+                CurrentNpv = npv?.CurrentNpv ?? 0,
+                HighProfitProjectsCount = npv?.HighProfitProjectsCount ?? 0,
+                MediumProfitProjectsCount = npv?.MediumProfitProjectsCount ?? 0,
+                LowProfitProjectsCount = npv?.LowProfitProjectsCount ?? 0,
+                WhatIfAnalysis = npv?.WhatIfAnalysis ?? "Not enough data for analysis",
 
 
                 // Collections
-                PendingForms = pendingForms,
-                Milestones = milestones,
-                MonthlyCashflow = cashflow,
-                RegionalPortfolio = regionalPortfolio,
-                ProjectsAtRisk = projectsAtRisk,
-                TaskPriorityMatrix = taskMatrix
+                PendingForms = pendingForms ?? new List<PendingFormDto>(),
+                Milestones = milestones ?? new List<MilestoneBillingDto>(),
+                MonthlyCashflow = cashflow ?? new List<MonthlyCashflowDto>(),
+                RegionalPortfolio = regionalPortfolio ?? new List<RegionalPortfolioDto>(),
+                ProjectsAtRisk = projectsAtRisk ?? new List<ProjectAtRiskDto>(),
+                TaskPriorityMatrix = taskMatrix ?? new List<TaskPriorityItemDto>()
             };
         }
     }

@@ -57,18 +57,37 @@ const CashflowChart: React.FC<CashflowChartProps> = ({ data, currencyCode }) => 
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary">Planned Revenue (Budget):</Typography>
-              <Typography variant="caption" fontWeight="bold" sx={{ color: planned < 0 ? '#d32f2f' : '#16a34a' }}>
+              <Typography variant="caption" color="text.secondary">Total Planned:</Typography>
+              <Typography variant="caption" fontWeight="bold">
                 {currency}{planned}K
               </Typography>
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary">Actual Revenue (Progress):</Typography>
-              <Typography variant="caption" fontWeight="bold" sx={{ color: actual > 0 ? '#16a34a' : '#d32f2f' }}>
+              <Typography variant="caption" color="text.secondary">Total Actual:</Typography>
+              <Typography variant="caption" fontWeight="bold">
                 {currency}{actual}K
               </Typography>
             </Box>
+
+            {payload[0].payload.projectBreakdown?.length > 0 && (
+              <Box sx={{ mt: 1.5, borderTop: '1px solid #eee', pt: 1 }}>
+                <Typography variant="caption" fontWeight="bold" sx={{ display: 'block', mb: 0.5 }}>
+                  Project Breakdown
+                </Typography>
+                {payload[0].payload.projectBreakdown.map((proj: any, idx: number) => (
+                  <Box key={idx} sx={{ mb: 0.5, pl: 1 }}>
+                    <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 'medium' }}>
+                      {proj.projectName}
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', pl: 1 }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.65rem' }}>Plan: {currency}{proj.planned}K</Typography>
+                      <Typography variant="caption" sx={{ fontSize: '0.65rem' }}>Act: {currency}{proj.actual}K</Typography>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )}
 
             <Box sx={{
               display: 'flex',

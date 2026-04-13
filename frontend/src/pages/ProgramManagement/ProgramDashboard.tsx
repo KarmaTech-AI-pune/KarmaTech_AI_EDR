@@ -84,11 +84,19 @@ const ProgramDashboard: React.FC = () => {
   const financialMetrics: FinancialMetrics = {
     totalRevenue: data.totalRevenueExpected,
     totalRevenueActual: data.totalRevenueActual,
+    completedMilestonesCount: data.completedMilestonesCount,
     totalRevenueChange: parseFloat(data.revenueChangeDescription?.split("%")[0]) || 0,
     totalRevenueChangeType: data.revenueChangeType,
-    profitMargin: data.profitMargin,
-    profitMarginChange: parseFloat(data.profitMarginChangeDescription?.split("%")[0]) || 0,
-    profitMarginChangeType: data.profitMarginChangeType,
+    expectedProfitMargin: {
+      value: data.expectedProfitMargin,
+      change: parseFloat(data.expectedProfitMarginChangeDescription?.split("%")[0]) || 0,
+      changeType: data.expectedProfitMarginChangeType
+    },
+    actualProfitMargin: {
+      value: data.actualProfitMargin,
+      change: parseFloat(data.actualProfitMarginChangeDescription?.split("%")[0]) || 0,
+      changeType: data.actualProfitMarginChangeType
+    },
     revenueAtRisk: 0,
     revenueAtRiskChange: 0,
     revenueAtRiskChangeType: "neutral",

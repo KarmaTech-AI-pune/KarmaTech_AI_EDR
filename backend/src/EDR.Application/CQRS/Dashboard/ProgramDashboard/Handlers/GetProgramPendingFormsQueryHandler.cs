@@ -37,10 +37,10 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
                 .Where(jsf => jsf.Header == null || jsf.Header.StatusId != (int)PMWorkflowStatusEnum.Approved)
                 .Select(jsf => new PendingFormDto
                 {
-                    Id = jsf.FormId,
-                    Project = projectNames.GetValueOrDefault(jsf.ProjectId, "Unknown"),
-                    FormTitle = jsf.FormTitle,
-                    Duration = jsf.Header != null && jsf.Header.JobStartFormHistories.Any() 
+                    FormId = jsf.FormId,
+                    ProjectName = projectNames.GetValueOrDefault(jsf.ProjectId, "Unknown"),
+                    FormName = jsf.FormTitle ?? "Job Start Form",
+                    HoldingUserName = jsf.Header != null && jsf.Header.JobStartFormHistories.Any() 
                         ? jsf.Header.JobStartFormHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
                         : "Internal Process",
                     Status = jsf.Header == null ? "0" : jsf.Header.StatusId.ToString()
@@ -52,10 +52,10 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
                 .Where(h => h.StatusId != (int)PMWorkflowStatusEnum.Approved)
                 .Select(h => new PendingFormDto
                 {
-                    Id = h.Id,
-                    Project = projectNames.GetValueOrDefault(h.ProjectId, "Unknown"),
-                    FormTitle = (h.TaskType == TaskType.Manpower) ? "Manpower Task" : (h.TaskType == TaskType.ODC) ? "ODC Task" : "WBS Planned Hour",
-                    Duration = (h.WBSHistories != null && h.WBSHistories.Any(hist => hist.AssignedTo != null)) 
+                    FormId = h.Id,
+                    ProjectName = projectNames.GetValueOrDefault(h.ProjectId, "Unknown"),
+                    FormName = (h.TaskType == TaskType.Manpower) ? "Manpower Task" : (h.TaskType == TaskType.ODC) ? "ODC Task" : "WBS Planned Hour",
+                    HoldingUserName = (h.WBSHistories != null && h.WBSHistories.Any(hist => hist.AssignedTo != null)) 
                         ? h.WBSHistories.Where(hist => hist.AssignedTo != null).OrderByDescending(hist => hist.ActionDate).FirstOrDefault().AssignedTo.Name 
                         : "Internal Process",
                     Status = h.StatusId.ToString()
@@ -67,10 +67,10 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
                 .Where(pc => pc.WorkflowStatusId != (int)PMWorkflowStatusEnum.Approved)
                 .Select(pc => new PendingFormDto
                 {
-                    Id = pc.Id,
-                    Project = projectNames.GetValueOrDefault(pc.ProjectId, "Unknown"),
-                    FormTitle = "Project Closure",
-                    Duration = pc.WorkflowHistories != null && pc.WorkflowHistories.Any()
+                    FormId = pc.Id,
+                    ProjectName = projectNames.GetValueOrDefault(pc.ProjectId, "Unknown"),
+                    FormName = "Project Closure",
+                    HoldingUserName = pc.WorkflowHistories != null && pc.WorkflowHistories.Any()
                         ? pc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
                         : "Internal Process",
                     Status = pc.WorkflowStatusId.ToString()
@@ -82,10 +82,10 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
                 .Where(cc => cc.WorkflowStatusId != (int)PMWorkflowStatusEnum.Approved)
                 .Select(cc => new PendingFormDto
                 {
-                    Id = cc.Id,
-                    Project = projectNames.GetValueOrDefault(cc.ProjectId, "Unknown"),
-                    FormTitle = "Change Control",
-                    Duration = cc.WorkflowHistories != null && cc.WorkflowHistories.Any()
+                    FormId = cc.Id,
+                    ProjectName = projectNames.GetValueOrDefault(cc.ProjectId, "Unknown"),
+                    FormName = "Change Control",
+                    HoldingUserName = cc.WorkflowHistories != null && cc.WorkflowHistories.Any()
                         ? cc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
                         : "Internal Process",
                     Status = cc.WorkflowStatusId.ToString()

@@ -15,7 +15,7 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
         <MetricCard
           title="Total Revenue-Expected"
           value={formatCurrency(metrics.totalRevenue, metrics.currency)}
-          change={`${metrics.totalRevenueChange}% vs last quater`}
+          change={`${metrics.totalRevenueChange}% vs last quarter`}
           changeType={metrics.totalRevenueChangeType}
           icon="revenue"
         />
@@ -25,9 +25,10 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
         <MetricCard
           title="Total Revenue-Actual"
           value={formatCurrency(metrics.totalRevenueActual, metrics.currency)}
-          change={`${metrics.totalRevenueChange}% vs last quater`}
+          change={`${metrics.totalRevenueChange}% vs last quarter`}
           changeType={metrics.totalRevenueChangeType}
           icon="revenue"
+          subtitle={metrics.completedMilestonesCount !== undefined ? `${metrics.completedMilestonesCount} milestones completed` : undefined}
         />
       </Grid>
 

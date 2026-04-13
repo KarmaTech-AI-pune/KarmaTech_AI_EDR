@@ -26,7 +26,7 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
 
             var allJsf = await _programDashboardRepository.GetJobStartFormsByProjectIdsAsync(projects.Select(p => p.Id), cancellationToken);
 
-            var totalRevenueExpected = projects.Sum(p => p.EstimatedProjectFee ?? 0);
+            var totalRevenueExpected = projects.Sum(p => (p.EstimatedProjectCost ?? 0) + (p.EstimatedProjectFee ?? 0));
 
             // Quarterly Changes
             var currentDate = DateTime.Now;
@@ -39,11 +39,11 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
 
             var currentQuarterRev = allJsf
                 .Where(jsf => jsf.CreatedDate.Year == currentYear && ((jsf.CreatedDate.Month - 1) / 3 + 1) == currentQuarter)
-                .Sum(jsf => jsf.TotalProjectFees);
+                .Sum(jsf => jsf.GrandTotal + jsf.TotalProjectFees);
             
             var prevQuarterRev = allJsf
                 .Where(jsf => jsf.CreatedDate.Year == previousQuarterYear && ((jsf.CreatedDate.Month - 1) / 3 + 1) == previousQuarter)
-                .Sum(jsf => jsf.TotalProjectFees);
+                .Sum(jsf => jsf.GrandTotal + jsf.TotalProjectFees);
 
             var revChange = prevQuarterRev > 0 ? ((currentQuarterRev - prevQuarterRev) / prevQuarterRev) * 100 : 0;
 
