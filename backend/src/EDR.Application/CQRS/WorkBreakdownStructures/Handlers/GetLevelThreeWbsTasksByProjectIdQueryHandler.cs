@@ -34,8 +34,10 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 .Where(t => t.WorkBreakdownStructure.WBSHeader.ProjectId == request.ProjectId 
                             && t.WorkBreakdownStructure.WBSHeader.IsActive 
                             && !t.IsDeleted
-                            && t.Level == WBSTaskLevel.Level3)
+                            && t.Level == WBSTaskLevel.Level3
+                            && t.TaskType == TaskType.Manpower)
                 .ToListAsync(cancellationToken);
+
 
             return ConvertToHierarchicalDto(wbsTasks);
         }

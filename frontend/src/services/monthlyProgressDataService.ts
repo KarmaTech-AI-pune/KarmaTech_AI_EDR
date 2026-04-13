@@ -33,6 +33,8 @@ interface ProjectData {
 interface AssigneeProgressDto {
   assigneeId: string | null;
   assigneeName: string;
+  roleId: string | null;
+  roleName: string;
   month: string;
   estimatedHours: number;
   actualHours: number;
@@ -81,6 +83,7 @@ const transformDataForMonthlyProgress = (
       eacStaff: null,
       totalEAC: null,
       grossProfitPercentage: null,
+      expectedGrossProfitPercentage: null,
     },
     budgetTable: {
       originalBudget: {
@@ -264,20 +267,42 @@ const transformDataForMonthlyProgress = (
         const targetYear = targetDate.getFullYear();
         const targetMonthYear = `${targetMonthNumber}-${targetYear}`;
         
-        const normalizeString = (str: string) => 
-          str?.trim().toLowerCase().replace(/\s+/g, ' ') || '';
+        const normalizeString = (str: any) => 
+          str?.toString().trim().toLowerCase().replace(/\s+/g, ' ') || '';
         
         const normalizedEmployeeName = normalizeString(resource.assignedUserName);
         
-        const match = assigneeProgressResult.value.find(ap => {
-          const nameMatch = normalizeString(ap.assigneeName) === normalizedEmployeeName;
-          const monthMatch = ap.month === targetMonthYear;
-          return nameMatch && monthMatch;
+        // WBS API task structure might have different property names for RoleId
+        const resourceRoleId = normalizeString(
+          (resource as any).resourceRoleId || 
+          resource.resource_role || 
+          (resource as any).resource_role_id
+        );
+        
+        console.log(`🔍 Matching for ${resource.assignedUserName} (Role: ${resourceRoleId}) in ${targetMonthYear}`);
+        
+        // Match by name + month + roleId for exact identification
+        const match = assigneeProgressResult.value.find(apRaw => {
+          // Handle both camelCase and PascalCase from backend
+          const ap = apRaw as any;
+          const apName = normalizeString(ap.assigneeName || ap.AssigneeName);
+          const apMonth = normalizeString(ap.month || ap.Month);
+          const apRoleId = normalizeString(ap.roleId || ap.RoleId);
+          
+          const nameMatch = apName === normalizedEmployeeName;
+          const monthMatch = apMonth === targetMonthYear;
+          const roleMatch = apRoleId === resourceRoleId;
+          
+          return nameMatch && monthMatch && roleMatch;
         });
         
         if (match) {
-          consumedHours = match.employeeLoggedHours || 0; // Logged hours
-          approvedHours = match.actualHours || 0; // Actual hours
+          const ap = match as any;
+          consumedHours = (ap.employeeLoggedHours ?? ap.EmployeeLoggedHours) || 0;
+          approvedHours = (ap.actualHours ?? ap.ActualHours) || 0;
+          console.log(`✅ Match found for ${resource.assignedUserName}: Consumed=${consumedHours}, Approved=${approvedHours}`);
+        } else {
+          console.warn(`❌ No match found for ${resource.assignedUserName} (Role: ${resourceRoleId})`);
         }
       }
       

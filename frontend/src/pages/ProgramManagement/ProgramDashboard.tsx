@@ -34,24 +34,24 @@ const ProgramDashboard: React.FC = () => {
         console.warn("No programId found in context");
         return;
       }
-      
+
       try {
         setLoading(true);
         setError(null);
-        
+
         console.log(`Fetching dashboard data for programId: ${programId}`);
-        
+
         const responseData = await dashboardService.getProgramDashboard(parseInt(programId));
         console.log("Dashboard response data:", responseData);
-        
+
         if (!responseData) {
-            throw new Error("Dashboard service returned no data");
+          throw new Error("Dashboard service returned no data");
         }
         setData(responseData);
 
         const programData = await programApi.getById(parseInt(programId));
         setProgram(programData);
-        
+
       } catch (err: any) {
         console.error("Error fetching program dashboard:", err);
         const msg = err.response?.data?.message || err.message || "Failed to load program dashboard data.";
@@ -145,14 +145,8 @@ const ProgramDashboard: React.FC = () => {
     issues: p.issues || (p.delay === "delayed" ? ["Project is delayed"] : []),
   }));
 
-  const mappedRegionalPortfolio = (data.regionalPortfolio || []).map((r: any) => ({
-    ...r,
-    projectDetails: (r.projectDetails || []).map((pd: any) => ({
-      projectName: pd.projectName,
-      programName: pd.programName
-    }))
-  }));
-  
+  const mappedRegionalPortfolio = data.regionalPortfolio || [];
+
   const mappedTasks = data.taskPriorityMatrix || [];
 
   return (
@@ -186,7 +180,7 @@ const ProgramDashboard: React.FC = () => {
                 <RegionalPortfolio data={mappedRegionalPortfolio} />
               </Grid>
               <Grid item xs={12}>
-                <TaskPriorityMatrix 
+                <TaskPriorityMatrix
                   tasks={mappedTasks}
                   onTaskClick={(taskId) => console.log("View task:", taskId)}
                 />
@@ -201,7 +195,7 @@ const ProgramDashboard: React.FC = () => {
               <Grid item xs={12}>
                 <CashflowChart data={mappedCashflow} />
               </Grid>
-              
+
               {/* NPV & Profitability */}
               <Grid item xs={12}>
                 <NPVProfitability
@@ -221,10 +215,10 @@ const ProgramDashboard: React.FC = () => {
         {/* Bottom - Approvals & Milestones */}
         <Grid container spacing={3} sx={{ mt: 1 }}>
           <Grid item xs={12} md={6}>
-            <PendingApprovals approvals={mappedPendingApprovals} onEscalate={() => {}} onRemind={() => {}} />
+            <PendingApprovals approvals={mappedPendingApprovals} onEscalate={() => { }} onRemind={() => { }} />
           </Grid>
           <Grid item xs={12} md={6}>
-            <MilestoneBillingTracker milestones={mappedMilestones} onSendNotice={() => {}} onFollowUp={() => {}} />
+            <MilestoneBillingTracker milestones={mappedMilestones} onSendNotice={() => { }} onFollowUp={() => { }} />
           </Grid>
         </Grid>
       </Container>
