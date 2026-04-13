@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -42,6 +43,7 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
                 ProgramId = program.Id,
                 ProgramName = program.Name,
                 TotalProjects = projects.Count,
+                Currency = totalRevenueActual?.Currency ?? totalRevenueExpected?.Currency,
                 
                 // Revenue (Actual)
                 TotalRevenueActual = totalRevenueActual?.TotalRevenue ?? 0,

@@ -84,6 +84,7 @@ const ProgramDashboard: React.FC = () => {
   const financialMetrics: FinancialMetrics = {
     totalRevenue: data.totalRevenueExpected,
     totalRevenueActual: data.totalRevenueActual,
+    currency: data.currency,
     completedMilestonesCount: data.completedMilestonesCount,
     totalRevenueChange: parseFloat(data.revenueChangeDescription?.split("%")[0]) || 0,
     totalRevenueChangeType: data.revenueChangeType,
@@ -144,7 +145,13 @@ const ProgramDashboard: React.FC = () => {
     issues: p.issues || (p.delay === "delayed" ? ["Project is delayed"] : []),
   }));
 
-  const mappedRegionalPortfolio = data.regionalPortfolio || [];
+  const mappedRegionalPortfolio = (data.regionalPortfolio || []).map((r: any) => ({
+    ...r,
+    projectDetails: (r.projectDetails || []).map((pd: any) => ({
+      projectName: pd.projectName,
+      programName: pd.programName
+    }))
+  }));
   
   const mappedTasks = data.taskPriorityMatrix || [];
 

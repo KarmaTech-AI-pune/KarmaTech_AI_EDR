@@ -7,6 +7,7 @@ using MediatR;
 using EDR.Application.CQRS.Dashboard.ProgramDashboard.Queries;
 using EDR.Application.Dtos.ProgramDashboard;
 using EDR.Repositories.Interfaces;
+using EDR.Domain.Entities;
 
 namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
 {
@@ -22,38 +23,59 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
         public async Task<List<RegionalPortfolioDto>> Handle(GetProgramRegionalPortfolioQuery request, CancellationToken cancellationToken)
         {
             var projects = await _programDashboardRepository.GetProjectsByProgramIdAsync(request.ProgramId, cancellationToken);
-            if (!projects.Any()) return new List<RegionalPortfolioDto>();
+            var activeProjects = projects.Where(p => p.Status == ProjectStatus.Active || p.Status == ProjectStatus.InProgress).ToList();
+            
+            if (!activeProjects.Any()) return new List<RegionalPortfolioDto>();
 
-            var projectIds = projects.Select(p => p.Id).ToList();
+            var projectIds = activeProjects.Select(p => p.Id).ToList();
             var allJsf = await _programDashboardRepository.GetJobStartFormsByProjectIdsAsync(projectIds, cancellationToken);
-            var progressReports = await _programDashboardRepository.GetMonthlyProgressesByProjectIdsAsync(projectIds, cancellationToken);
 
-            var currentDate = DateTime.Now;
-            var currentYear = currentDate.Year;
+            // Latest JSF per project
+            var latestJsfs = allJsf
+                .GroupBy(jsf => jsf.ProjectId)
+                .Select(g => g.OrderByDescending(jsf => jsf.CreatedDate).FirstOrDefault())
+                .Where(jsf => jsf != null)
+                .ToList();
 
-            var regionalPortfolio = projects
+            var currentYear = DateTime.Now.Year;
+
+            var regionalPortfolio = activeProjects
+                .Where(p => !string.IsNullOrEmpty(p.Region))
                 .GroupBy(p => p.Region)
                 .Select(group => {
-                    var regionName = group.Key ?? "Unknown";
+                    var regionName = group.Key;
                     var regionProjects = group.ToList();
                     var regionProjectIds = regionProjects.Select(p => p.Id).ToList();
-                    var regionReports = progressReports.Where(r => regionProjectIds.Contains(r.ProjectId)).ToList();
+                    var regionJsfs = latestJsfs.Where(jsf => regionProjectIds.Contains(jsf.ProjectId)).ToList();
 
-                    var regionRevenue = regionProjects.Sum(p => p.EstimatedProjectFee ?? 0);
-                    var regionJsf = allJsf.Where(j => regionProjectIds.Contains(j.ProjectId)).ToList();
-                    var regionProfit = regionJsf.Any() ? (double)regionJsf.Average(j => j.ProfitPercentage) : 0;
+                    // Weighted Financials
+                    decimal totalRevenue = regionJsfs.Sum(jsf => jsf.TotalProjectFees);
+                    decimal totalProfitValue = regionJsfs.Sum(jsf => jsf.Profit);
+                    decimal weightedProfitMargin = totalRevenue > 0 ? (totalProfitValue / totalRevenue) * 100 : 0;
+
+                    // Project Details
+                    var details = regionProjects
+                        .Select(p => new RegionalProjectDetailDto
+                        {
+                            ProjectName = p.Name,
+                            ProgramName = p.Program?.Name ?? ""
+                        })
+                        .OrderBy(d => d.ProjectName)
+                        .ToList();
 
                     return new RegionalPortfolioDto
                     {
                         Region = regionName,
-                        Revenue = Math.Round(regionRevenue, 2),
-                        Profit = Math.Round((decimal)regionProfit, 2),
-                        Q1 = group.Count(p => IsActiveInQuarter(p.StartDate, p.EndDate, currentYear, 1)),
-                        Q2 = group.Count(p => IsActiveInQuarter(p.StartDate, p.EndDate, currentYear, 2)),
-                        Q3 = group.Count(p => IsActiveInQuarter(p.StartDate, p.EndDate, currentYear, 3)),
-                        Q4 = group.Count(p => IsActiveInQuarter(p.StartDate, p.EndDate, currentYear, 4))
+                        Revenue = Math.Round(totalRevenue, 2),
+                        Profit = Math.Round(weightedProfitMargin, 2),
+                        Q1 = regionProjects.Count(p => IsActiveInQuarter(p.StartDate, p.EndDate, currentYear, 1)),
+                        Q2 = regionProjects.Count(p => IsActiveInQuarter(p.StartDate, p.EndDate, currentYear, 2)),
+                        Q3 = regionProjects.Count(p => IsActiveInQuarter(p.StartDate, p.EndDate, currentYear, 3)),
+                        Q4 = regionProjects.Count(p => IsActiveInQuarter(p.StartDate, p.EndDate, currentYear, 4)),
+                        ProjectDetails = details
                     };
                 })
+                .OrderByDescending(r => r.Revenue)
                 .ToList();
 
             return regionalPortfolio;

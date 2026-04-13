@@ -53,12 +53,12 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
                 }
             }
 
-            var totalRevenueExpected = await _context.JobStartForms
-                .Include(jsf => jsf.Project)
-                .Where(jsf => jsf.Project.Status == ProjectStatus.Active ||
-                              jsf.Project.Status == ProjectStatus.InProgress)
-                .Where(jsf => jsf.CreatedDate.Year == currentYear)
-                .SumAsync(jsf => jsf.TotalProjectFees, cancellationToken);
+            var projects = await _context.Projects
+                .Where(p => p.Status == ProjectStatus.Active ||
+                              p.Status == ProjectStatus.InProgress)
+                .ToListAsync(cancellationToken);
+
+            var totalRevenueExpected = projects.Sum(p => (p.EstimatedProjectCost ?? 0) + (p.EstimatedProjectFee ?? 0));
 
             var currentQuarterRevenueExpected = await _context.JobStartForms
                 .Include(jsf => jsf.Project)
@@ -66,7 +66,7 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
                               jsf.Project.Status == ProjectStatus.InProgress)
                 .Where(jsf => jsf.CreatedDate.Year == currentYear &&
                               ((jsf.CreatedDate.Month - 1) / 3 + 1) == currentQuarter)
-                .SumAsync(jsf => jsf.TotalProjectFees, cancellationToken);
+                .SumAsync(jsf => jsf.GrandTotal + jsf.TotalProjectFees, cancellationToken);
 
             var previousQuarterRevenueExpected = await _context.JobStartForms
                 .Include(jsf => jsf.Project)
@@ -74,9 +74,9 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
                               jsf.Project.Status == ProjectStatus.InProgress)
                 .Where(jsf => jsf.CreatedDate.Year == previousQuarterYear &&
                               ((jsf.CreatedDate.Month - 1) / 3 + 1) == previousQuarter)
-                .SumAsync(jsf => jsf.TotalProjectFees, cancellationToken);
+                .SumAsync(jsf => jsf.GrandTotal + jsf.TotalProjectFees, cancellationToken);
 
-            _logger.LogInformation("Calculated Total Revenue Expected: {TotalRevenueExpected}, Current Quarter Revenue: {CurrentQuarterRevenue}, Previous Quarter Revenue: {PreviousQuarterRevenueExpected}", 
+            _logger.LogInformation("Calculated Total Revenue Expected (Aggregated): {TotalRevenueExpected}, Current Quarter Revenue: {CurrentQuarterRevenue}, Previous Quarter Revenue: {PreviousQuarterRevenueExpected}", 
                 totalRevenueExpected, currentQuarterRevenueExpected, previousQuarterRevenueExpected);
 
             var revenueChange = previousQuarterRevenueExpected > 0
@@ -86,6 +86,7 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
             return new TotalRevenueExpectedDto
             {
                 TotalRevenue = totalRevenueExpected,
+                Currency = projects.FirstOrDefault()?.Currency,
                 ChangeDescription = $"{revenueChange:F1}% vs last quarter",
                 ChangeType = revenueChange > 0 ? "positive" : revenueChange < 0 ? "negative" : "neutral"
             };

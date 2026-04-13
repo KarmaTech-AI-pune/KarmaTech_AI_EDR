@@ -24,14 +24,15 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
             var project = await _projectDashboardRepository.GetProjectByIdAsync(request.ProjectId, cancellationToken);
             if (project == null || string.IsNullOrEmpty(project.Region)) return new List<RegionalPortfolioDto>();
 
-            var progressReports = await _projectDashboardRepository.GetMonthlyProgressesByProjectIdAsync(request.ProjectId, cancellationToken);
-            
             var allJsf = await _projectDashboardRepository.GetJobStartFormsByProjectIdAsync(request.ProjectId, cancellationToken);
-            var totalRevenueExpected = project.EstimatedProjectFee ?? 0;
-            var profitMargin = allJsf.Any() ? (double)allJsf.Average(j => j.ProfitPercentage) : 0;
+            
+            // Current project focus
+            var latestJsf = allJsf.OrderByDescending(j => j.CreatedDate).FirstOrDefault();
+            
+            var totalRevenue = latestJsf?.TotalProjectFees ?? 0;
+            var profitMargin = latestJsf != null && totalRevenue > 0 ? (latestJsf.Profit / totalRevenue) * 100 : 0;
 
-            var currentDate = DateTime.Now;
-            var currentYear = currentDate.Year;
+            var currentYear = DateTime.Now.Year;
 
             var regionalPortfolio = new List<RegionalPortfolioDto>();
             
@@ -43,12 +44,20 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
             regionalPortfolio.Add(new RegionalPortfolioDto
             {
                 Region = project.Region,
-                Revenue = Math.Round(totalRevenueExpected, 2),
-                Profit = Math.Round((decimal)profitMargin, 2),
+                Revenue = Math.Round(totalRevenue, 2),
+                Profit = Math.Round(profitMargin, 2),
                 Q1 = q1,
                 Q2 = q2,
                 Q3 = q3,
-                Q4 = q4
+                Q4 = q4,
+                ProjectDetails = new List<RegionalProjectDetailDto>
+                {
+                    new RegionalProjectDetailDto
+                    {
+                        ProjectName = project.Name,
+                        ProgramName = project.Program?.Name ?? ""
+                    }
+                }
             });
 
             return regionalPortfolio;

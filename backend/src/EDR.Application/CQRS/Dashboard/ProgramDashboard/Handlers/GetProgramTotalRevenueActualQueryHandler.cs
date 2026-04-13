@@ -71,6 +71,7 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
             return new TotalRevenueActualDto
             {
                 TotalRevenue = Math.Round(totalRevenueActual, 2),
+                Currency = projects.FirstOrDefault()?.Currency,
                 ChangeDescription = $"{revChange:F1}% vs last quarter",
                 ChangeType = revChange > 0 ? "positive" : (revChange < 0 ? "negative" : "neutral"),
                 CompletedMilestonesCount = completedMilestonesCount

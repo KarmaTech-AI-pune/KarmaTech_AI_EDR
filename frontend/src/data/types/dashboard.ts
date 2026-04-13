@@ -19,6 +19,7 @@ export interface RegionalData {
   q4: number;
   revenue: number;
   profit: number;
+  projectDetails: { projectName: string; programName?: string }[];
 }
 
 export interface ProfitMarginMetric {

@@ -28,6 +28,7 @@ namespace EDR.Repositories.Repositories
         {
             return await _context.Projects
                 .Include(p => p.ProjectManager)
+                .Include(p => p.Program)
                 .Where(p => p.ProgramId == programId)
                 .ToListAsync(ct);
         }

@@ -123,7 +123,13 @@ const ProjectDashboard: React.FC = () => {
     issues: p.issues || (p.delay === "delayed" ? ["Project is delayed"] : []),
   }));
 
-  const mappedRegionalPortfolio = (data as any).regionalPortfolio || [];
+  const mappedRegionalPortfolio = ((data as any).regionalPortfolio || []).map((r: any) => ({
+    ...r,
+    projectDetails: (r.projectDetails || []).map((pd: any) => ({
+      projectName: pd.projectName,
+      programName: pd.programName
+    }))
+  }));
   
   const mappedTasks = data.taskPriorityMatrix || [];
 

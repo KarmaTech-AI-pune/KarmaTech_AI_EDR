@@ -26,34 +26,49 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
             var currentDate = DateTime.Now;
             var currentYear = currentDate.Year;
             var currentMonth = currentDate.Month;
+            var currentQuarter = (currentMonth - 1) / 3 + 1;
 
-            var totalRevenueActual = await _context.MonthlyProgresses
-                .Include(mp => mp.Project)
-                .Where(mp => mp.Year == currentYear && mp.Month <= currentMonth)
-                .Where(mp => mp.Project.Status == ProjectStatus.Active ||
-                             mp.Project.Status == ProjectStatus.InProgress ||
-                             mp.Project.Status == ProjectStatus.Completed)
-                .SumAsync(mp => mp.FinancialDetails.FeeTotal ?? 0m, cancellationToken);
+            var projects = await _context.Projects
+                .Where(p => p.Status == ProjectStatus.Active ||
+                          p.Status == ProjectStatus.InProgress ||
+                          p.Status == ProjectStatus.Completed)
+                .ToListAsync(cancellationToken);
 
-            var previousQuarter = (currentMonth - 1) / 3;
-            var previousQuarterYear = previousQuarter == 0 ? currentYear - 1 : currentYear;
-            var previousQuarterMonth = previousQuarter == 0 ? 12 : previousQuarter * 3;
+            if (!projects.Any()) return new TotalRevenueActualDto { TotalRevenue = 0, ChangeDescription = "0% vs last quarter", ChangeType = "neutral", Currency = "USD" };
 
-            var previousQuarterRevenueActual = await _context.MonthlyProgresses
-                .Include(mp => mp.Project)
-                .Where(mp => mp.Year == previousQuarterYear && mp.Month <= previousQuarterMonth)
-                .Where(mp => mp.Project.Status == ProjectStatus.Active ||
-                             mp.Project.Status == ProjectStatus.InProgress ||
-                             mp.Project.Status == ProjectStatus.Completed)
-                .SumAsync(mp => mp.FinancialDetails.FeeTotal ?? 0m, cancellationToken);
+            var projectIds = projects.Select(p => p.Id).ToList();
+            var progressReports = await _context.MonthlyProgresses
+                .Include(mp => mp.ProgressDeliverables)
+                .Where(mp => projectIds.Contains(mp.ProjectId))
+                .ToListAsync(cancellationToken);
 
-            var revenueChange = previousQuarterRevenueActual > 0
-                ? ((totalRevenueActual - previousQuarterRevenueActual) / previousQuarterRevenueActual) * 100
-                : 0;
+            var completedMilestones = progressReports
+                .SelectMany(mp => mp.ProgressDeliverables ?? new List<ProgressDeliverable>())
+                .Where(d => d.PaymentReceivedDate.HasValue)
+                .ToList();
+
+            var totalRevenueActual = completedMilestones.Sum(d => d.PaymentDue ?? 0);
+
+            // Quarterly Changes
+            var previousQuarter = currentQuarter == 1 ? 4 : currentQuarter - 1;
+            var previousQuarterYear = currentQuarter == 1 ? currentYear - 1 : currentYear;
+
+            var currentQuarterRev = completedMilestones
+                .Where(d => d.PaymentReceivedDate.Value.Year == currentYear && 
+                           ((d.PaymentReceivedDate.Value.Month - 1) / 3 + 1) == currentQuarter)
+                .Sum(d => d.PaymentDue ?? 0);
+            
+            var prevQuarterRev = completedMilestones
+                .Where(d => d.PaymentReceivedDate.Value.Year == previousQuarterYear && 
+                           ((d.PaymentReceivedDate.Value.Month - 1) / 3 + 1) == previousQuarter)
+                .Sum(d => d.PaymentDue ?? 0);
+
+            var revenueChange = prevQuarterRev > 0 ? ((currentQuarterRev - prevQuarterRev) / prevQuarterRev) * 100 : 0;
 
             return new TotalRevenueActualDto
             {
-                TotalRevenue = totalRevenueActual,
+                TotalRevenue = Math.Round(totalRevenueActual, 2),
+                Currency = projects.FirstOrDefault()?.Currency,
                 ChangeDescription = $"{revenueChange:F1}% vs last quarter",
                 ChangeType = revenueChange > 0 ? "positive" : revenueChange < 0 ? "negative" : "neutral"
             };
