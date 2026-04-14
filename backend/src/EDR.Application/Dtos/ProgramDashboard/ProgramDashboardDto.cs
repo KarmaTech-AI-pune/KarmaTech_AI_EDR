@@ -7,17 +7,23 @@ namespace EDR.Application.Dtos.ProgramDashboard
         public int ProgramId { get; set; }
         public string ProgramName { get; set; }
         public int TotalProjects { get; set; }
+        public string Currency { get; set; }
         
         // Revenue Metrics
         public decimal TotalRevenueExpected { get; set; }
         public string RevenueChangeDescription { get; set; }
         public string RevenueChangeType { get; set; }
         public decimal TotalRevenueActual { get; set; }
+        public int CompletedMilestonesCount { get; set; }
         
         // Profit Metrics
-        public decimal ProfitMargin { get; set; }
-        public string ProfitMarginChangeDescription { get; set; }
-        public string ProfitMarginChangeType { get; set; }
+        public decimal ExpectedProfitMargin { get; set; }
+        public string ExpectedProfitMarginChangeDescription { get; set; }
+        public string ExpectedProfitMarginChangeType { get; set; }
+
+        public decimal ActualProfitMargin { get; set; }
+        public string ActualProfitMarginChangeDescription { get; set; }
+        public string ActualProfitMarginChangeType { get; set; }
         
         // NPV & Profitability
         public decimal CurrentNpv { get; set; }

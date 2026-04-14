@@ -27,12 +27,14 @@ export interface TaskPriorityItemDto {
 
 export interface TotalRevenueExpectedDto {
     totalRevenue: number;
+    currency?: string;
     changeDescription: string;
     changeType: string;
 }
 
 export interface TotalRevenueActualDto {
     totalRevenue: number;
+    currency?: string;
     changeDescription: string;
     changeType: string;
 }
@@ -51,6 +53,12 @@ export interface ProjectActualProfitMarginDto {
 
 export interface ProfitMarginDto {
     profitMargin: number;
+    expectedProfitMargin: number;
+    expectedChangeDescription: string;
+    expectedChangeType: string;
+    actualProfitMargin: number;
+    actualChangeDescription: string;
+    actualChangeType: string;
     changeDescription: string;
     changeType: string;
 }
@@ -87,6 +95,11 @@ export interface MonthlyCashflowDto {
     variance: number;
 }
 
+export interface RegionalProjectDetailDto {
+    projectName: string;
+    programName: string;
+}
+
 export interface RegionalPortfolioDto {
     region: string;
     q1: number;
@@ -95,6 +108,7 @@ export interface RegionalPortfolioDto {
     q4: number;
     revenue: number;
     profit: number;
+    projectDetails: RegionalProjectDetailDto[];
 }
 
 export interface NpvProfitabilityDto {

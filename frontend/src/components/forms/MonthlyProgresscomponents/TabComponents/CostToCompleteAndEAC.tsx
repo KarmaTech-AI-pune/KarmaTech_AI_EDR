@@ -208,8 +208,8 @@ const CostToCompleteAndEAC: React.FC = () => {
       title: "Gross Profit",
       control,
       fields: [
-        { name: "expectedGrossProfitPercentage", label: "Expected GP %", readOnly: true, value: expectedGrossProfitPercentage ?? 0 },
-        { name: "grossProfitPercentage", label: "Current GP %", readOnly: true, value: calculatedValues.grossProfitPercentage ?? 0 },
+        { name: "expectedGrossProfitPercentage", label: "Expected Gross Profit %", readOnly: true, value: expectedGrossProfitPercentage ?? 0 },
+        { name: "grossProfitPercentage", label: "Actual Gross Profit %", readOnly: true, value: calculatedValues.grossProfitPercentage ?? 0 },
       ],
     },
   ];

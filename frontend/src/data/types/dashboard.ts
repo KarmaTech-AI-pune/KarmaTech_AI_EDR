@@ -19,6 +19,7 @@ export interface RegionalData {
   q4: number;
   revenue: number;
   profit: number;
+  projectDetails: { projectName: string; programName?: string }[];
 }
 
 export interface ProfitMarginMetric {
@@ -31,6 +32,7 @@ export interface FinancialMetrics {
   totalRevenue: number;
   currency?: string;
   totalRevenueActual?: number;
+  completedMilestonesCount?: number;
   totalRevenueChange: number;
   totalRevenueChangeType: 'positive' | 'negative' | 'neutral';
   expectedProfitMargin: ProfitMarginMetric;
@@ -48,6 +50,7 @@ export interface CashflowData {
   planned: number;
   actual: number;
   variance: number;
+  projectBreakdown?: { projectName: string, planned: number, actual: number }[];
 }
 
 export interface PendingApproval {

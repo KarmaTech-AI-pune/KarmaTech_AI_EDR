@@ -28,6 +28,7 @@ namespace EDR.Repositories.Repositories
         {
             return await _context.Projects
                 .Include(p => p.ProjectManager)
+                .Include(p => p.Program)
                 .Where(p => p.ProgramId == programId)
                 .ToListAsync(ct);
         }
@@ -52,6 +53,7 @@ namespace EDR.Repositories.Repositories
                 .Include(mp => mp.ContractAndCost)
                 .Include(mp => mp.FinancialDetails)
                 .Include(mp => mp.ProgressDeliverables)
+                .Include(mp => mp.CTCEAC)
                 .Where(mp => pIds.Contains(mp.ProjectId))
                 .ToListAsync(ct);
         }
@@ -74,7 +76,9 @@ namespace EDR.Repositories.Repositories
                          join wbs in _context.WorkBreakdownStructures on t.WorkBreakdownStructureId equals wbs.Id
                          join header in _context.WBSHeaders on wbs.WBSHeaderId equals header.Id
                          where pIds.Contains(header.ProjectId) && !t.IsDeleted
-                         select ph)
+                         select new { ph, t })
+                         .Select(x => x.ph)
+                         .Include(ph => ph.WBSTask)
                          .ToListAsync(ct);
         }
 
@@ -105,6 +109,13 @@ namespace EDR.Repositories.Repositories
                 .Include(st => st.SprintPlan)
                     .ThenInclude(sp => sp.Project)
                 .Where(st => st.SprintPlan != null && pIds.Contains(st.SprintPlan.ProjectId.Value))
+                .ToListAsync(ct);
+        }
+        public async Task<List<PaymentMilestone>> GetPaymentMilestonesByProjectIdsAsync(IEnumerable<int> projectIds, CancellationToken ct)
+        {
+            var pIds = projectIds.ToList();
+            return await _context.PaymentMilestones
+                .Where(pm => pIds.Contains(pm.ProjectId))
                 .ToListAsync(ct);
         }
     }

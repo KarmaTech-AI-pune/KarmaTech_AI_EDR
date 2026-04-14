@@ -2,10 +2,10 @@ namespace EDR.Application.Dtos.ProgramDashboard
 {
     public class PendingFormDto
     {
-        public int Id { get; set; }
-        public string Project { get; set; }
-        public string FormTitle { get; set; }
-        public string Duration { get; set; }
+        public int FormId { get; set; }
+        public string ProjectName { get; set; }
+        public string FormName { get; set; }
+        public string HoldingUserName { get; set; }
         public string Status { get; set; }
     }
 }

@@ -17,5 +17,6 @@ namespace EDR.Repositories.Interfaces
         Task<List<ProjectClosure>> GetProjectClosuresByProjectIdsAsync(IEnumerable<int> projectIds, CancellationToken ct);
         Task<List<ChangeControl>> GetChangeControlsByProjectIdsAsync(IEnumerable<int> projectIds, CancellationToken ct);
         Task<List<SprintTask>> GetSprintTasksByProjectIdsAsync(IEnumerable<int> projectIds, CancellationToken ct);
+        Task<List<PaymentMilestone>> GetPaymentMilestonesByProjectIdsAsync(IEnumerable<int> projectIds, CancellationToken ct);
     }
 }

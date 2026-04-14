@@ -141,17 +141,18 @@ const DashboardLayout: React.FC = () => {
   const financialMetrics: FinancialMetrics = {
     totalRevenue: totalRevenueExpected?.totalRevenue || 0,
     totalRevenueActual: totalRevenueActual?.totalRevenue || 0,
+    currency: totalRevenueActual?.currency || totalRevenueExpected?.currency || 'USD',
     totalRevenueChange: 0, // Not in DTO
     totalRevenueChangeType: (totalRevenueExpected?.changeType?.toLowerCase() as any) || 'neutral',
     expectedProfitMargin: {
-      value: profitMargin?.profitMargin || 0,
-      change: 0,
-      changeType: (profitMargin?.changeType?.toLowerCase() as any) || 'neutral'
+      value: profitMargin?.expectedProfitMargin || 0,
+      change: parseFloat(profitMargin?.expectedChangeDescription?.split('%')[0]) || 0,
+      changeType: (profitMargin?.expectedChangeType?.toLowerCase() as any) || 'neutral'
     },
     actualProfitMargin: {
-      value: profitMargin?.profitMargin || 0,
-      change: 0,
-      changeType: (profitMargin?.changeType?.toLowerCase() as any) || 'neutral'
+      value: profitMargin?.actualProfitMargin || 0,
+      change: parseFloat(profitMargin?.actualChangeDescription?.split('%')[0]) || 0,
+      changeType: (profitMargin?.actualChangeType?.toLowerCase() as any) || 'neutral'
     },
     revenueAtRisk: revenueAtRisk?.revenueAtRisk || 0,
     revenueAtRiskChange: 0, // Not in DTO
@@ -188,7 +189,11 @@ const DashboardLayout: React.FC = () => {
     q3: r.q3,
     q4: r.q4,
     revenue: r.revenue,
-    profit: r.profit
+    profit: r.profit,
+    projectDetails: (r.projectDetails || []).map(pd => ({
+      projectName: pd.projectName,
+      programName: pd.programName
+    }))
   }));
 
   const mappedPendingApprovals: PendingApproval[] = pendingForms?.pendingForms?.map(f => ({

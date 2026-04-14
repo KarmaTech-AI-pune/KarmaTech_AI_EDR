@@ -34,24 +34,24 @@ const ProgramDashboard: React.FC = () => {
         console.warn("No programId found in context");
         return;
       }
-      
+
       try {
         setLoading(true);
         setError(null);
-        
+
         console.log(`Fetching dashboard data for programId: ${programId}`);
-        
+
         const responseData = await dashboardService.getProgramDashboard(parseInt(programId));
         console.log("Dashboard response data:", responseData);
-        
+
         if (!responseData) {
-            throw new Error("Dashboard service returned no data");
+          throw new Error("Dashboard service returned no data");
         }
         setData(responseData);
 
         const programData = await programApi.getById(parseInt(programId));
         setProgram(programData);
-        
+
       } catch (err: any) {
         console.error("Error fetching program dashboard:", err);
         const msg = err.response?.data?.message || err.message || "Failed to load program dashboard data.";
@@ -84,17 +84,19 @@ const ProgramDashboard: React.FC = () => {
   const financialMetrics: FinancialMetrics = {
     totalRevenue: data.totalRevenueExpected,
     totalRevenueActual: data.totalRevenueActual,
+    currency: data.currency,
+    completedMilestonesCount: data.completedMilestonesCount,
     totalRevenueChange: parseFloat(data.revenueChangeDescription?.split("%")[0]) || 0,
     totalRevenueChangeType: data.revenueChangeType,
     expectedProfitMargin: {
-      value: data.profitMargin || 0,
-      change: parseFloat(data.profitMarginChangeDescription?.split("%")[0]) || 0,
-      changeType: data.profitMarginChangeType || "neutral",
+      value: data.expectedProfitMargin,
+      change: parseFloat(data.expectedProfitMarginChangeDescription?.split("%")[0]) || 0,
+      changeType: data.expectedProfitMarginChangeType
     },
     actualProfitMargin: {
-      value: data.actualProfitMargin || 0,
+      value: data.actualProfitMargin,
       change: parseFloat(data.actualProfitMarginChangeDescription?.split("%")[0]) || 0,
-      changeType: data.actualProfitMarginChangeType || "neutral",
+      changeType: data.actualProfitMarginChangeType
     },
     revenueAtRisk: 0,
     revenueAtRiskChange: 0,
@@ -144,7 +146,7 @@ const ProgramDashboard: React.FC = () => {
   }));
 
   const mappedRegionalPortfolio = data.regionalPortfolio || [];
-  
+
   const mappedTasks = data.taskPriorityMatrix || [];
 
   return (
@@ -178,7 +180,7 @@ const ProgramDashboard: React.FC = () => {
                 <RegionalPortfolio data={mappedRegionalPortfolio} />
               </Grid>
               <Grid item xs={12}>
-                <TaskPriorityMatrix 
+                <TaskPriorityMatrix
                   tasks={mappedTasks}
                   onTaskClick={(taskId) => console.log("View task:", taskId)}
                 />
@@ -193,7 +195,7 @@ const ProgramDashboard: React.FC = () => {
               <Grid item xs={12}>
                 <CashflowChart data={mappedCashflow} />
               </Grid>
-              
+
               {/* NPV & Profitability */}
               <Grid item xs={12}>
                 <NPVProfitability
@@ -213,10 +215,10 @@ const ProgramDashboard: React.FC = () => {
         {/* Bottom - Approvals & Milestones */}
         <Grid container spacing={3} sx={{ mt: 1 }}>
           <Grid item xs={12} md={6}>
-            <PendingApprovals approvals={mappedPendingApprovals} onEscalate={() => {}} onRemind={() => {}} />
+            <PendingApprovals approvals={mappedPendingApprovals} onEscalate={() => { }} onRemind={() => { }} />
           </Grid>
           <Grid item xs={12} md={6}>
-            <MilestoneBillingTracker milestones={mappedMilestones} onSendNotice={() => {}} onFollowUp={() => {}} />
+            <MilestoneBillingTracker milestones={mappedMilestones} onSendNotice={() => { }} onFollowUp={() => { }} />
           </Grid>
         </Grid>
       </Container>
