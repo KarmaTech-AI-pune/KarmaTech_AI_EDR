@@ -135,14 +135,15 @@ const ProgramDashboard: React.FC = () => {
   const mappedProjectsAtRisk: Project[] = (data.projectsAtRisk || []).map((p: any) => ({
     id: (p.id || p.projectId || 0).toString(),
     name: p.project || p.projectName || "Unknown",
-    severity: p.priority || "P3",
+    severity: (p.priority as any) || 'P3',
     status: p.status || "falling_behind",
-    delay: p.delayDays || (p.delay === "delayed" ? 10 : 0),
+    delay: p.delayDays || 0,
     region: p.region || "Global",
     budget: p.budgetTotal || 0,
     spent: p.budgetSpent || 0,
     timeline: p.budgetPercentage !== undefined ? `${p.budgetPercentage}%` : "0%",
-    issues: p.issues || (p.delay === "delayed" ? ["Project is delayed"] : []),
+    issues: p.issues || [],
+    programName: p.programName || p.ProgramName || 'General'
   }));
 
   const mappedRegionalPortfolio = data.regionalPortfolio || [];
@@ -201,11 +202,15 @@ const ProgramDashboard: React.FC = () => {
                 <NPVProfitability
                   data={{
                     currentNpv: data.currentNpv || 0,
+                    expectedRevenue: data.totalRevenueExpected || 0,
+                    actualRevenue: data.totalRevenueActual || 0,
+                    currencyCode: data.currency,
                     highProfitProjectsCount: data.highProfitProjectsCount || 0,
                     mediumProfitProjectsCount: data.mediumProfitProjectsCount || 0,
                     lowProfitProjectsCount: data.lowProfitProjectsCount || 0,
                     whatIfAnalysis: data.whatIfAnalysis || "Not enough data for analysis",
                   }}
+                  currencyCode={data.currency}
                 />
               </Grid>
             </Grid>

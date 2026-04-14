@@ -9,6 +9,7 @@ export interface Project {
   spent: number;
   timeline: string;
   issues: string[];
+  programName?: string;
 }
 
 export interface RegionalData {

@@ -184,6 +184,9 @@ const ProjectDashboard: React.FC = () => {
                 <NPVProfitability
                   data={{
                     currentNpv: data.currentNpv || 0,
+                    expectedRevenue: data.totalRevenueExpected || 0,
+                    actualRevenue: data.totalRevenueActual || 0,
+                    currencyCode: data.currency,
                     highProfitProjectsCount: (data.actualProfitMargin?.actualProfitMargin || 0) >= 20 ? 1 : 0,
                     mediumProfitProjectsCount: (data.actualProfitMargin?.actualProfitMargin || 0) >= 10 && (data.actualProfitMargin?.actualProfitMargin || 0) < 20 ? 1 : 0,
                     lowProfitProjectsCount: (data.actualProfitMargin?.actualProfitMargin || 0) < 10 ? 1 : 0,

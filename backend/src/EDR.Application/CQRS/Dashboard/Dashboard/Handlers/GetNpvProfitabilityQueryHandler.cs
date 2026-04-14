@@ -43,6 +43,20 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
             int projectsWithApprovalHistory = 0;
             decimal totalProjectFeesForDelayedProjects = 0;
 
+            // Calculate Expected Revenue (Total Portfolio)
+            var activeProjects = await _context.Projects
+                .Where(p => p.Status == ProjectStatus.Active || p.Status == ProjectStatus.InProgress)
+                .ToListAsync(cancellationToken);
+            
+            decimal expectedRevenue = activeProjects.Sum(p => (p.EstimatedProjectCost ?? 0) + (p.EstimatedProjectFee ?? 0));
+            string currencyCode = activeProjects.FirstOrDefault()?.Currency ?? "USD";
+
+            // Calculate Actual Revenue (Total Portfolio)
+            var activeProjectIds = activeProjects.Select(p => p.Id).ToList();
+            var actualRevenue = await _context.ProgressDeliverables
+                .Where(pd => activeProjectIds.Contains(pd.MonthlyProgress.ProjectId) && pd.PaymentReceivedDate != null)
+                .SumAsync(pd => pd.PaymentDue ?? 0, cancellationToken);
+
             foreach (var form in jobStartForms)
             {
                 currentNpv += form.TotalProjectFees;
@@ -114,6 +128,9 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
             return new NpvProfitabilityDto
             {
                 CurrentNpv = currentNpv,
+                ExpectedRevenue = expectedRevenue,
+                ActualRevenue = actualRevenue,
+                CurrencyCode = currencyCode,
                 HighProfitProjectsCount = highProfitCount,
                 MediumProfitProjectsCount = mediumProfitCount,
                 LowProfitProjectsCount = lowProfitCount,

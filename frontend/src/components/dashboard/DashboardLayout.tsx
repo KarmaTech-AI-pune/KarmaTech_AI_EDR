@@ -165,14 +165,15 @@ const DashboardLayout: React.FC = () => {
   const mappedProjects: Project[] = projectsAtRisk?.projects?.map(p => ({
     id: p.projectId.toString(),
     name: p.projectName,
-    severity: p.priority === 'High' ? 'P3' : 'P5', // Simple mapping
+    severity: (p.priority as any) || 'P5',
     status: 'falling_behind', // Default or map from p.Status
     delay: p.delayDays,
     region: p.region,
     budget: p.budgetTotal,
     spent: p.budgetSpent,
     timeline: `${p.budgetPercentage}%`,
-    issues: p.issues
+    issues: p.issues,
+    programName: p.programName || p.ProgramName || 'General'
   })) || [];
 
   const mappedCashflow: CashflowData[] = monthlyCashflow.map(c => ({
@@ -276,7 +277,15 @@ const DashboardLayout: React.FC = () => {
 
               {/* NPV & Profitability */}
               <Grid item xs={12} md={6}>
-                <NPVProfitability data={npvProfitability} />
+                <NPVProfitability 
+                  data={npvProfitability ? {
+                    ...npvProfitability,
+                    expectedRevenue: totalRevenueExpected?.totalRevenue || 0,
+                    actualRevenue: totalRevenueActual?.totalRevenue || 0,
+                    currencyCode: totalRevenueActual?.currency || totalRevenueExpected?.currency || 'USD'
+                  } : null} 
+                  currencyCode={totalRevenueActual?.currency || totalRevenueExpected?.currency || 'USD'}
+                />
               </Grid>
             </Grid>
           </Grid>

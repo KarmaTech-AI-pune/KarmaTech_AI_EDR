@@ -29,13 +29,16 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
         {
             var projects = await _context.Projects
                 .Include(p => p.ProjectManager)
-                // Removed .Include(p => p.JobStartForm) and .Include(p => p.WBSTasks) as they are not directly used in the output DTO or are causing errors
+                .Include(p => p.Program)
                 .Where(p => p.Status == ProjectStatus.OnHold || // Using OnHold as proxy for at-risk statuses, as Delayed/AtRisk/Critical are not in enum
                            p.Status == ProjectStatus.Active ||
                            p.Status == ProjectStatus.Opportunity)
                 .Select(p => new
                 {
                     Project = p,
+                    ProjectManager = p.ProjectManager,
+                    Program = p.Program,
+                    ProgramName = p.Program != null ? p.Program.Name : _context.Programs.IgnoreQueryFilters().Where(pr => pr.Id == p.ProgramId).Select(pr => pr.Name).FirstOrDefault(),
                     LatestSchedule = _context.Schedules
                         .Where(s => s.MonthlyProgress.ProjectId == p.Id)
                         .OrderByDescending(s => s.MonthlyProgress.Year)
@@ -51,6 +54,8 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
             foreach (var item in projects)
             {
                 var p = item.Project;
+                _logger.LogInformation($"Project {p.Id} ({p.Name}): ProgramId={p.ProgramId}, Program Loaded={item.Program != null}");
+                
                 var schedule = item.LatestSchedule;
 
                 // Calculate delay
@@ -60,6 +65,11 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
                     var compareDate = schedule.ExpectedCompletionDate ?? DateTime.Now;
                     delayDays = (int)(compareDate - schedule.CompletionDateAsPerContract.Value).TotalDays;
                     _logger.LogInformation($"Project {p.Id} ({p.Name}): Schedule found. Contract: {schedule.CompletionDateAsPerContract}, Expected: {schedule.ExpectedCompletionDate}, Delay: {delayDays}");
+                }
+                else if (p.EndDate != null && p.EndDate < DateTime.Now && p.Status != ProjectStatus.Completed)
+                {
+                    delayDays = (int)(DateTime.Now - p.EndDate.Value).TotalDays;
+                    _logger.LogInformation($"Project {p.Id} ({p.Name}): No schedule found, but EndDate {p.EndDate} is in the past. Fallback delay: {delayDays}");
                 }
                 else
                 {
@@ -107,7 +117,7 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
                 }
 
                 // Only include if actually at risk
-                if (delayDays > 5 || budgetPercentage > 80 || hasScopeChange)
+                if (delayDays > 0 || budgetPercentage > 80 || hasScopeChange)
                 {
                     projectsList.Add(new ProjectAtRiskDto
                     {
@@ -121,7 +131,8 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
                         BudgetTotal = budgetTotal ?? 0,
                         BudgetPercentage = budgetPercentage,
                         Issues = issues,
-                        Manager = p.ProjectManager?.Name ?? "Unknown"
+                        Manager = item.ProjectManager?.Name ?? "Unknown",
+                        ProgramName = item.ProgramName ?? item.Program?.Name ?? "General"
                     });
                 }
             }
