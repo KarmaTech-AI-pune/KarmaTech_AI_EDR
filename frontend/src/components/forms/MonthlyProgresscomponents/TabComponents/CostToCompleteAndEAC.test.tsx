@@ -83,8 +83,8 @@ describe('CostToCompleteAndEAC — Rendering', () => {
   it('renders all field labels', () => {
     const Wrapper = makeWrapper();
     render(<Wrapper><CostToCompleteAndEAC /></Wrapper>);
-    expect(screen.getAllByText('Expected GP %').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Current GP %').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Expected Gross Profit %').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Actual Gross Profit %').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Total EAC').length).toBeGreaterThanOrEqual(1);
     // ODCs and Staff labels appear in multiple sections
     expect(screen.getAllByText('ODCs').length).toBeGreaterThanOrEqual(3);
@@ -224,7 +224,7 @@ describe('CostToCompleteAndEAC — Gross Profit', () => {
     const Wrapper = makeWrapper();
     render(<Wrapper><CostToCompleteAndEAC /></Wrapper>);
     // budgetTable.originalBudget.profitPercentage is null → defaults to 0
-    const expectedGPField = screen.getByLabelText('Expected GP %');
+    const expectedGPField = screen.getByLabelText('Expected Gross Profit %');
     expect(expectedGPField).toHaveValue('0.00');
   });
 
@@ -237,7 +237,7 @@ describe('CostToCompleteAndEAC — Gross Profit', () => {
       },
     });
     render(<Wrapper><CostToCompleteAndEAC /></Wrapper>);
-    const expectedGPField = screen.getByLabelText('Expected GP %');
+    const expectedGPField = screen.getByLabelText('Expected Gross Profit %');
     expect(expectedGPField).toHaveValue('25.00');
   });
 
@@ -249,7 +249,7 @@ describe('CostToCompleteAndEAC — Gross Profit', () => {
       },
     });
     render(<Wrapper><CostToCompleteAndEAC /></Wrapper>);
-    const currentGPField = screen.getByLabelText('Current GP %');
+    const currentGPField = screen.getByLabelText('Actual Gross Profit %');
     expect(currentGPField).toHaveValue('0.00');
   });
 
@@ -262,7 +262,7 @@ describe('CostToCompleteAndEAC — Gross Profit', () => {
       },
     });
     render(<Wrapper><CostToCompleteAndEAC /></Wrapper>);
-    const currentGPField = screen.getByLabelText('Current GP %');
+    const currentGPField = screen.getByLabelText('Actual Gross Profit %');
     expect(currentGPField).toHaveValue('-40.00');
   });
 });

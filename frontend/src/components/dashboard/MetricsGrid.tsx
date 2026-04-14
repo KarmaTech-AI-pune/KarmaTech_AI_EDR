@@ -34,7 +34,7 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
 
       <Grid item xs={12} sm={6} lg={2}>
         <MetricCard
-          title="Expected GP %"
+          title="Expected Gross Profit %"
           value={`${(metrics.expectedProfitMargin?.value ?? 0).toFixed(2)}%`}
           change={`${metrics.expectedProfitMargin?.change ?? 0}% improvement`}
           changeType={metrics.expectedProfitMargin?.changeType ?? 'neutral'}
@@ -44,7 +44,7 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
 
       <Grid item xs={12} sm={6} lg={2}>
         <MetricCard
-          title="Actual GP %"
+          title="Actual Gross Profit %"
           value={`${(metrics.actualProfitMargin?.value ?? 0).toFixed(2)}%`}
           change={`${metrics.actualProfitMargin?.change ?? 0}% improvement`}
           changeType={metrics.actualProfitMargin?.changeType ?? 'neutral'}
