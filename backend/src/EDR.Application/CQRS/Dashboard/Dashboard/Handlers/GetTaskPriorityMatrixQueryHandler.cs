@@ -28,7 +28,6 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
                     .ThenInclude(sp => sp.Project)
                 .Where(st => 
                     st.SprintPlan != null && 
-                    st.SprintPlan.Status == 1 && // Active Sprints
                     st.Taskstatus != "Done" && 
                     st.Taskstatus != "Completed" && 
                     st.Taskstatus != "Closed")
@@ -36,7 +35,7 @@ namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
                 {
                     Id = st.Taskid,
                     Title = st.TaskTitle,
-                    Project = st.SprintPlan.Project.Name,
+                    Project = st.SprintPlan.Project != null ? st.SprintPlan.Project.Name : "Unknown Project",
                     Assignee = st.TaskAssigneeName ?? "Unassigned",
                     Category = MapPriorityToCategory(st.Taskpriority)
                 })
