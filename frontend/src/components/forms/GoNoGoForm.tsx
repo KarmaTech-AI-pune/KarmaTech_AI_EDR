@@ -225,7 +225,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     bidtimeandcosts: { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
-  const [serverError, setServerError] = useState<string | null>(null);
+  const [_serverError, setServerError] = useState<string | null>(null);
 
   const MAX_POSSIBLE_SCORE = 120; // 12 criteria × 10 points each
 

@@ -16,7 +16,6 @@ import {
   Container,
   Switch,
   FormControlLabel,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -263,7 +262,7 @@ const BidPreparationForm: React.FC = () => {
   const [versionHistory, setVersionHistory] = useState<BidVersionHistoryType[]>([]);
   // This state is used to track the latest version from history
   const [currentVersion, setCurrentVersion] = useState<BidVersionHistoryType | undefined>();
-  const [error, setError] = useState<string>('');
+  const [_error, setError] = useState<string>('');
 
   useEffect(() => {
     loadBidPreparationData();
