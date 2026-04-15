@@ -81,6 +81,7 @@ export interface ProjectAtRiskDto {
     budgetPercentage: number;
     issues: string[];
     manager: string;
+    programName: string;
 }
 
 export interface ProjectsAtRiskResponseDto {
@@ -113,6 +114,9 @@ export interface RegionalPortfolioDto {
 
 export interface NpvProfitabilityDto {
     currentNpv: number;
+    expectedRevenue: number;
+    actualRevenue: number;
+    currencyCode?: string;
     highProfitProjectsCount: number;
     mediumProfitProjectsCount: number;
     lowProfitProjectsCount: number;

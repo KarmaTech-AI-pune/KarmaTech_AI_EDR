@@ -34,11 +34,8 @@ export const BDSideMenu: React.FC = () => {
   const [formsOpen, setFormsOpen] = useState(location.pathname.includes('/forms'));
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const navigate = useNavigate();
-  const { opportunity, goNoGoDecisionStatus, goNoGoVersionNumber } = useBusinessDevelopment();
+  useBusinessDevelopment();
 
-  const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
-    ? opportunity?.currentHistory.some((history) => history.statusId === 6)
-    : opportunity?.currentHistory?.statusId === 6;
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -64,14 +61,12 @@ export const BDSideMenu: React.FC = () => {
       title: 'Go/No-Go Decision',
       icon: <AssessmentIcon />,
       path: '/business-development/details/forms/gonogo',
-      disabled: !isOpportunityApproved,
     },
     {
       id: 'bidPrep',
       title: 'Bid Preparation',
       icon: <AssignmentIcon />,
       path: '/business-development/details/forms/bid-preparation',
-      disabled: !(goNoGoDecisionStatus === "GO" && goNoGoVersionNumber === 3),
     },
   ];
 
@@ -179,7 +174,7 @@ export const BDSideMenu: React.FC = () => {
                           },
                         }}
                         onClick={() => handleNavigation(item.path)}
-                        disabled={item.disabled}
+                        disabled={(item as any).disabled}
                       >
                       <ListItemIcon>{item.icon}</ListItemIcon>
                       <ListItemText

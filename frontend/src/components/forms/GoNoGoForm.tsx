@@ -225,7 +225,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     bidtimeandcosts: { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
-  const [serverError, setServerError] = useState<string | null>(null);
+  const [_serverError, setServerError] = useState<string | null>(null);
 
   const MAX_POSSIBLE_SCORE = 120; // 12 criteria × 10 points each
 
@@ -696,11 +696,12 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
 
   return (
     <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
-      {serverError && (
+      {/* serverError alert hidden - do not delete */}
+      {/* {serverError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setServerError(null)}>
           {serverError}
         </Alert>
-      )}
+      )} */}
       {isLoading && (
         <Typography variant="body1" sx={{ mb: 2 }}>
           Loading...

@@ -146,12 +146,12 @@ const DashboardLayout: React.FC = () => {
     totalRevenueChangeType: (totalRevenueExpected?.changeType?.toLowerCase() as any) || 'neutral',
     expectedProfitMargin: {
       value: profitMargin?.expectedProfitMargin || 0,
-      change: parseFloat(profitMargin?.expectedChangeDescription?.split('%')[0]) || 0,
+      change: parseFloat(profitMargin?.expectedChangeDescription?.split('%')[0] ?? '0') || 0,
       changeType: (profitMargin?.expectedChangeType?.toLowerCase() as any) || 'neutral'
     },
     actualProfitMargin: {
       value: profitMargin?.actualProfitMargin || 0,
-      change: parseFloat(profitMargin?.actualChangeDescription?.split('%')[0]) || 0,
+      change: parseFloat(profitMargin?.actualChangeDescription?.split('%')[0] ?? '0') || 0,
       changeType: (profitMargin?.actualChangeType?.toLowerCase() as any) || 'neutral'
     },
     revenueAtRisk: revenueAtRisk?.revenueAtRisk || 0,
@@ -165,14 +165,15 @@ const DashboardLayout: React.FC = () => {
   const mappedProjects: Project[] = projectsAtRisk?.projects?.map(p => ({
     id: p.projectId.toString(),
     name: p.projectName,
-    severity: p.priority === 'High' ? 'P3' : 'P5', // Simple mapping
+    severity: (p.priority as any) || 'P5',
     status: 'falling_behind', // Default or map from p.Status
     delay: p.delayDays,
     region: p.region,
     budget: p.budgetTotal,
     spent: p.budgetSpent,
     timeline: `${p.budgetPercentage}%`,
-    issues: p.issues
+    issues: p.issues,
+    programName: p.programName || 'General'
   })) || [];
 
   const mappedCashflow: CashflowData[] = monthlyCashflow.map(c => ({
@@ -276,7 +277,15 @@ const DashboardLayout: React.FC = () => {
 
               {/* NPV & Profitability */}
               <Grid item xs={12} md={6}>
-                <NPVProfitability data={npvProfitability} />
+                <NPVProfitability 
+                  data={npvProfitability ? {
+                    ...npvProfitability,
+                    expectedRevenue: totalRevenueExpected?.totalRevenue || 0,
+                    actualRevenue: totalRevenueActual?.totalRevenue || 0,
+                    currencyCode: totalRevenueActual?.currency || totalRevenueExpected?.currency || 'USD'
+                  } : null} 
+                  currencyCode={totalRevenueActual?.currency || totalRevenueExpected?.currency || 'USD'}
+                />
               </Grid>
             </Grid>
           </Grid>

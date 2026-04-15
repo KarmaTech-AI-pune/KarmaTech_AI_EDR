@@ -10,22 +10,13 @@ import {
 import DescriptionIcon from '@mui/icons-material/Description';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
-import { OpportunityTracking } from '../../models';
-
-type ContextType = {
-  opportunity: OpportunityTracking;
-};
 
 export const BForms: React.FC = () => {
-  const { opportunity } = useOutletContext<ContextType>();
   const navigate = useNavigate();
-  const { goNoGoDecisionStatus, goNoGoVersionNumber } = useBusinessDevelopment();
+  useBusinessDevelopment();
 
-  const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
-    ? opportunity?.currentHistory.some((history) => history.statusId === 6)
-    : opportunity?.currentHistory?.statusId === 6;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -65,7 +56,6 @@ export const BForms: React.FC = () => {
                 variant="contained"
                 fullWidth
                 onClick={() => navigate('/business-development/details/forms/gonogo')}
-                disabled={!isOpportunityApproved}
               >
                 View Form
               </Button>
@@ -86,7 +76,6 @@ export const BForms: React.FC = () => {
                 variant="contained"
                 fullWidth
                 onClick={() => navigate('/business-development/details/forms/bid-preparation')}
-                disabled={!(goNoGoDecisionStatus === "GO" && goNoGoVersionNumber === 3)}
               >
                 View Form
               </Button>

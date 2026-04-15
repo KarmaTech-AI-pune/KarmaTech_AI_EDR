@@ -53,7 +53,24 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onViewActionPlan }) 
           </Typography>
         </Box>
 
-        <Typography variant="h6" fontWeight="semibold" sx={{ mb: 1 }}>
+        {project.programName && (
+          <Typography 
+            variant="overline" 
+            sx={{ 
+              color: 'primary.main', 
+              fontWeight: 700,
+              fontSize: '0.65rem',
+              letterSpacing: 1.2,
+              mb: 0.5,
+              display: 'block',
+              textTransform: 'uppercase'
+            }}
+          >
+            Program: {project.programName}
+          </Typography>
+        )}
+
+        <Typography variant="h6" fontWeight="semibold" sx={{ mb: 1, lineHeight: 1.2 }}>
           {project.name}
         </Typography>
         

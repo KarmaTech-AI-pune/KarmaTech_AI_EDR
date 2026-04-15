@@ -54,4 +54,39 @@ describe('TaskPriorityMatrix Component', () => {
     expect(screen.getByText('Reply to client email')).toBeInTheDocument();
     expect(screen.getByText('Organize desk drawer')).toBeInTheDocument();
   });
+
+  it('groups tasks with the same title', () => {
+    const tasksWithDuplicates = [
+      ...mockTasks,
+      {
+        id: 5,
+        title: 'Fix critical database issue',
+        category: 'urgent_important' as const,
+        project: 'Project Beta',
+        assignee: 'Bob'
+      }
+    ];
+
+    render(<TaskPriorityMatrix tasks={tasksWithDuplicates} />);
+
+    // Should only show the title once in the quadrant
+    const titles = screen.getAllByText('Fix critical database issue');
+    expect(titles.length).toBe(1);
+
+    // Should show the combination indicator
+    expect(screen.getByText('2 Tasks Combined')).toBeInTheDocument();
+  });
+
+  it('handles multiple unique assignees for the same title', () => {
+    const tasksWithThreeUsers = [
+      { id: 1, title: 'Test Task', category: 'urgent_important' as const, project: 'Project A', assignee: 'User 1' },
+      { id: 2, title: 'Test Task', category: 'urgent_important' as const, project: 'Project A', assignee: 'User 2' },
+      { id: 3, title: 'Test Task', category: 'urgent_important' as const, project: 'Project A', assignee: 'User 3' },
+    ];
+
+    render(<TaskPriorityMatrix tasks={tasksWithThreeUsers} />);
+
+    // Should show "3 Tasks Combined"
+    expect(screen.getByText('3 Tasks Combined')).toBeInTheDocument();
+  });
 });
