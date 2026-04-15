@@ -104,10 +104,11 @@ const ProductBacklog: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sprintFilter, setSprintFilter] = useState<string>('all');
-  const [versionFilter, setVersionFilter] = useState<string>('all');
+  const [versionFilter, setVersionFilter] = useState<string>('latest'); // Default to 'latest'
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [availableVersions, setAvailableVersions] = useState<number[]>([]);
 
-  const fetchBacklog = async () => {
+  const fetchBacklog = async (selectedVersion: string = 'latest') => {
     if (!projectId) {
       setLoading(false);
       setError('No project selected.');
@@ -116,7 +117,11 @@ const ProductBacklog: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axiosInstance.get(`/api/ProgramSprint/${projectId}`);
+      let apiUrl = `/api/ProgramSprint/${projectId}`;
+      if (selectedVersion !== 'latest') {
+        apiUrl = `/api/ProgramSprint/${projectId}/version/${selectedVersion}`;
+      }
+      const response = await axiosInstance.get(apiUrl);
       setBacklogItems(response.data);
       // Auto-expand all parent rows
       const parents = new Set<number>();
@@ -134,8 +139,22 @@ const ProductBacklog: React.FC = () => {
     }
   };
 
+  const fetchVersions = async () => {
+    if (!projectId) return;
+    try {
+      const response = await axiosInstance.get(`/api/ProgramSprint/${projectId}/versions`);
+      setAvailableVersions(response.data);
+      // Set the initial version filter to 'latest' and fetch backlog
+      setVersionFilter('latest');
+      fetchBacklog('latest');
+    } catch (err: any) {
+      console.error('Failed to fetch backlog versions:', err);
+      setError(err.response?.data?.message || 'Failed to load backlog versions.');
+    }
+  };
+
   useEffect(() => {
-    fetchBacklog();
+    fetchVersions();
   }, [projectId]);
 
   // Derived data
@@ -144,19 +163,21 @@ const ProductBacklog: React.FC = () => {
     return sprints;
   }, [backlogItems]);
 
-  const versionOptions = useMemo(() => {
-    const versions = [...new Set(backlogItems.map(i => i.backlogVersion))].sort((a, b) => a - b);
-    return versions;
-  }, [backlogItems]);
-
   const totalHours = useMemo(() => backlogItems.reduce((sum, i) => sum + i.plannedHours, 0), [backlogItems]);
   const totalRemaining = useMemo(() => backlogItems.reduce((sum, i) => sum + i.remainingHours, 0), [backlogItems]);
   const completionPct = useMemo(() => totalHours > 0 ? Math.round(((totalHours - totalRemaining) / totalHours) * 100) : 0, [totalHours, totalRemaining]);
 
+  const handleVersionChange = (event: SelectChangeEvent) => {
+    const selected = event.target.value;
+    setVersionFilter(selected);
+    fetchBacklog(selected);
+  };
+
   const filteredItems = useMemo(() => {
     return backlogItems.filter(item => {
       if (sprintFilter !== 'all' && item.sprintNumber !== parseInt(sprintFilter)) return false;
-      if (versionFilter !== 'all' && item.backlogVersion !== parseInt(versionFilter)) return false;
+      // Update version filter logic to handle 'latest' string
+      if (versionFilter !== 'latest' && versionFilter !== 'all' && item.backlogVersion !== parseInt(versionFilter)) return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         return (
@@ -406,11 +427,11 @@ const ProductBacklog: React.FC = () => {
             <Select
               value={versionFilter}
               label="Backlog Version"
-              onChange={(e: SelectChangeEvent) => setVersionFilter(e.target.value)}
+              onChange={handleVersionChange}
             >
-              <MenuItem value="all">All Versions</MenuItem>
-              {versionOptions.map(v => (
-                <MenuItem key={v} value={v.toString()}>v{v}.0</MenuItem>
+              <MenuItem value="latest">Latest</MenuItem>
+              {availableVersions.map(v => (
+                <MenuItem key={v} value={v.toString()}>Version {v}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -447,7 +468,7 @@ const ProductBacklog: React.FC = () => {
 
           <Box sx={{ ml: 'auto' }}>
             <Tooltip title="Refresh Backlog">
-              <IconButton color="primary" onClick={fetchBacklog}>
+              <IconButton color="primary" onClick={() => fetchBacklog(versionFilter)}>
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
