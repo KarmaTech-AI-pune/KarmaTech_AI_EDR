@@ -88,5 +88,25 @@ namespace EDR.Repositories.Repositories
                 .Where(o => o.ApprovalManagerId == regionalDirectorId)
                 .ToListAsync();
         }
+
+        public async Task<int?> GetStatusIdByNameAsync(string statusName)
+        {
+            var status = await _context.OpportunityStatuses
+                .FirstOrDefaultAsync(s => s.Status.ToLower() == statusName.ToLower());
+            return status?.Id;
+        }
+
+        public async Task<string?> GetValidUserIdAsync(string userIdOrEmail)
+        {
+            if (string.IsNullOrWhiteSpace(userIdOrEmail) || userIdOrEmail.ToLower() == "string")
+            {
+                return null;
+            }
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userIdOrEmail || u.Email.ToLower() == userIdOrEmail.ToLower());
+
+            return user?.Id;
+        }
     }
 }

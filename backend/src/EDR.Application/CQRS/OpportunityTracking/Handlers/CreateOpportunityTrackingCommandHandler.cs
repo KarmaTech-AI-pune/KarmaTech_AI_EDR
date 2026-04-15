@@ -30,8 +30,12 @@ namespace EDR.Application.CQRS.OpportunityTracking.Handlers
         {
             var histories = new List<OpportunityHistory>();
             var currentDateTime = DateTime.UtcNow;
-            var currentUser = _userContext.GetCurrentUserId();
-            
+
+            var validBidManagerId = await _repository.GetValidUserIdAsync(request.BidManagerId);
+            var validReviewManagerId = await _repository.GetValidUserIdAsync(request.ReviewManagerId);
+            var validApprovalManagerId = await _repository.GetValidUserIdAsync(request.ApprovalManagerId);
+            var validCurrentUserId = await _repository.GetValidUserIdAsync(_userContext.GetCurrentUserId());
+
             // Get next bid number
             int nextBidNumber = await _settingsRepository.GetNextBidNumberAsync();
             string formattedBidNumber = nextBidNumber.ToString("0000000");
@@ -45,9 +49,9 @@ namespace EDR.Application.CQRS.OpportunityTracking.Handlers
                 BidFees = request.BidFees,
                 Emd = request.Emd,
                 FormOfEMD = request.FormOfEMD,
-                BidManagerId = request.BidManagerId,
-                ReviewManagerId = request.ReviewManagerId,
-                ApprovalManagerId = request.ApprovalManagerId,
+                BidManagerId = validBidManagerId,
+                ReviewManagerId = validReviewManagerId,
+                ApprovalManagerId = validApprovalManagerId,
                 ContactPersonAtClient = request.ContactPersonAtClient,
                 DateOfSubmission = request.DateOfSubmission,
                 PercentageChanceOfProjectHappening = request.PercentageChanceOfProjectHappening,
@@ -69,44 +73,47 @@ namespace EDR.Application.CQRS.OpportunityTracking.Handlers
                 DurationOfProject = request.DurationOfProject,
                 FundingStream = request.FundingStream,
                 ContractType = request.ContractType,
-                CreatedBy=_userContext.GetCurrentUserId(),
+                CreatedBy= validCurrentUserId,
                 CreatedAt = currentDateTime,
                 UpdatedAt = currentDateTime
             };
+
+            var initialStatusId = await _repository.GetStatusIdByNameAsync("Initial") ?? 1;
+
             if (entity.ReviewManagerId is not null)
             {
                 histories.Add(new OpportunityHistory
                 {
-                    StatusId = 1,
+                    StatusId = initialStatusId,
                     AssignedToId = entity.ReviewManagerId,
                     Action = "Submitted",
                     Comments= "Submitted",
                     ActionDate = currentDateTime,
-                    ActionBy= currentUser
+                    ActionBy= validCurrentUserId
                 });
             }
             if (entity.ApprovalManagerId is not null)
             {
                 histories.Add(new OpportunityHistory
                 {
-                    StatusId = 1,
+                    StatusId = initialStatusId,
                     AssignedToId = entity.ApprovalManagerId,
                     Action = "Submitted",
                     Comments = "Submitted",
                     ActionDate = currentDateTime,
-                    ActionBy = currentUser
+                    ActionBy = validCurrentUserId
                 });
             }
             if (entity.BidManagerId is not null)
             {
                 histories.Add(new OpportunityHistory
                 {
-                    StatusId = 1,
+                    StatusId = initialStatusId,
                     AssignedToId = entity.BidManagerId,
                     Action = "Submitted",
                     Comments = "Submitted",
                     ActionDate = currentDateTime,
-                    ActionBy = currentUser
+                    ActionBy = validCurrentUserId
                 });
             }
 

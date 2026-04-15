@@ -11,7 +11,7 @@ import {
   Chip
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-// import { BDChips } from '../common/BDChips';
+import { BDChips } from '../common/BDChips';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { OpportunityItemProps } from '../../types';
 import { useState, useEffect } from 'react';

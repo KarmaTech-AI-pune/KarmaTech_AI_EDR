@@ -224,6 +224,10 @@ namespace EDR.Domain.Database
             modelBuilder.Entity<SprintTaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintSubtaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
 
+            modelBuilder.Entity<OpportunityTracking>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<OpportunityStatus>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<Settings>().HasQueryFilter(p => p.TenantId == TenantId);
+
             modelBuilder.Entity<User>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<Role>().HasQueryFilter(role => role.TenantId == TenantId);
             modelBuilder.Entity<Program>().HasQueryFilter(role => role.TenantId == TenantId);
