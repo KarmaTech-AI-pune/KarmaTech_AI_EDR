@@ -8,6 +8,7 @@ using EDR.Application.CQRS.Dashboard.ProgramDashboard.Queries;
 using EDR.Repositories.Interfaces;
 using EDR.Domain.Enums;
 using EDR.Application.Dtos.ProgramDashboard;
+using EDR.Domain.Entities;
 
 namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
 {
@@ -28,8 +29,15 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
             var projectIds = projects.Select(p => p.Id).ToList();
             var allJsf = await _programDashboardRepository.GetJobStartFormsByProjectIdsAsync(projectIds, cancellationToken);
             
-            decimal totalRevenueExpected = projects.Sum(p => p.EstimatedProjectFee ?? 0);
-            decimal currentNpv = totalRevenueExpected;
+            decimal expectedRevenue = projects.Sum(p => (p.EstimatedProjectCost ?? 0) + (p.EstimatedProjectFee ?? 0));
+            
+            var progressReports = await _programDashboardRepository.GetMonthlyProgressesByProjectIdsAsync(projectIds, cancellationToken);
+            decimal actualRevenue = progressReports
+                .SelectMany(mp => (IEnumerable<ProgressDeliverable>?)mp.ProgressDeliverables ?? Array.Empty<ProgressDeliverable>())
+                .Where(pd => pd.PaymentReceivedDate.HasValue)
+                .Sum(pd => pd.PaymentDue ?? 0);
+
+            decimal currentNpv = projects.Sum(p => p.EstimatedProjectFee ?? 0);
 
             // Profitability Categories
             int highProfitCount = 0;
@@ -74,7 +82,7 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
             if (approvalHistoriesCount > 0)
             {
                 double avgDelay = totalApprovalDelayDays / approvalHistoriesCount;
-                decimal estimatedGain = totalRevenueExpected * 0.08m * (decimal)((avgDelay * 0.4) / 365.0);
+                decimal estimatedGain = expectedRevenue * 0.08m * (decimal)((avgDelay * 0.4) / 365.0);
                 whatIf = estimatedGain > 0 
                     ? $"Reducing approval delays by 40% across this program could improve NPV by {estimatedGain:C0}"
                     : "Program approval cycles are within target parameters.";
@@ -83,6 +91,8 @@ namespace EDR.Application.CQRS.Dashboard.ProgramDashboard.Handlers
             return new ProgramNpvDto
             {
                 CurrentNpv = Math.Round(currentNpv, 2),
+                ExpectedRevenue = expectedRevenue,
+                ActualRevenue = actualRevenue,
                 HighProfitProjectsCount = highProfitCount,
                 MediumProfitProjectsCount = mediumProfitCount,
                 LowProfitProjectsCount = lowProfitCount,

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace EDR.Application.Dtos.Dashboard
 {
@@ -15,6 +15,7 @@ namespace EDR.Application.Dtos.Dashboard
         public int BudgetPercentage { get; set; }
         public List<string> Issues { get; set; }
         public string Manager { get; set; }
+        public string ProgramName { get; set; }
     }
 }
 

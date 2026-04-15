@@ -7,6 +7,7 @@ using MediatR;
 using EDR.Application.CQRS.Dashboard.ProjectDashboard.Queries;
 using EDR.Repositories.Interfaces;
 using EDR.Domain.Enums;
+using EDR.Domain.Entities;
 
 namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
 {
@@ -25,10 +26,16 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
             if (project == null) return null;
 
             var allJsf = await _projectDashboardRepository.GetJobStartFormsByProjectIdAsync(request.ProjectId, cancellationToken);
-            var totalRevenueExpected = project.EstimatedProjectFee ?? 0;
+            var expectedRevenue = (project.EstimatedProjectCost ?? 0) + (project.EstimatedProjectFee ?? 0);
+            
+            var progressReports = await _projectDashboardRepository.GetMonthlyProgressesByProjectIdAsync(request.ProjectId, cancellationToken);
+            var actualRevenue = progressReports
+                .SelectMany(mp => mp.ProgressDeliverables ?? new List<ProgressDeliverable>())
+                .Where(pd => pd.PaymentReceivedDate.HasValue)
+                .Sum(pd => pd.PaymentDue ?? 0);
 
             // NPV & What-If Logic
-            decimal currentNpv = totalRevenueExpected;
+            decimal currentNpv = project.EstimatedProjectFee ?? 0;
             double totalApprovalDelayDays = 0;
             int approvalHistoriesCount = 0;
 
@@ -56,7 +63,7 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
             if (approvalHistoriesCount > 0)
             {
                 double avgDelay = totalApprovalDelayDays / approvalHistoriesCount;
-                decimal estimatedGain = totalRevenueExpected * 0.10m * (decimal)((avgDelay * 0.5) / 365.0);
+                decimal estimatedGain = expectedRevenue * 0.10m * (decimal)((avgDelay * 0.5) / 365.0);
                 whatIf = estimatedGain > 0 
                     ? $"If approval delays reduced by 50%, project NPV could increase by {estimatedGain:C0}"
                     : "Approval cycle is efficient; minimal NPV impact projected.";
@@ -65,6 +72,8 @@ namespace EDR.Application.CQRS.Dashboard.ProjectDashboard.Handlers
             return new ProjectNpvDto
             {
                 CurrentNpv = Math.Round(currentNpv, 2),
+                ExpectedRevenue = expectedRevenue,
+                ActualRevenue = actualRevenue,
                 WhatIfAnalysis = whatIf
             };
         }

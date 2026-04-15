@@ -1,12 +1,20 @@
+using System.Collections.Generic;
+
 namespace EDR.Application.Dtos.ProgramDashboard
 {
     public class ProjectAtRiskDto
     {
         public int Id { get; set; }
         public string Project { get; set; }
-        public decimal MilestoneValue { get; set; }
-        public decimal ProfitMargin { get; set; }
-        public string Delay { get; set; }
-        public decimal CriticalResource { get; set; }
+        public string Priority { get; set; }
+        public string Region { get; set; }
+        public string Status { get; set; }
+        public int DelayDays { get; set; }
+        public decimal BudgetSpent { get; set; }
+        public decimal BudgetTotal { get; set; }
+        public int BudgetPercentage { get; set; }
+        public List<string> Issues { get; set; }
+        public string Manager { get; set; }
+        public string ProgramName { get; set; }
     }
 }
