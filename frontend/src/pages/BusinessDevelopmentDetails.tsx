@@ -64,7 +64,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
             {opportunity.workName}
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 3 }}>
-            <BDChips opportunityId={opportunity.id || 0} />
+            {/* BDChips hidden - do not delete */}
+            {/* <BDChips opportunityId={opportunity.id || 0} /> */}
           </Box>
           <Outlet context={{ opportunity, histories, handleOpportunityUpdate }} />
         </Box>
