@@ -622,12 +622,11 @@ const BidPreparationForm: React.FC = () => {
           </Box>
         </Box>
 
-        {/* error alert hidden - do not delete */}
-        {/* {error && (
+        {error && (
           <Alert data-testid="error-alert" severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
-        )} */}
+        )}
 
         <Paper sx={{ mb: 2 }}>
           <Table>

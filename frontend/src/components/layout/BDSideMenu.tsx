@@ -61,12 +61,14 @@ export const BDSideMenu: React.FC = () => {
       title: 'Go/No-Go Decision',
       icon: <AssessmentIcon />,
       path: '/business-development/details/forms/gonogo',
+      disabled: !isOpportunityApproved,
     },
     {
       id: 'bidPrep',
       title: 'Bid Preparation',
       icon: <AssignmentIcon />,
       path: '/business-development/details/forms/bid-preparation',
+      disabled: !(goNoGoDecisionStatus === "GO" && goNoGoVersionNumber === 3),
     },
   ];
 

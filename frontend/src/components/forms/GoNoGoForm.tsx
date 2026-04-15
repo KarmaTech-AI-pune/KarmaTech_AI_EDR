@@ -696,12 +696,11 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
 
   return (
     <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
-      {/* serverError alert hidden - do not delete */}
-      {/* {serverError && (
+      {serverError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setServerError(null)}>
           {serverError}
         </Alert>
-      )} */}
+      )}
       {isLoading && (
         <Typography variant="body1" sx={{ mb: 2 }}>
           Loading...
