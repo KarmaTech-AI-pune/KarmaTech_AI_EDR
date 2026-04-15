@@ -56,6 +56,7 @@ export const BForms: React.FC = () => {
                 variant="contained"
                 fullWidth
                 onClick={() => navigate('/business-development/details/forms/gonogo')}
+                disabled={!isOpportunityApproved}
               >
                 View Form
               </Button>
@@ -76,6 +77,7 @@ export const BForms: React.FC = () => {
                 variant="contained"
                 fullWidth
                 onClick={() => navigate('/business-development/details/forms/bid-preparation')}
+                disabled={!(goNoGoDecisionStatus === "GO" && goNoGoVersionNumber === 3)}
               >
                 View Form
               </Button>

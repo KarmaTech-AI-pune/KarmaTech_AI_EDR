@@ -64,11 +64,9 @@ const BidVersionHistory: React.FC<BidVersionHistoryProps> = ({ versionHistory })
             </TableBody>
           </Table>
         ) : (
-          /* No Data Found alert hidden - do not delete */
-          /* <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
             No Data Found
-          </Alert> */
-          null
+          </Alert>
         )}
       </Paper>
     </Container>

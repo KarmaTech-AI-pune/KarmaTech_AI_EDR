@@ -324,8 +324,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             alignItems: 'center'
           }}>
             <Box>
-              {/* BDChips hidden - do not delete */}
-              {/* <BDChips opportunityId={currentOpportunity.id} /> */}
+              <BDChips opportunityId={currentOpportunity.id} />
             </Box>
           </Box>
         </Box>
