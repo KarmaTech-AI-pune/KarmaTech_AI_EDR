@@ -13,9 +13,7 @@ import {
   Button,
   List,
   ListItem,
-  ListItemText,
   Divider,
-  Paper
 } from '@mui/material';
 import { TaskPriorityItemDto } from '../../services/dashboardService';
 

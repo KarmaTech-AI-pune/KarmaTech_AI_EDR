@@ -65,7 +65,7 @@ const RegionalPortfolio: React.FC<RegionalPortfolioProps> = ({ data }) => {
                   })()}: {(() => {
                     const month = new Date().getMonth() + 1;
                     const quarter = Math.ceil(month / 3);
-                    return region[`q${quarter}` as keyof RegionalData] || 0;
+                    return Number(region[`q${quarter}` as keyof RegionalData]) || 0;
                   })()} projects
                 </Typography>
                 <Typography 

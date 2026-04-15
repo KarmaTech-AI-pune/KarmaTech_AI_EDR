@@ -146,12 +146,12 @@ const DashboardLayout: React.FC = () => {
     totalRevenueChangeType: (totalRevenueExpected?.changeType?.toLowerCase() as any) || 'neutral',
     expectedProfitMargin: {
       value: profitMargin?.expectedProfitMargin || 0,
-      change: parseFloat(profitMargin?.expectedChangeDescription?.split('%')[0]) || 0,
+      change: parseFloat(profitMargin?.expectedChangeDescription?.split('%')[0] ?? '0') || 0,
       changeType: (profitMargin?.expectedChangeType?.toLowerCase() as any) || 'neutral'
     },
     actualProfitMargin: {
       value: profitMargin?.actualProfitMargin || 0,
-      change: parseFloat(profitMargin?.actualChangeDescription?.split('%')[0]) || 0,
+      change: parseFloat(profitMargin?.actualChangeDescription?.split('%')[0] ?? '0') || 0,
       changeType: (profitMargin?.actualChangeType?.toLowerCase() as any) || 'neutral'
     },
     revenueAtRisk: revenueAtRisk?.revenueAtRisk || 0,
@@ -173,7 +173,7 @@ const DashboardLayout: React.FC = () => {
     spent: p.budgetSpent,
     timeline: `${p.budgetPercentage}%`,
     issues: p.issues,
-    programName: p.programName || p.ProgramName || 'General'
+    programName: p.programName || 'General'
   })) || [];
 
   const mappedCashflow: CashflowData[] = monthlyCashflow.map(c => ({
