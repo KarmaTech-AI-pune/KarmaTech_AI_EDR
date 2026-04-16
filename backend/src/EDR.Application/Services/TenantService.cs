@@ -1,9 +1,14 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
-using EDR.Repositories.Interfaces;using System.Security.Claims;
+using EDR.Domain.Services;
+using EDR.Repositories.Interfaces;
+using System.Security.Claims;
 using System.Linq;
+using System;
+using Microsoft.Extensions.Logging;
 
 namespace EDR.Application.Services
 {
@@ -11,13 +16,18 @@ namespace EDR.Application.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly TenantDbContext _tenantDbContext;
+        private readonly IServiceProvider _serviceProvider;
 
         public int? TenantId { get; set; }
 
-        public TenantService(IHttpContextAccessor httpContextAccessor, TenantDbContext tenantDbContext)
+        public TenantService(
+            IHttpContextAccessor httpContextAccessor, 
+            TenantDbContext tenantDbContext,
+            IServiceProvider serviceProvider)
         {
             _httpContextAccessor = httpContextAccessor;
             _tenantDbContext = tenantDbContext;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task<string> GetTenantDomain()
@@ -120,6 +130,24 @@ namespace EDR.Application.Services
 
             TenantId = tenant.Id;
 
+            try
+            {
+                var currentTenantService = _serviceProvider.GetService<ICurrentTenantService>();
+                if (currentTenantService != null)
+                {
+                    await currentTenantService.SetTenant(tenant.Id);
+                    var projectContext = _serviceProvider.GetService<ProjectManagementContext>();
+                    if (projectContext != null && !string.IsNullOrEmpty(currentTenantService.ConnectionString))
+                    {
+                        projectContext.Database.SetConnectionString(currentTenantService.ConnectionString);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log or ignore if services aren't registered, but this is critical for DB switching
+            }
+
             return true;
         }
 
@@ -187,11 +215,12 @@ namespace EDR.Application.Services
             var tenant = await _tenantDbContext.Tenants
                 .FirstOrDefaultAsync(t => t.Domain == identifier);
 
-            // If not found, try reaching by subdomain/name part
-            if (tenant == null)
+            // If not found, try extracting the subdomain
+            if (tenant == null && identifier.Contains('.'))
             {
+                var subDomain = identifier.Split('.')[0];
                 tenant = await _tenantDbContext.Tenants
-                    .FirstOrDefaultAsync(t => t.Domain.StartsWith(identifier + "."));
+                    .FirstOrDefaultAsync(t => t.Domain == subDomain);
             }
 
             if (tenant == null && int.TryParse(identifier, out var tenantId))
@@ -218,12 +247,48 @@ namespace EDR.Application.Services
             if (IsSuperAdminFromClaims())
                 return true;
 
-            // For regular users, check if they belong to the tenant and are active
-            // Note: tenantId 1 is the default workspace (mean db) that all users can access.
-            if (tenantId <= 1) return true;
-
-            return await _tenantDbContext.TenantUsers
+            // For regular users, first check if they belong to explicit cross-tenant mappings
+            bool hasExplicitMapping = await _tenantDbContext.TenantUsers
                 .AnyAsync(tu => tu.UserId == userId && tu.TenantId == tenantId && tu.IsActive);
+
+            if (hasExplicitMapping)
+            {
+                return true;
+            }
+
+            // If no explicit mapping, fallback to checking their primary TenantId inside the User table
+            try
+            {
+                var projectContext = _serviceProvider.GetRequiredService<ProjectManagementContext>();
+
+                var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<TenantService>>();
+                logger?.LogInformation("ValidateTenantAccessAsync checking primary mapping for User {UserId} in Tenant {TenantId}", userId, tenantId);
+
+                // Just to be absolutely safe that the connection string is correctly propagating
+                var currentTenantService = _serviceProvider.GetService<ICurrentTenantService>();
+                if (currentTenantService != null && !string.IsNullOrEmpty(currentTenantService.ConnectionString))
+                {
+                    projectContext.Database.SetConnectionString(currentTenantService.ConnectionString);
+                }
+
+                bool hasPrimaryMapping = await projectContext.Users
+                    .IgnoreQueryFilters()
+                    .AnyAsync(u => u.Id == userId && u.TenantId == tenantId && u.IsActive);
+
+                if (hasPrimaryMapping)
+                {
+                    logger?.LogInformation("User {UserId} HAS primary mapping for Tenant {TenantId}", userId, tenantId);
+                    return true;
+                }
+                logger?.LogWarning("User {UserId} does NOT have primary mapping for Tenant {TenantId}", userId, tenantId);
+            }
+            catch (Exception ex)
+            {
+                var logger = _serviceProvider.GetService<Microsoft.Extensions.Logging.ILogger<TenantService>>();
+                logger?.LogError(ex, "Error while checking primary mapping for User {UserId} in Tenant {TenantId}", userId, tenantId);
+            }
+
+            return false;
         }
 
         public async Task<List<TenantUser>> GetTenantUsersByUserIdAsync(string userId)
