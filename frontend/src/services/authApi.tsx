@@ -8,7 +8,7 @@ interface DecodedToken {
   sub: string;
   email: string;
   'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': string;
-  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': string | string[];
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': string;
   Permissions: [];
   exp: number;
   iss: string;
@@ -47,33 +47,9 @@ export const authApi = {
 
         // Decode token and store user data
         const decodedToken = jwtDecode<DecodedToken>(token);
-        
-        // JWT role claim is a string when 1 role, array when multiple roles
-        const rawRole = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-        const roleNames: string[] = Array.isArray(rawRole)
-          ? rawRole
-          : rawRole
-          ? [rawRole]
-          : [];
-
+        const role = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
         const permissions = decodedToken.Permissions;
         const temp = normalizePermissions(permissions);
-        const mappedPermissions = temp.map(p => PermissionType[p as keyof typeof PermissionType]);
-
-        // Build one role object per role name
-        const rolesArray = roleNames.map(roleName => ({
-          id: roleName,
-          name: roleName,
-          permissions: mappedPermissions
-        }));
-
-        // roleDetails reflects the union of all roles/permissions
-        const primaryRole = roleNames[0] || '';
-        const roleDetails = {
-          id: primaryRole,
-          name: primaryRole,
-          permissions: mappedPermissions
-        };
 
         // Create user with role details
         const userWithRole: UserWithRole = {
@@ -82,8 +58,16 @@ export const authApi = {
           name: decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
           email: decodedToken.email,
           avatar: response.data.user.avatar,
-          roles: rolesArray,
-          roleDetails: roleDetails,
+          roles: [{
+            id: role,
+            name: role,
+            permissions: temp.map(p => PermissionType[p as keyof typeof PermissionType])
+          }],
+          roleDetails: {
+            id: role,
+            name: role,
+            permissions: temp.map(p => PermissionType[p as keyof typeof PermissionType])
+          },
           standardRate: response.data.user.standardRate,
           isConsultant: response.data.user.isConsultant,
           createdAt: response.data.user.createdAt,
