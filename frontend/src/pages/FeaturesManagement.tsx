@@ -61,26 +61,28 @@ const FeaturesManagement: React.FC = () => {
     }
   };
 
-  // Filter features based on search and status
+  // Filter and sort features based on search and status
   const filteredFeatures = useMemo(() => {
-    return features.filter(feature => {
-      // Null-safe search - handle undefined/null values
-      const featureName = feature.name?.toLowerCase() || '';
-      const featureDescription = feature.description?.toLowerCase() || '';
-      const search = debouncedSearchTerm.toLowerCase().trim();
-      
-      const matchesSearch = 
-        search === '' || // If search is empty, show all
-        featureName.includes(search) ||
-        featureDescription.includes(search);
-      
-      const matchesStatus = 
-        statusFilter === 'all' ||
-        (statusFilter === 'active' && feature.isActive) ||
-        (statusFilter === 'inactive' && !feature.isActive);
-      
-      return matchesSearch && matchesStatus;
-    });
+    return features
+      .filter(feature => {
+        // Null-safe search - handle undefined/null values
+        const featureName = feature.name?.toLowerCase() || '';
+        const featureDescription = feature.description?.toLowerCase() || '';
+        const search = debouncedSearchTerm.toLowerCase().trim();
+        
+        const matchesSearch = 
+          search === '' || // If search is empty, show all
+          featureName.includes(search) ||
+          featureDescription.includes(search);
+        
+        const matchesStatus = 
+          statusFilter === 'all' ||
+          (statusFilter === 'active' && feature.isActive) ||
+          (statusFilter === 'inactive' && !feature.isActive);
+        
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => a.id - b.id); // Sort by ID in ascending order
   }, [features, debouncedSearchTerm, statusFilter]);
 
   // Handle add feature
