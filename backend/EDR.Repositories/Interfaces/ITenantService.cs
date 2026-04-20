@@ -1,8 +1,15 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using EDR.Domain.Entities;
 
 namespace EDR.Repositories.Interfaces
 {
+    public enum TenantAccessResult
+    {
+        Success,
+        NoMapping,
+        UserInactive
+    }
+
     public interface ITenantService
     {
         int? TenantId { get; set; }
@@ -22,7 +29,7 @@ namespace EDR.Repositories.Interfaces
         // Tenant validation and management
         Task<Tenant?> GetTenantByIdentifierAsync(string identifier);
         Task<Tenant> GetCurrentTenantAsync();
-        Task<bool> ValidateTenantAccessAsync(string userId, int tenantId);
+        Task<TenantAccessResult> ValidateTenantAccessAsync(string userId, int tenantId);
         Task<List<TenantUser>> GetTenantUsersByUserIdAsync(string userId);
     }
 }

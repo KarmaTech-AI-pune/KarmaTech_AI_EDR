@@ -85,6 +85,7 @@ export type LoginResponse = {
   message: string;
   token?: string;
   user?: UserWithRole;
+  errorCode?: string;
 }
 
 

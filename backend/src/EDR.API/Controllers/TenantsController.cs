@@ -1,15 +1,17 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EDR.Application.Services.IContract;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
 using EDR.Domain.Services;
+using EDR.Domain.Events;
 using MediatR;
 using Microsoft.Data.SqlClient;
 using EDR.Application.CQRS.Tenants.Queries;
 using EDR.Application.Dtos;
 using EDR.API.Strategies;
+using System.Security.Claims;
 
 namespace EDR.API.Controllers
 {
@@ -29,6 +31,7 @@ namespace EDR.API.Controllers
         private readonly ITenantUserMigrationStrategySelector _tenantUserMigrationStrategySelector;
         private readonly IConfiguration _configuration;
         private readonly IMediator _mediator;
+        private readonly IAuditService _auditService;
 
         public TenantsController(
             ProjectManagementContext context,
@@ -41,7 +44,8 @@ namespace EDR.API.Controllers
             IConfiguration configuration,
             IMediator mediator,
             ILogger<TenantsController> logger,
-            ITenantUserMigrationStrategySelector tenantUserMigrationStrategySelector)
+            ITenantUserMigrationStrategySelector tenantUserMigrationStrategySelector,
+            IAuditService auditService)
         {
             _context = context;
             _dnsService = dnsService;
@@ -54,6 +58,7 @@ namespace EDR.API.Controllers
             _mediator = mediator;
             _logger = logger;
             _tenantUserMigrationStrategySelector = tenantUserMigrationStrategySelector;
+            _auditService = auditService;
         }
 
         // GET: api/tenants
@@ -681,6 +686,7 @@ namespace EDR.API.Controllers
 
         // PUT: api/tenants/users/{tenantUserId}
         [HttpPut("users/{tenantUserId}")]
+        [Authorize(Roles = "Admin,TenantAdmin")]
         public async Task<ActionResult<object>> UpdateTenantUser(int tenantUserId,
             [FromBody] UpdateTenantUserRequest request)
         {
@@ -689,6 +695,9 @@ namespace EDR.API.Controllers
             {
                 return NotFound("Tenant user not found");
             }
+
+            var oldIsActive = tenantUser.IsActive;
+            var oldRole = tenantUser.Role;
 
             if (request.Role.HasValue)
             {
@@ -702,10 +711,121 @@ namespace EDR.API.Controllers
 
             await _tenantDbContext.SaveChangesAsync();
 
+            // Log audit event if IsActive changed
+            if (oldIsActive != tenantUser.IsActive)
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown";
+                var action = tenantUser.IsActive ? "UserActivated" : "UserDeactivated";
+                
+                var auditEvent = new AuditEvent(
+                    "TenantUser",
+                    action,
+                    tenantUserId.ToString(),
+                    $"{{IsActive: {oldIsActive}}}",
+                    $"{{IsActive: {tenantUser.IsActive}}}",
+                    userId,
+                    DateTime.UtcNow,
+                    null,
+                    HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Request.Headers["User-Agent"].ToString()
+                );
+                
+                await _auditService.LogAuditAsync(auditEvent);
+                _logger.LogInformation("User {UserId} {Action} for tenant user {TenantUserId}", userId, action, tenantUserId);
+            }
+
             _logger.LogInformation("Updated tenant user {TenantUserId} with role {Role} and active status {IsActive}",
                 tenantUserId, tenantUser.Role, tenantUser.IsActive);
 
             return Ok(tenantUser);
+        }
+
+        // POST: api/tenants/{tenantId}/users/{userId}/deactivate
+        [HttpPost("{tenantId}/users/{userId}/deactivate")]
+        [Authorize(Roles = "Admin,TenantAdmin")]
+        public async Task<ActionResult<object>> DeactivateUserForTenant(int tenantId, string userId, [FromBody] DeactivateUserRequest? request)
+        {
+            var tenantUser = await _tenantDbContext.TenantUsers
+                .FirstOrDefaultAsync(tu => tu.TenantId == tenantId && tu.UserId == userId);
+
+            if (tenantUser == null)
+            {
+                return NotFound(new { message = "User not found in this tenant" });
+            }
+
+            if (!tenantUser.IsActive)
+            {
+                return BadRequest(new { message = "User is already inactive" });
+            }
+
+            tenantUser.IsActive = false;
+            await _tenantDbContext.SaveChangesAsync();
+
+            // Log audit event
+            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown";
+            var auditEvent = new AuditEvent(
+                "TenantUser",
+                "UserDeactivated",
+                tenantUser.Id.ToString(),
+                $"{{TenantId: {tenantId}, UserId: '{userId}', IsActive: true}}",
+                $"{{TenantId: {tenantId}, UserId: '{userId}', IsActive: false}}",
+                adminId,
+                DateTime.UtcNow,
+                request?.Reason,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers["User-Agent"].ToString()
+            );
+
+            await _auditService.LogAuditAsync(auditEvent);
+
+            _logger.LogInformation("User {UserId} deactivated user {TargetUserId} for tenant {TenantId}. Reason: {Reason}",
+                adminId, userId, tenantId, request?.Reason ?? "No reason provided");
+
+            return Ok(new { success = true, message = "User has been deactivated", tenantUser });
+        }
+
+        // POST: api/tenants/{tenantId}/users/{userId}/activate
+        [HttpPost("{tenantId}/users/{userId}/activate")]
+        [Authorize(Roles = "Admin,TenantAdmin")]
+        public async Task<ActionResult<object>> ActivateUserForTenant(int tenantId, string userId)
+        {
+            var tenantUser = await _tenantDbContext.TenantUsers
+                .FirstOrDefaultAsync(tu => tu.TenantId == tenantId && tu.UserId == userId);
+
+            if (tenantUser == null)
+            {
+                return NotFound(new { message = "User not found in this tenant" });
+            }
+
+            if (tenantUser.IsActive)
+            {
+                return BadRequest(new { message = "User is already active" });
+            }
+
+            tenantUser.IsActive = true;
+            await _tenantDbContext.SaveChangesAsync();
+
+            // Log audit event
+            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown";
+            var auditEvent = new AuditEvent(
+                "TenantUser",
+                "UserActivated",
+                tenantUser.Id.ToString(),
+                $"{{TenantId: {tenantId}, UserId: '{userId}', IsActive: false}}",
+                $"{{TenantId: {tenantId}, UserId: '{userId}', IsActive: true}}",
+                adminId,
+                DateTime.UtcNow,
+                null,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers["User-Agent"].ToString()
+            );
+
+            await _auditService.LogAuditAsync(auditEvent);
+
+            _logger.LogInformation("User {UserId} activated user {TargetUserId} for tenant {TenantId}",
+                adminId, userId, tenantId);
+
+            return Ok(new { success = true, message = "User has been activated", tenantUser });
         }
 
         // DELETE: api/tenants/users/{tenantUserId}
@@ -794,6 +914,11 @@ namespace EDR.API.Controllers
         public string UserId { get; set; } = string.Empty;
         public TenantUserRole Role { get; set; }
         public bool IsActive { get; set; } = true;
+    }
+
+    public class DeactivateUserRequest
+    {
+        public string? Reason { get; set; }
     }
 
     public class UpdateTenantUserRequest

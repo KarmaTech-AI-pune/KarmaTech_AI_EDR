@@ -164,7 +164,21 @@ namespace EDR.API.Controllers
                     });
                 }
 
-                return Unauthorized(new { success = false, message = authResult.Message ?? "Invalid credentials" });
+                string errorCode = "INVALID_CREDENTIALS";
+                if (authResult.ResultType == AuthResultType.UserInactive)
+                {
+                    errorCode = "USER_ACCOUNT_INACTIVE";
+                }
+                else if (authResult.ResultType == AuthResultType.TenantInactive)
+                {
+                    errorCode = "TENANT_BLOCKED";
+                }
+                else if (authResult.ResultType == AuthResultType.NoTenantMapping)
+                {
+                    errorCode = "USER_NOT_ASSIGNED_TO_TENANT";
+                }
+
+                return Unauthorized(new { success = false, message = authResult.Message ?? "Invalid credentials", errorCode = errorCode });
             }
             catch (Exception ex)
             {

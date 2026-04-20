@@ -1,4 +1,4 @@
-﻿using EDR.Domain.Services;
+using EDR.Domain.Services;
 using EDR.Repositories.Interfaces;
 
 namespace EDR.API.Middleware;
@@ -34,25 +34,28 @@ public class TenantMiddleware
                 var tenantId = tenantResolver.GetTenantIdFromClaims();
                 if (tenantId.HasValue)
                 {
-                    var tenant = await tenantResolver.GetTenantByIdentifierAsync(tenantId.Value.ToString());
-                    var isSuperAdmin = tenantResolver.IsSuperAdminFromClaims();
-
-                    // 1. Check if tenant is blocked (only for non-super admins)
-                    if (!isSuperAdmin && tenant != null && tenant.IsBlocked)
+                    // 1. Establish tenant context first (sets connection string for further checks)
+                    var tenantSet = await currentTenantService.SetTenant(tenantId.Value);
+                    if (!tenantSet)
                     {
-                        _logger.LogWarning("Access blocked for tenant {TenantId} ({TenantName}). Reason: {Reason}", 
-                            tenant.Id, tenant.Name, tenant.BlockReason);
+                        var tenantInfo = await tenantResolver.GetTenantByIdentifierAsync(tenantId.Value.ToString());
+                        string reason = tenantInfo?.IsBlocked == true ? "Tenant is blocked: " + tenantInfo.BlockReason : "Tenant not found or database not configured.";
+                        
+                        _logger.LogWarning("Failed to set tenant context for TenantId: {TenantId}. Reason: {Reason}", tenantId.Value, reason);
                         
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                        context.Response.ContentType = "application/json";
                         await context.Response.WriteAsJsonAsync(new 
                         { 
                             success = false, 
-                            message = tenant.BlockReason,
-                            errorCode = tenant.BlockErrorCode
+                            message = "Access denied: " + reason,
+                            errorCode = "TENANT_CONTEXT_ERROR"
                         });
                         return;
                     }
+
+                    _logger.LogInformation("Tenant context established for TenantId: {TenantId}", tenantId.Value);
+
+                    var isSuperAdmin = tenantResolver.IsSuperAdminFromClaims();
 
                     // 2. Validate if user has active access to this tenant (only for non-super admins)
                     if (!isSuperAdmin)
@@ -62,25 +65,41 @@ public class TenantMiddleware
 
                         if (!string.IsNullOrEmpty(userId))
                         {
-                            var hasAccess = await tenantResolver.ValidateTenantAccessAsync(userId, tenantId.Value);
-                            if (!hasAccess)
+                            var accessResult = await tenantResolver.ValidateTenantAccessAsync(userId, tenantId.Value);
+                            if (accessResult != TenantAccessResult.Success)
                             {
-                                _logger.LogWarning("User {UserId} attempted to access tenant {TenantId} but is inactive or has no mapping.", userId, tenantId.Value);
+                                string message = "Access denied.";
+                                string errorCode = "USER_ACCESS_DENIED";
+
+                                if (accessResult == TenantAccessResult.UserInactive)
+                                {
+                                    message = "Your account for this tenant has been deactivated. Please contact your administrator.";
+                                    errorCode = "USER_ACCOUNT_INACTIVE";
+                                }
+                                else if (accessResult == TenantAccessResult.NoMapping)
+                                {
+                                    message = "Access denied: You are not assigned to this tenant.";
+                                    errorCode = "USER_NOT_ASSIGNED_TO_TENANT";
+                                }
+
+                                _logger.LogWarning("ACCESS DENIED ({ErrorCode}): User {UserId} for Tenant {TenantId}", errorCode, userId, tenantId.Value);
+                                
                                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
                                 context.Response.ContentType = "application/json";
                                 await context.Response.WriteAsJsonAsync(new 
                                 { 
                                     success = false, 
-                                    message = "Your account is inactive for this tenant. Please contact your administrator.",
-                                    errorCode = "USER_INACTIVE_FOR_TENANT"
+                                    message = message,
+                                    errorCode = errorCode
                                 });
                                 return;
                             }
                         }
                     }
-
-                    await currentTenantService.SetTenant(tenantId.Value);
-                    _logger.LogInformation("Tenant context set for request. TenantId: {TenantId}", tenantId.Value);
+                }
+                else
+                {
+                    _logger.LogWarning("No TenantId claim found for authenticated user.");
                 }
             }
 
