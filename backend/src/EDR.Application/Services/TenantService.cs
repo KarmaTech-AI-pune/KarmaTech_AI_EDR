@@ -248,8 +248,28 @@ namespace EDR.Application.Services
                 return TenantAccessResult.Success;
 
             // For regular users, first check if they belong to explicit cross-tenant mappings
+            // Use robust lookup to handle potential ID mismatches (ID vs Email)
             var explicitMapping = await _tenantDbContext.TenantUsers
-                .FirstOrDefaultAsync(tu => tu.UserId == userId && tu.TenantId == tenantId);
+                .Include(tu => tu.User)
+                .FirstOrDefaultAsync(tu => (tu.UserId == userId || (tu.User != null && tu.User.Id == userId)) && tu.TenantId == tenantId);
+
+            // Fallback for email-based mapping if ID match fails
+            if (explicitMapping == null)
+            {
+                try
+                {
+                    var pmContext = _serviceProvider.GetRequiredService<ProjectManagementContext>();
+                    var user = await pmContext.Users.FindAsync(userId);
+                    if (user != null && !string.IsNullOrEmpty(user.Email))
+                    {
+                        var email = user.Email.ToLower();
+                        explicitMapping = await _tenantDbContext.TenantUsers
+                            .Include(tu => tu.User)
+                            .FirstOrDefaultAsync(tu => tu.TenantId == tenantId && tu.User.Email.ToLower() == email);
+                    }
+                }
+                catch { /* Ignore and fallback */ }
+            }
 
             if (explicitMapping != null)
             {
@@ -283,6 +303,8 @@ namespace EDR.Application.Services
 
                 if (primaryUser != null)
                 {
+                    // User is a primary user for this tenant. 
+                    // If no record exists in TenantUsers table, we fallback to the user's primary activity status.
                     if (primaryUser.IsActive)
                     {
                         logger?.LogInformation("ValidateTenantAccessAsync: SUCCESS - User {UserId} has primary mapping for Tenant {TenantId}", userId, tenantId);
@@ -308,10 +330,42 @@ namespace EDR.Application.Services
 
         public async Task<List<TenantUser>> GetTenantUsersByUserIdAsync(string userId)
         {
-            return await _tenantDbContext.TenantUsers
+            if (string.IsNullOrEmpty(userId))
+                return new List<TenantUser>();
+
+            // Try to find by direct UserId (string match)
+            var mappings = await _tenantDbContext.TenantUsers
                 .Where(tu => tu.UserId.ToLower() == userId.ToLower())
                 .Include(tu => tu.Tenant)
+                .Include(tu => tu.User)
                 .ToListAsync();
+
+            if (mappings.Any())
+                return mappings;
+
+            // Fallback: If no direct ID match, find the user's email from ProjectManagementContext 
+            // and try to find mappings in TenantUsers that are linked to a user with that email.
+            // This handles cases where UserId GUIDs might be inconsistent.
+            try
+            {
+                var pmContext = _serviceProvider.GetRequiredService<ProjectManagementContext>();
+                var user = await pmContext.Users.FindAsync(userId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    var email = user.Email.ToLower();
+                    return await _tenantDbContext.TenantUsers
+                        .Include(tu => tu.Tenant)
+                        .Include(tu => tu.User)
+                        .Where(tu => tu.User.Email.ToLower() == email)
+                        .ToListAsync();
+                }
+            }
+            catch
+            {
+                // Fallback to empty if anything fails
+            }
+
+            return new List<TenantUser>();
         }
     }
 }

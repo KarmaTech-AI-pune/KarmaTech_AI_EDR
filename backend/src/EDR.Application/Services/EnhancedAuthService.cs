@@ -121,6 +121,7 @@ namespace EDR.Application.Services
 
                 // Check User-Tenant Mapping & Activity
                 var mapping = userTenants?.FirstOrDefault(t => t.TenantId == currentTenantId.Value);
+                
                 bool hasAccess = false;
                 bool isActive = false;
                 TenantUserRole? tenantRole = null;
@@ -128,15 +129,20 @@ namespace EDR.Application.Services
                 if (mapping != null)
                 {
                     hasAccess = true;
-                    isActive = mapping.IsActive;
+                    isActive = mapping.IsActive; // Authority is the TenantUsers mapping table
                     tenantRole = mapping.Role;
+                    
+                    _logger.LogInformation("Resolved mapping for User {UserId} in Tenant {TenantId}. IsActive: {IsActive}", user.Id, currentTenantId, isActive);
                 }
                 else if (user.TenantId == currentTenantId.Value)
                 {
-                    // This is a primary user, so they have access, but we still need to check their global active status
+                    // This is a primary user for this tenant. 
+                    // Fallback to the User table status if no explicit mapping exists in TenantUsers.
                     hasAccess = true;
                     isActive = user.IsActive; 
-                    tenantRole = TenantUserRole.User; 
+                    tenantRole = TenantUserRole.User;
+                    
+                    _logger.LogInformation("User {UserId} is a primary user for Tenant {TenantId}. Falling back to global IsActive: {IsActive}", user.Id, currentTenantId, isActive);
                 }
 
                 if (!hasAccess)
