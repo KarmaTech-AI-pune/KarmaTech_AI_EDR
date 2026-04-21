@@ -6,7 +6,7 @@ import {
 } from '../models/opportunityTrackingModel';
 import { OpportunityHistory } from '../models/opportunityHistoryModel';
 
-type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E';
+type OpportunityStage = 'EOI' | 'Shortlisted' | 'Proposal' | 'Awarded' | 'Lost';
 type OpportunityTrackingStatus = 
   'Bid Under Preparation' | 
   'Bid Submitted' | 
@@ -61,35 +61,35 @@ export interface BackendOpportunityTracking {
 // Mapping functions to convert frontend types to backend numeric values
 const mapStageToBackend = (stage: OpportunityStage | undefined): number => {
   switch (stage) {
-    case 'A':
+    case 'EOI':
       return 1;
-    case 'B':
+    case 'Shortlisted':
       return 2;
-    case 'C':
+    case 'Proposal':
       return 3;
-    case 'D':
+    case 'Awarded':
       return 4;
-    case 'E':
+    case 'Lost':
       return 5;
     default:
-      return 1; // Default to A
+      return 1; // Default to EOI
   }
 };
 
 const mapStageFromBackend = (stage: number): OpportunityStage => {
   switch (stage) {
     case 1:
-      return 'A';
+      return 'EOI';
     case 2:
-      return 'B';
+      return 'Shortlisted';
     case 3:
-      return 'C';
+      return 'Proposal';
     case 4:
-      return 'D';
+      return 'Awarded';
     case 5:
-      return 'E';
+      return 'Lost';
     default:
-      return 'A'; // Default to A
+      return 'EOI'; // Default to EOI
   }
 };
 
@@ -141,7 +141,7 @@ export const opportunityApi = {
 
       // Prepare the opportunity object with default values and convert to backend model
       const command: BackendOpportunityTracking = {
-        stage: mapStageToBackend(preparedData.stage as OpportunityStage || 'A'),
+        stage: mapStageToBackend(preparedData.stage as OpportunityStage || 'EOI'),
         strategicRanking: preparedData.strategicRanking || 'M',
         bidManagerId: preparedData.bidManagerId,
         approvalManagerId: preparedData.approvalManagerId|| undefined,
@@ -214,7 +214,7 @@ export const opportunityApi = {
       // Prepare the opportunity object with default values and convert to backend model
       const command: BackendOpportunityTracking = {
         id: opportunityId,
-        stage: mapStageToBackend(preparedData.stage as OpportunityStage || 'A'),
+        stage: mapStageToBackend(preparedData.stage as OpportunityStage || 'EOI'),
         strategicRanking: preparedData.strategicRanking || 'M',
         bidManagerId: preparedData.bidManagerId,
         approvalManagerId: preparedData.approvalManagerId|| undefined,
