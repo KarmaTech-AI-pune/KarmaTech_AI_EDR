@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -94,14 +94,19 @@ namespace EDR.Domain.Services
                 }
 
                 var tenantDb = await _context.TenantDatabases.Where(x => x.TenantId == tenantInfo.Id).FirstOrDefaultAsync();
+                
+                _tenantId = tenant;
+
                 if (tenantDb == null)
                 {
-                    _logger.LogWarning("No database configuration found for tenant: {TenantId}", tenant);
-                    return false;
+                    _logger.LogInformation("No explicit database configuration found for tenant {TenantId}. Falling back to default 'AppDbConnection'.", tenant);
+                    _connectionString = _configuration.GetConnectionString("AppDbConnection");
                 }
-
-                _tenantId = tenant;
-                _connectionString = tenantDb.ConnectionString;
+                else
+                {
+                    _logger.LogInformation("Using specific database configuration for tenant {TenantId}", tenant);
+                    _connectionString = tenantDb.ConnectionString;
+                }
                 
                 var httpContext = _httpContextAccessor.HttpContext;
                 if (httpContext != null)

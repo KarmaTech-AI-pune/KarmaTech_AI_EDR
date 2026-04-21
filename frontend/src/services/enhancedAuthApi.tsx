@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { LoginResponse, UserWithRole } from '../types';
 import { Credentials } from '../types/auth';
@@ -124,7 +124,8 @@ export const enhancedAuthApi = {
     } catch (error: any) {
       return {
         success: false,
-        message: error.response?.data?.message || 'An error occurred during login'
+        message: error.response?.data?.message || 'An error occurred during login',
+        errorCode: error.response?.data?.errorCode
       };
     }
   },

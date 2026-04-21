@@ -66,7 +66,7 @@ export const EnhancedLoginScreen: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    
+
     const { setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
     const navigation = useAppNavigation();
 
@@ -104,6 +104,23 @@ export const EnhancedLoginScreen: React.FC = () => {
         setError('');
     };
 
+    const getFriendlyErrorMessage = (result: any) => {
+        if (!result.errorCode) return result.message || 'Invalid credentials or access denied';
+
+        switch (result.errorCode) {
+            case 'USER_ACCOUNT_INACTIVE':
+                return 'Your account is currently inactive. Please contact your system administrator.';
+            case 'TENANT_BLOCKED':
+                return 'This tenant space is currently suspended or blocked. Please contact support.';
+            case 'USER_NOT_ASSIGNED_TO_TENANT':
+                return 'You do not have access to this tenant. Please request assignment from the tenant administrator.';
+            case 'INVALID_CREDENTIALS':
+                return 'Invalid email or password. Please try again.';
+            default:
+                return result.message || 'Login failed. Please try again.';
+        }
+    };
+
     const handleSuperAdminLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -119,7 +136,7 @@ export const EnhancedLoginScreen: React.FC = () => {
                 setIsAuthenticated(true);
                 navigation.navigateToHome();
             } else {
-                setError(result.message || 'Invalid credentials');
+                setError(getFriendlyErrorMessage(result));
             }
         } catch (err) {
             console.error('Super admin login error:', err);
@@ -146,7 +163,7 @@ export const EnhancedLoginScreen: React.FC = () => {
                 //window.location.href = `http://${selectedTenant}.localhost:5000`;
                 navigation.navigateToHome();
             } else {
-                setError(result.message || 'Invalid credentials or tenant access denied');
+                setError(getFriendlyErrorMessage(result));
             }
         } catch (err) {
             console.error('Tenant login error:', err);
@@ -160,12 +177,12 @@ export const EnhancedLoginScreen: React.FC = () => {
         const testUser = testUsers[userType];
         setEmail(testUser.email);
         setPassword(testUser.password);
-        
+
         if (tabValue === 0) {
             // Super admin login
             const credentials: Credentials = { email: testUser.email, password: testUser.password };
             const result = await enhancedAuthApi.superAdminLogin(credentials);
-            
+
             if (result.success && result.token && result.user) {
                 setUser(result.user);
                 setIsAuthenticated(true);
@@ -177,7 +194,7 @@ export const EnhancedLoginScreen: React.FC = () => {
             // Tenant login
             const credentials: Credentials = { email: testUser.email, password: testUser.password };
             const result = await enhancedAuthApi.tenantLogin(credentials, selectedTenant);
-            
+
             if (result.success && result.token && result.user) {
                 setUser(result.user);
                 setIsAuthenticated(true);
@@ -323,7 +340,7 @@ export const EnhancedLoginScreen: React.FC = () => {
                         </form>
 
                         <Divider sx={{ my: 2 }} />
-                        
+
                         <Typography variant="subtitle2" gutterBottom>
                             Quick Test Login:
                         </Typography>
@@ -366,36 +383,36 @@ export const EnhancedLoginScreen: React.FC = () => {
                                         return tenant ? tenant.name : selected;
                                     }}
                                 >
-                                {isLoadingTenants ? (
-                                    <MenuItem disabled value="">
-                                        <CircularProgress size={20} sx={{ mr: 1 }} />
-                                        Loading tenants...
-                                    </MenuItem>
-                                ) : availableTenants.length === 0 ? (
-                                    <MenuItem disabled value="">No tenants available</MenuItem>
-                                ) : (
-                                    availableTenants.map((tenant) => (
-                                        <MenuItem key={tenant.id} value={tenant.domain}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                                                <Chip 
-                                                    label={tenant.status === 0 ? 'Active' : 'Inactive'} 
-                                                    color={tenant.status === 0 ? 'success' : 'error'} 
-                                                    size="small" 
-                                                    sx={{ mr: 1 }}
-                                                />
-                                                <Box sx={{ flexGrow: 1 }}>
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                                        {tenant.name}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="textSecondary">
-                                                        {tenant.domain}.localhost
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
+                                    {isLoadingTenants ? (
+                                        <MenuItem disabled value="">
+                                            <CircularProgress size={20} sx={{ mr: 1 }} />
+                                            Loading tenants...
                                         </MenuItem>
-                                    ))
-                                )}
-                            </Select>
+                                    ) : availableTenants.length === 0 ? (
+                                        <MenuItem disabled value="">No tenants available</MenuItem>
+                                    ) : (
+                                        availableTenants.map((tenant) => (
+                                            <MenuItem key={tenant.id} value={tenant.domain}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                                    <Chip
+                                                        label={tenant.status === 0 ? 'Active' : 'Inactive'}
+                                                        color={tenant.status === 0 ? 'success' : 'error'}
+                                                        size="small"
+                                                        sx={{ mr: 1 }}
+                                                    />
+                                                    <Box sx={{ flexGrow: 1 }}>
+                                                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                                            {tenant.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="textSecondary">
+                                                            {tenant.domain}.localhost
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </MenuItem>
+                                        ))
+                                    )}
+                                </Select>
                             </FormControl>
                             <Button
                                 variant="outlined"
@@ -432,11 +449,11 @@ export const EnhancedLoginScreen: React.FC = () => {
                                                 <strong>Domain:</strong> {tenant.domain}.localhost
                                             </Typography>
                                             <Typography variant="body2">
-                                                <strong>Status:</strong> 
-                                                <Chip 
-                                                    label={tenant.status === 0 ? 'Active' : 'Inactive'} 
-                                                    color={tenant.status === 0 ? 'success' : 'error'} 
-                                                    size="small" 
+                                                <strong>Status:</strong>
+                                                <Chip
+                                                    label={tenant.status === 0 ? 'Active' : 'Inactive'}
+                                                    color={tenant.status === 0 ? 'success' : 'error'}
+                                                    size="small"
                                                     sx={{ ml: 1 }}
                                                 />
                                             </Typography>
@@ -502,7 +519,7 @@ export const EnhancedLoginScreen: React.FC = () => {
                         </form>
 
                         <Divider sx={{ my: 2 }} />
-                        
+
                         <Typography variant="subtitle2" gutterBottom>
                             Quick Test Logins:
                         </Typography>
@@ -556,9 +573,9 @@ export const EnhancedLoginScreen: React.FC = () => {
                         Testing Information
                     </Typography>
                     <Typography variant="body2" color="textSecondary">
-                        <strong>Super Admin:</strong> Can access admin panel at localhost:5173/admin<br/>
-                        <strong>Tenant Users:</strong> Will be redirected to tenant-specific subdomains<br/>
-                        <strong>Data Isolation:</strong> Each tenant has separate data and user access<br/>
+                        <strong>Super Admin:</strong> Can access admin panel at localhost:5173/admin<br />
+                        <strong>Tenant Users:</strong> Will be redirected to tenant-specific subdomains<br />
+                        <strong>Data Isolation:</strong> Each tenant has separate data and user access<br />
                         <strong>Hosts File:</strong> Ensure tenant1.localhost, tenant2.localhost, etc. are configured
                     </Typography>
                 </CardContent>
