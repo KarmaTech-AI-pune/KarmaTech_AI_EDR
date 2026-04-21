@@ -19,7 +19,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Alert
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -262,7 +263,7 @@ const BidPreparationForm: React.FC = () => {
   const [versionHistory, setVersionHistory] = useState<BidVersionHistoryType[]>([]);
   // This state is used to track the latest version from history
   const [currentVersion, setCurrentVersion] = useState<BidVersionHistoryType | undefined>();
-  const [_error, setError] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     loadBidPreparationData();

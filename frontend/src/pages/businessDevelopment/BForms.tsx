@@ -15,7 +15,17 @@ import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext
 
 export const BForms: React.FC = () => {
   const navigate = useNavigate();
-  useBusinessDevelopment();
+  const { 
+    opportunity, 
+    goNoGoDecisionStatus, 
+    goNoGoVersionNumber 
+  } = useBusinessDevelopment();
+
+  const statusId = Array.isArray(opportunity?.currentHistory)
+  ? opportunity?.currentHistory[0]?.statusId
+  : opportunity?.currentHistory?.statusId;
+
+  const isOpportunityApproved = statusId === 6;
 
 
   return (
