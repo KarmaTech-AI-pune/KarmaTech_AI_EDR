@@ -1,8 +1,10 @@
-﻿﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
 
 namespace EDR.Domain.Entities
 {
@@ -27,22 +29,29 @@ namespace EDR.Domain.Entities
         public new bool TwoFactorEnabled { get; set; } = false; // Default to true for all users
 
         // Navigation property for WBS Tasks
+        [JsonIgnore]
         public ICollection<UserWBSTask> UserWBSTasks { get; set; }
 
         // Navigation property for Project Resources
+        [JsonIgnore]
         public ICollection<ProjectResource> ProjectResources { get; set; }
 
         // Inverse navigation properties for managed projects
+        [JsonIgnore]
         [InverseProperty("ProjectManager")]
         public virtual ICollection<Project> ManagedProjects { get; set; }
 
+        [JsonIgnore]
         [InverseProperty("RegionalManager")]
         public virtual ICollection<Project> RegionalManagerProjects { get; set; }
 
+        [JsonIgnore]
         [InverseProperty("SeniorProjectManager")]
         public virtual ICollection<Project> SeniorManagedProjects { get; set; }
 
+        [JsonIgnore]
         public ICollection<OpportunityHistory> OpportunityHistories { get; set; } = [];
+
         public int TenantId { get; set; }
 
         public User()
