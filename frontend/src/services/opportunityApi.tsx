@@ -6,7 +6,7 @@ import {
 } from '../models/opportunityTrackingModel';
 import { OpportunityHistory } from '../models/opportunityHistoryModel';
 
-type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E';
+type OpportunityStage = 'EOI' | 'Shortlisted' | 'Proposal' | 'Awarded' | 'Lost';
 type OpportunityTrackingStatus =
   'Bid Under Preparation' |
   'Bid Submitted' |
@@ -61,23 +61,23 @@ export interface BackendOpportunityTracking {
 // Mapping functions to convert frontend types to backend numeric values
 const mapStageToBackend = (stage: OpportunityStage | undefined): number => {
   switch (stage) {
-    case 'A': return 1;
-    case 'B': return 2;
-    case 'C': return 3;
-    case 'D': return 4;
-    case 'E': return 5;
+    case 'EOI': return 1;
+    case 'Shortlisted': return 2;
+    case 'Proposal': return 3;
+    case 'Awarded': return 4;
+    case 'Lost': return 5;
     default: return 1;
   }
 };
 
 const mapStageFromBackend = (stage: number): OpportunityStage => {
   switch (stage) {
-    case 1: return 'A';
-    case 2: return 'B';
-    case 3: return 'C';
-    case 4: return 'D';
-    case 5: return 'E';
-    default: return 'A';
+    case 1: return 'EOI';
+    case 2: return 'Shortlisted';
+    case 3: return 'Proposal';
+    case 4: return 'Awarded';
+    case 5: return 'Lost';
+    default: return 'EOI';
   }
 };
 
@@ -115,7 +115,7 @@ export const opportunityApi = {
       const preparedData = prepareOpportunityTrackingForSubmission(normalizedData);
 
       const command: BackendOpportunityTracking = {
-        stage: mapStageToBackend(preparedData.stage as OpportunityStage || 'A'),
+        stage: mapStageToBackend(preparedData.stage as OpportunityStage || 'EOI'),
         strategicRanking: preparedData.strategicRanking || 'M',
         bidManagerId: preparedData.bidManagerId,
         approvalManagerId: preparedData.approvalManagerId || undefined,
