@@ -321,7 +321,8 @@ namespace EDR.API.Controllers
                     Comments = dto.Comments,
                     ApprovedAt = DateTime.UtcNow,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy=dto.CreatedBy
+                    CreatedBy=dto.CreatedBy,
+                    Status = dto.Status
                 };
 
                 var createdVersion = await _repository.CreateVersion(version);
@@ -356,9 +357,8 @@ namespace EDR.API.Controllers
                     ApprovedAt = DateTime.UtcNow,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = dto.CreatedBy,
-                    VersionNumber= dto.VersionNumber    
-                    
-                    
+                    VersionNumber= dto.VersionNumber,    
+                    Status = dto.Status
                 };
 
                 var createdVersion = await _decisionService.UpdateVersion(version);

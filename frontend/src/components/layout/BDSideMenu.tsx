@@ -34,7 +34,17 @@ export const BDSideMenu: React.FC = () => {
   const [formsOpen, setFormsOpen] = useState(location.pathname.includes('/forms'));
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const navigate = useNavigate();
-  useBusinessDevelopment();
+  const { 
+    opportunity, 
+    goNoGoDecisionStatus, 
+    goNoGoVersionNumber 
+  } = useBusinessDevelopment();
+
+  const statusId = Array.isArray(opportunity?.currentHistory)
+  ? opportunity?.currentHistory[0]?.statusId
+  : opportunity?.currentHistory?.statusId;
+
+  const isOpportunityApproved = statusId === 6;
 
 
   const handleNavigation = (path: string) => {

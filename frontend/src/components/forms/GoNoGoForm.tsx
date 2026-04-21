@@ -225,7 +225,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     bidtimeandcosts: { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
-  const [_serverError, setServerError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const MAX_POSSIBLE_SCORE = 120; // 12 criteria × 10 points each
 
@@ -580,16 +580,27 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       };
 
       if (decisionId && currentVersion !== null) {
-        // Get the next status based on current user's role
-        const userRole = context?.user?.roles?.[0].name;
-        let nextStatus = GoNoGoVersionStatus.BDM_PENDING;
+        // Get the next status based on current user's roles and current form status
+        const userRoles = context?.user?.roles?.map(r => r.name) || [];
+        const hasRole = (role: string) => userRoles.includes(role);
+        
+        let nextStatus = currentVersion.status as GoNoGoVersionStatus;
 
-        if (userRole === 'Business Development Manager') {
+        if (currentVersion.status === GoNoGoVersionStatus.BDM_PENDING && hasRole('Business Development Manager')) {
           nextStatus = GoNoGoVersionStatus.RM_PENDING;
-        } else if (userRole === 'Regional Manager') {
+        } else if (currentVersion.status === GoNoGoVersionStatus.RM_PENDING && hasRole('Regional Manager')) {
           nextStatus = GoNoGoVersionStatus.RD_PENDING;
-        } else if (userRole === 'Regional Director') {
+        } else if (currentVersion.status === GoNoGoVersionStatus.RD_PENDING && hasRole('Regional Director')) {
           nextStatus = GoNoGoVersionStatus.RD_APPROVED;
+        } else {
+          // Fallback logic for when multiple roles overlap or for non-sequential jumps
+          if (hasRole('Business Development Manager') && currentVersion.status <= GoNoGoVersionStatus.BDM_PENDING) {
+            nextStatus = GoNoGoVersionStatus.RM_PENDING;
+          } else if (hasRole('Regional Manager') && currentVersion.status <= GoNoGoVersionStatus.RM_PENDING) {
+            nextStatus = GoNoGoVersionStatus.RD_PENDING;
+          } else if (hasRole('Regional Director') && currentVersion.status <= GoNoGoVersionStatus.RD_PENDING) {
+            nextStatus = GoNoGoVersionStatus.RD_APPROVED;
+          }
         }
 
         const createGoNoAfterUpdate: CreateGoNoGoVersionDto = {

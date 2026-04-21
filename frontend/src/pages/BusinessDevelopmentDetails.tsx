@@ -9,7 +9,7 @@ import {
 import { Outlet } from 'react-router-dom';
 import { useBusinessDevelopment } from '../context/BusinessDevelopmentContext';
 import { BDSideMenu } from '../components/layout/BDSideMenu';
-// import { BDChips } from '../components/common/BDChips';
+import { BDChips } from '../components/common/BDChips';
 
 const NAVBAR_HEIGHT = '64px';
 
