@@ -50,9 +50,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
 
   const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
     bidNumber: project?.bidNumber,
-    stage: project?.stage || 'EOI',
+    stage: project?.stage || undefined,
     strategicRanking: project?.strategicRanking || '',
-    partners: project?.partners || '',
     bidFees: project?.bidFees || 0,
     emd: project?.emd || 0,
     formOfEMD: project?.formOfEMD || '',
@@ -62,7 +61,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     contactPersonAtClient: project?.contactPersonAtClient || '',
     dateOfSubmission: project?.dateOfSubmission || undefined,
     percentageChanceOfProjectHappening: project?.percentageChanceOfProjectHappening || 0,
-    percentageChanceOfNJSSuccess: project?.percentageChanceOfNJSSuccess || 0,
+    percentageChanceOfEDRSuccess: project?.percentageChanceOfEDRSuccess || 0,
     likelyCompetition: project?.likelyCompetition || '',
     grossRevenue: project?.grossRevenue || 0,
     netEDRRevenue: project?.netEDRRevenue || 0,
@@ -80,8 +79,6 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     durationOfProject: project?.durationOfProject || 0,
     fundingStream: project?.fundingStream || '',
     contractType: project?.contractType || '',
-    tentativeFee: project?.tentativeFee || 0,
-    njseiShare: project?.njseiShare || 0,
     // Default to Initial (ID: 1)
   });
 
@@ -326,9 +323,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       percentageChanceOfProjectHappening: typeof formData.percentageChanceOfProjectHappening === 'string'
         ? parseFloat(formData.percentageChanceOfProjectHappening as any) || 0
         : formData.percentageChanceOfProjectHappening,
-      percentageChanceOfNJSSuccess: typeof formData.percentageChanceOfNJSSuccess === 'string'
-        ? parseFloat(formData.percentageChanceOfNJSSuccess as any) || 0
-        : formData.percentageChanceOfNJSSuccess,
+      percentageChanceOfEDRSuccess: typeof formData.percentageChanceOfEDRSuccess === 'string'
+        ? parseFloat(formData.percentageChanceOfEDRSuccess as any) || 0
+        : formData.percentageChanceOfEDRSuccess,
     };
 
     onSubmit(submissionData as OpportunityTracking);
@@ -458,23 +455,12 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     required
                     data-testid="stage-select"
                   >
-                    <MenuItem value="EOI">EOI</MenuItem>
-                    <MenuItem value="Shortlisted">Shortlisted</MenuItem>
-                    <MenuItem value="Proposal">Proposal</MenuItem>
-                    <MenuItem value="Awarded">Awarded</MenuItem>
-                    <MenuItem value="Lost">Lost</MenuItem>
+                    <MenuItem value="A">A</MenuItem>
+                    <MenuItem value="B">B</MenuItem>
+                    <MenuItem value="C">C</MenuItem>
+                    <MenuItem value="D">D</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Partners"
-                  name="partners"
-                  value={formData.partners || ''}
-                  onChange={handleChange}
-                  placeholder="Enter partner names"
-                />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
@@ -585,43 +571,6 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                   value={formatIndianNumber(formData.capitalValue)}
                   onChange={handleNumberChange}
                   required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Tentative Fee"
-                  name="tentativeFee"
-                  type="text"
-                  value={formatIndianNumber(formData.tentativeFee)}
-                  onChange={handleNumberChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="NJSEI Share (%)"
-                  name="njseiShare"
-                  type="text"
-                  inputProps={{ min: 0, max: 100, step: 0.01 }}
-                  value={formData.njseiShare || 0}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Allow empty, digits, one decimal point, and partial decimals
-                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        njseiShare: value === '' ? 0 : (value.endsWith('.') ? value : parseFloat(value) || 0),
-                      }));
-                    }
-                  }}
-                  onClick={(e) => {
-                    const target = e.target as HTMLInputElement;
-                    // If value is 0, select all so typing replaces it
-                    if (formData.njseiShare === 0 || target.value === '0') {
-                      target.select();
-                    }
-                  }}
                 />
               </Grid>
             </Grid>
@@ -828,11 +777,11 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Chance of NJS Success (%)"
-                  name="percentageChanceOfNJSSuccess"
+                  label="Chance of EDR Success (%)"
+                  name="percentageChanceOfEDRSuccess"
                   type="text"
                   inputProps={{ min: 0, max: 100, step: 0.01 }}
-                  value={formData.percentageChanceOfNJSSuccess || 0}
+                  value={formData.percentageChanceOfEDRSuccess || 0}
                   onChange={handleNumberChange}
                 />
               </Grid>

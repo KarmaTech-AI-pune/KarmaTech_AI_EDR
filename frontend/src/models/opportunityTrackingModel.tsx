@@ -1,7 +1,7 @@
 ﻿import { OpportunityHistory } from "./opportunityHistoryModel";
 
 // Local type definitions
-export type OpportunityStage = 'EOI' | 'Shortlisted' | 'Proposal' | 'Awarded' | 'Lost' | string;
+export type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E' | string;
 type OpportunityTrackingStatus =
   'Bid Under Preparation' | 
   'Bid Submitted' | 
@@ -14,7 +14,6 @@ export interface OpportunityTracking {
   projectId?: number | string | null;
   stage?: OpportunityStage;
   strategicRanking?: string;
-  partners?: string;
   bidManagerId?: string;
   reviewManagerId?: string;
   approvalManagerId?: string;
@@ -38,15 +37,13 @@ export interface OpportunityTracking {
   contactPersonAtClient?: string;
   dateOfSubmission?: Date | string;
   percentageChanceOfProjectHappening?: number;
-  percentageChanceOfNJSSuccess?: number;
+  percentageChanceOfEDRSuccess?: number;
   likelyCompetition?: string;
   grossRevenue?: number;
   netEDRRevenue?: number;
   followUpComments?: string;
   notes?: string;
   probableQualifyingCriteria?: string;
-  tentativeFee?: number;
-  njseiShare?: number;
 
   // Audit fields
   createdAt?: Date | string;
