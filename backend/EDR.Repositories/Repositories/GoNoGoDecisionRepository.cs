@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
 using EDR.Domain.Enums;
@@ -130,7 +130,7 @@ namespace EDR.Repositories.Repositories
                 throw new Exception("GoNoGo decision header not found");
 
             version.VersionNumber = (header.Versions?.Count() ?? 0) + 1;
-            version.CreatedAt = DateTime.Now;
+            version.CreatedAt = DateTime.UtcNow;
             version.Status = header.Versions?.Any() != true
                 ? GoNoGoVersionStatus.BDM_PENDING
                 : GetNextVersionStatus(header.VersionStatus.Value);
@@ -186,7 +186,7 @@ namespace EDR.Repositories.Repositories
                 throw new Exception("Header not found");
 
             version.ApprovedBy = approver;
-            version.ApprovedAt = DateTime.Now;
+            version.ApprovedAt = DateTime.UtcNow;
             version.Comments = comments;
 
             var nextStatus = GetNextVersionStatus(version.Status);

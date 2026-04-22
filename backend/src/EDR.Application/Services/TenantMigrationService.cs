@@ -2,6 +2,8 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using EDR.Application.Services.IContract;
+using EDR.Domain;
+using EDR.Domain.Services;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -13,13 +15,15 @@ namespace EDR.Application.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<TenantMigrationService> _logger;
+        private readonly ITenantConnectionResolver _connectionResolver;
         private readonly string _migrationScriptsPath;
         private readonly string _nonIsolatedTenetScriptPath;
 
-        public TenantMigrationService(IConfiguration configuration, ILogger<TenantMigrationService> logger)
+        public TenantMigrationService(IConfiguration configuration, ILogger<TenantMigrationService> logger, ITenantConnectionResolver connectionResolver)
         {
             _configuration = configuration;
             _logger = logger;
+            _connectionResolver = connectionResolver;
 
             // Try multiple paths to find the migration scripts directory
             var possiblePaths = new[]
@@ -89,11 +93,40 @@ namespace EDR.Application.Services
                     return false;
                 }
 
-                // Extract database name
-                var builder = new NpgsqlConnectionStringBuilder(connectionString);
-                var targetDatabaseName = builder.Database;
+                // Extract database name dynamically
+                var dbType = _configuration[Constants.DbType];
+                string targetDatabaseName;
 
-                // PostgreSQL does NOT support cross-database queries
+                if (dbType == Constants.DbServerType)
+                {
+                    var nBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+                    targetDatabaseName = nBuilder.Database;
+                }
+                else
+                {
+                    var sBuilder = new SqlConnectionStringBuilder(connectionString);
+                    targetDatabaseName = sBuilder.InitialCatalog;
+                }
+
+                // If sourceDatabaseName not provided, use ITenantConnectionResolver to try and find default
+                if (string.IsNullOrEmpty(sourceDatabaseName))
+                {
+                    var defaultConn = await _connectionResolver.GetDefaultConnectionStringAsync();
+                    if (!string.IsNullOrEmpty(defaultConn))
+                    {
+                        if (dbType == EDR.Domain.Constants.DbServerType)
+                        {
+                            var sBuilder = new NpgsqlConnectionStringBuilder(defaultConn);
+                            sourceDatabaseName = sBuilder.Database;
+                        }
+                        else
+                        {
+                            var sBuilder = new SqlConnectionStringBuilder(defaultConn);
+                            sourceDatabaseName = sBuilder.InitialCatalog;
+                        }
+                    }
+                }
+
                 sourceDatabaseName ??= targetDatabaseName;
 
                 var migrationScripts = new[]
@@ -202,11 +235,20 @@ namespace EDR.Application.Services
                 // If source database not provided, use the default from configuration
                 if (string.IsNullOrEmpty(sourceDatabaseName))
                 {
-                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                    var defaultConnectionString = await _connectionResolver.GetDefaultConnectionStringAsync();
                     if (!string.IsNullOrEmpty(defaultConnectionString))
                     {
-                        var defaultBuilder = new Npgsql.NpgsqlConnectionStringBuilder(defaultConnectionString);
-                        sourceDatabaseName = defaultBuilder.Database;
+                        var dbType = _configuration[Constants.DbType];
+                        if (dbType == Constants.DbServerType)
+                        {
+                            var defaultBuilder = new Npgsql.NpgsqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.Database;
+                        }
+                        else
+                        {
+                            var defaultBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.InitialCatalog;
+                        }
                     }
                 }
 
@@ -310,11 +352,20 @@ namespace EDR.Application.Services
                 // If source database/server not provided, use the default from configuration
                 if (string.IsNullOrEmpty(sourceDatabaseName))
                 {
-                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                    var defaultConnectionString = await _connectionResolver.GetDefaultConnectionStringAsync();
                     if (!string.IsNullOrEmpty(defaultConnectionString))
                     {
-                        var defaultBuilder = new SqlConnectionStringBuilder(defaultConnectionString);
-                        sourceDatabaseName = defaultBuilder.InitialCatalog;
+                        var dbType = _configuration[Constants.DbType];
+                        if (dbType == Constants.DbServerType)
+                        {
+                            var defaultBuilder = new Npgsql.NpgsqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.Database;
+                        }
+                        else
+                        {
+                            var defaultBuilder = new SqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.InitialCatalog;
+                        }
                     }
                 }
 
@@ -413,11 +464,20 @@ namespace EDR.Application.Services
                 // If source database not provided, use the default from configuration
                 if (string.IsNullOrEmpty(sourceDatabaseName))
                 {
-                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                    var defaultConnectionString = await _connectionResolver.GetDefaultConnectionStringAsync();
                     if (!string.IsNullOrEmpty(defaultConnectionString))
                     {
-                        var defaultBuilder = new NpgsqlConnectionStringBuilder(defaultConnectionString);
-                        sourceDatabaseName = defaultBuilder.Database;
+                        var dbType = _configuration[Constants.DbType];
+                        if (dbType == Constants.DbServerType)
+                        {
+                            var defaultBuilder = new NpgsqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.Database;
+                        }
+                        else
+                        {
+                            var defaultBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.InitialCatalog;
+                        }
                     }
                 }
 
@@ -567,23 +627,39 @@ namespace EDR.Application.Services
             string? permissionName = null)
         {
             // Read source connection details
-            var sourceConn = new NpgsqlConnectionStringBuilder(
-                _configuration.GetConnectionString("AppDbConnection")
-            );
+            var defaultConnectionString = _connectionResolver.GetDefaultConnectionStringAsync().GetAwaiter().GetResult();
+            var dbType = _configuration[Constants.DbType];
+            
+            if (dbType == Constants.DbServerType)
+            {
+                var sourceConn = new NpgsqlConnectionStringBuilder(defaultConnectionString);
+                return scriptContent
+                    // ---- dblink connection ----
+                    .Replace("{{SOURCE_DB}}", sourceDatabaseName ?? sourceConn.Database)
+                    .Replace("{{SOURCE_HOST}}", sourceConn.Host)
+                    .Replace("{{SOURCE_PORT}}", sourceConn.Port.ToString())
+                    .Replace("{{SOURCE_USER}}", sourceConn.Username)
+                    .Replace("{{SOURCE_PASSWORD}}", sourceConn.Password)
 
-            return scriptContent
-                // ---- dblink connection ----
-                .Replace("{{SOURCE_DB}}", sourceDatabaseName ?? sourceConn.Database)
-                .Replace("{{SOURCE_HOST}}", sourceConn.Host)
-                .Replace("{{SOURCE_PORT}}", sourceConn.Port.ToString())
-                .Replace("{{SOURCE_USER}}", sourceConn.Username)
-                .Replace("{{SOURCE_PASSWORD}}", sourceConn.Password)
-
-                // ---- business values ----
-                .Replace("{{TENANT_ID}}", tenantId.ToString())
-                .Replace("{{USER_EMAIL}}", EscapeSql(userEmail))
-                .Replace("{{ROLE_NAME}}", EscapeSql(roleName))
-                .Replace("{{PERMISSION_NAME}}", EscapeSql(permissionName));
+                    // ---- business values ----
+                    .Replace("{{TENANT_ID}}", tenantId.ToString())
+                    .Replace("{{USER_EMAIL}}", EscapeSql(userEmail))
+                    .Replace("{{ROLE_NAME}}", EscapeSql(roleName))
+                    .Replace("{{PERMISSION_NAME}}", EscapeSql(permissionName));
+            }
+            else
+            {
+                var sourceConn = new SqlConnectionStringBuilder(defaultConnectionString);
+                return scriptContent
+                    // ---- placeholders ----
+                    .Replace("{{SOURCE_DB}}", sourceDatabaseName ?? sourceConn.InitialCatalog)
+                    
+                    // ---- business values ----
+                    .Replace("{{TENANT_ID}}", tenantId.ToString())
+                    .Replace("{{USER_EMAIL}}", EscapeSql(userEmail))
+                    .Replace("{{ROLE_NAME}}", EscapeSql(roleName))
+                    .Replace("{{PERMISSION_NAME}}", EscapeSql(permissionName));
+            }
         }
 
         private static string EscapeSql(string? value)

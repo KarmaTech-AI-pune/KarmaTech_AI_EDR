@@ -5,8 +5,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using EDR.Application.Dtos;
 using EDR.Application.Services.IContract;
+using EDR.Domain;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
+using EDR.Domain.Services;
 using EDR.Repositories.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.AccessControl;
@@ -24,6 +26,7 @@ namespace EDR.Application.Services
         private readonly ITenantService _tenantService;
         private readonly TenantDbContext _tenantDbContext;
         private readonly ILogger<EnhancedAuthService> _logger;
+        private readonly ITenantConnectionResolver _connectionResolver;
 
         public EnhancedAuthService(
             IConfiguration configuration,
@@ -32,7 +35,8 @@ namespace EDR.Application.Services
             IPermissionRepository permissionRepository,
             ITenantService tenantService,
             TenantDbContext tenantDbContext,
-            ILogger<EnhancedAuthService> logger)
+            ILogger<EnhancedAuthService> logger,
+            ITenantConnectionResolver connectionResolver)
         {
             _configuration = configuration;
             _userManager = userManager;
@@ -41,6 +45,7 @@ namespace EDR.Application.Services
             _tenantService = tenantService;
             _tenantDbContext = tenantDbContext;
             _logger = logger;
+            _connectionResolver = connectionResolver;
         }
 
         public async Task<AuthResult> ValidateUserAsync(string email, string password)
@@ -54,7 +59,7 @@ namespace EDR.Application.Services
                     return AuthResult.Failed(AuthResultType.InvalidCredentials, "Invalid credentials");
                 }
 
-                // Global inactivity check - If user is blocked globally, they can't access anything
+                // Global inactivity check
                 if (!user.IsActive)
                 {
                     _logger.LogWarning("Login failed: User {Email} is globally inactive.", email);
@@ -64,11 +69,9 @@ namespace EDR.Application.Services
                 var isSuperAdmin = await IsSuperAdminAsync(user);
                 var currentTenantId = await GetCurrentTenantIdAsync();
 
-                // 1. Super Admin logic
+                // 1. Super Admin logic - bypasses tenant-specific blocks
                 if (isSuperAdmin)
                 {
-                    // Super Admins are allowed bypass all tenant/user blocks
-                    // Check password first before granting bypass
                     var validPwd = await _userManager.CheckPasswordAsync(user, password);
                     if (!validPwd)
                     {
@@ -78,77 +81,57 @@ namespace EDR.Application.Services
                     return AuthResult.Succeeded(user, token);
                 }
 
-                // 2. Regular User logic - Check tenant mapping before password
+                // 2. Regular User logic - check tenant context
                 var userTenants = await _tenantService.GetTenantUsersByUserIdAsync(user.Id);
 
-                // RESOLVE TENANT: If no tenant context is provided, try to find a valid mapping
-                if (!currentTenantId.HasValue || (currentTenantId == 1 && (userTenants == null || !userTenants.Any(t => t.TenantId == 1))))
+                // Default to user's primary tenant if no context is found
+                if (!currentTenantId.HasValue || currentTenantId <= 1)
                 {
-                    if (currentTenantId == 1 && user.TenantId > 1)
+                    if (user.TenantId > 1) 
                     {
                         currentTenantId = user.TenantId;
-                        _logger.LogInformation("Resolved Tenant ID {TenantId} from primary user tenant for {Email}", currentTenantId, email);
+                    }
+                    else if (userTenants != null && userTenants.Any())
+                    {
+                        currentTenantId = userTenants.First().TenantId;
                     }
                     else
                     {
-                        var firstMapping = userTenants?.FirstOrDefault();
-                        if (firstMapping != null)
-                        {
-                            currentTenantId = firstMapping.TenantId;
-                            _logger.LogInformation("Resolved Tenant ID {TenantId} from user mappings for {Email}", currentTenantId, email);
-                        }
-                        else if (user.TenantId > 0)
-                        {
-                            currentTenantId = user.TenantId;
-                            _logger.LogInformation("Resolved Tenant ID {TenantId} from primary user tenant for {Email}", currentTenantId, email);
-                        }
-                        else if (!currentTenantId.HasValue)
-                        {
-                            // Final fallback to Tenant 1
-                            currentTenantId = 1;
-                            _logger.LogInformation("No tenant context or mappings found. Defaulting to Tenant 1 for user {Email}", email);
-                        }
+                        currentTenantId = 1; // System default
                     }
                 }
 
-                // Check Tenant Status (Blocked/Expired)
-                var resolvedTenant = await _tenantService.GetTenantByIdentifierAsync(currentTenantId.Value.ToString());
-                if (resolvedTenant != null && resolvedTenant.IsBlocked)
+                // Check Tenant Status (Blocked/Inactive)
+                var tenant = await _tenantService.GetTenantByIdentifierAsync(currentTenantId.Value.ToString());
+                if (tenant != null && tenant.IsBlocked)
                 {
-                    _logger.LogWarning("Access to tenant {TenantId} is blocked: {Reason}", currentTenantId, resolvedTenant.BlockReason);
-                    return AuthResult.Failed(AuthResultType.TenantInactive, resolvedTenant.BlockReason);
+                    return AuthResult.Failed(AuthResultType.TenantInactive, tenant.BlockReason ?? "This workspace is currently blocked.");
                 }
 
-                // Check User-Tenant Mapping & Activity
+                // Check User-Tenant Mapping Activity
                 var mapping = userTenants?.FirstOrDefault(t => t.TenantId == currentTenantId.Value);
-                
-                bool hasAccess = false;
                 bool isActive = false;
+                bool hasMapping = false;
                 TenantUserRole? tenantRole = null;
 
                 if (mapping != null)
                 {
-                    hasAccess = true;
-                    isActive = mapping.IsActive; // Authority is the TenantUsers mapping table
+                    hasMapping = true;
+                    isActive = mapping.IsActive;
                     tenantRole = mapping.Role;
-                    
-                    _logger.LogInformation("Resolved mapping for User {UserId} in Tenant {TenantId}. IsActive: {IsActive}", user.Id, currentTenantId, isActive);
                 }
                 else if (user.TenantId == currentTenantId.Value)
                 {
-                    // This is a primary user for this tenant. 
-                    // Fallback to the User table status if no explicit mapping exists in TenantUsers.
-                    hasAccess = true;
-                    isActive = user.IsActive; 
+                    // If no explicit mapping exists, fallback to User record if it's their primary tenant
+                    hasMapping = true;
+                    isActive = user.IsActive;
                     tenantRole = TenantUserRole.User;
-                    
-                    _logger.LogInformation("User {UserId} is a primary user for Tenant {TenantId}. Falling back to global IsActive: {IsActive}", user.Id, currentTenantId, isActive);
                 }
 
-                if (!hasAccess)
+                if (!hasMapping)
                 {
-                    _logger.LogWarning("User {UserId} attempted login to tenant {TenantId} but has no mapping.", user.Id, currentTenantId);
-                    return AuthResult.Failed(AuthResultType.NoTenantMapping, "You do not have access to this tenant.");
+                    _logger.LogWarning("User {UserId} attempted login to tenant {TenantId} without access.", user.Id, currentTenantId);
+                    return AuthResult.Failed(AuthResultType.NoTenantMapping, "You do not have access to this workspace.");
                 }
 
                 if (!isActive)
@@ -157,7 +140,7 @@ namespace EDR.Application.Services
                     return AuthResult.Failed(AuthResultType.UserInactive, "Your account is inactive for this specific tenant. Please contact your administrator.");
                 }
 
-                // 3. User is valid and active for the tenant, now check password
+                // Validate password
                 var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
                 if (!isValidPassword)
                 {
@@ -172,9 +155,10 @@ namespace EDR.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error validating user {Email}", email);
-                return AuthResult.Failed(AuthResultType.Error, "An internal error occurred during validation");
+                return AuthResult.Failed(AuthResultType.Error, "An internal error occurred during login.");
             }
         }
+
 
         public async Task<bool> IsSuperAdminAsync(User user)
         {

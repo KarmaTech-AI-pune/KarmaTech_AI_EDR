@@ -1263,7 +1263,7 @@ namespace EDR.Domain.Database
                 entity.HasOne(h => h.Project)
                     .WithMany()
                     .HasForeignKey(h => h.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)

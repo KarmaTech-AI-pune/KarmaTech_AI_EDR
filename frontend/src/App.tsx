@@ -29,6 +29,8 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
+  const [canCreateOpportunity, setCanCreateOpportunity] = useState(false);
+  const [canViewOpportunity, setCanViewOpportunity] = useState(false);
   const [canSubmitForReview, setCanSubmitForReview] = useState(false);
   const [canReviewBD, setCanReviewBD] = useState(false);
   const [canApproveBD, setCanApproveBD] = useState(false);
@@ -48,6 +50,8 @@ function App() {
           setCurrentUser(null);
           setCanEditOpportunity(false);
           setCanDeleteOpportunity(false);
+          setCanCreateOpportunity(false);
+          setCanViewOpportunity(false);
           setCanSubmitForReview(false);
           setCanReviewBD(false);
           setCanApproveBD(false);
@@ -66,9 +70,12 @@ function App() {
           setCanDeleteOpportunity(
             user.roleDetails.permissions.includes(PermissionType.DELETE_BUSINESS_DEVELOPMENT)
           );
-          // setCanSubmitForReview(
-          //   user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
-          // );
+          setCanCreateOpportunity(
+            user.roleDetails.permissions.includes(PermissionType.CREATE_BUSINESS_DEVELOPMENT)
+          );
+          setCanViewOpportunity(
+            user.roleDetails.permissions.includes(PermissionType.VIEW_BUSINESS_DEVELOPMENT)
+          );
           setCanSubmitForApproval(
             user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL)
           );
@@ -164,8 +171,10 @@ function App() {
     setCanEditOpportunity,
     canDeleteOpportunity,
     setCanDeleteOpportunity,
-    canSubmitForReview,
-    setCanSubmitForReview,
+    canCreateOpportunity,
+    setCanCreateOpportunity,
+    canViewOpportunity,
+    setCanViewOpportunity,
     canReviewBD,
     setCanReviewBD,
     canApproveBD,
@@ -188,7 +197,8 @@ function App() {
     currentUser,
     canEditOpportunity,
     canDeleteOpportunity,
-    canSubmitForReview,
+    canCreateOpportunity,
+    canViewOpportunity,
     canReviewBD,
     canApproveBD,
     canSubmitForApproval,

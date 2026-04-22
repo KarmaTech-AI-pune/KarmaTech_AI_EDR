@@ -13,7 +13,7 @@ import { GoNoGoVersionStatus } from '../../models/workflowModel';
 interface Props {
   status: GoNoGoVersionStatus;
   onApprove?: () => void;
-  userRole: string;
+  canApprove: boolean;
   isEditable: boolean;
   score?: number;
 }
@@ -49,17 +49,12 @@ const getStepState = (
   return 'pending';
 };
 
-const canUserApprove = (status: GoNoGoVersionStatus, userRole: string): boolean => {
-  const currentStep = approvalSteps.find(step => 
-    status === step.pending && userRole === step.role
-  );
-  return !!currentStep && userRole==="Regional Director";
-};
+
 
 const GoNoGoApprovalStatus: React.FC<Props> = ({
   status,
   onApprove,
-  userRole,
+  canApprove,
   isEditable,
   score
 }) => {
@@ -78,14 +73,14 @@ const GoNoGoApprovalStatus: React.FC<Props> = ({
             </Typography>
           )}
         </Box>
-        {canUserApprove(status, userRole) && onApprove && (
+        {canApprove && onApprove && (
           <Button
             variant="contained"
             color="primary"
             onClick={onApprove}
             disabled={!isEditable}
           >
-            Approve
+            {Number(status) === GoNoGoVersionStatus.RD_PENDING ? 'Approve' : 'Send to Approve'}
           </Button>
         )}
       </Box>

@@ -17,20 +17,12 @@ interface Props {
   currentVersion: number;
   onVersionSelect: (version: GoNoGoVersionDto) => void;
   onApprove: (version: GoNoGoVersionDto) => void;
-  userRole: string;
+  // Returns the button label if the user can act on this version, or null if they cannot
+  getActionLabel: (status: GoNoGoVersionStatus) => string | null;
   score: number;
 }
 
-const canUserApprove = (status: GoNoGoVersionStatus, userRole: string): boolean => {
-  switch (status) {
-    case GoNoGoVersionStatus.BDM_PENDING:
-      return userRole === 'Business Development Manager';
-    case GoNoGoVersionStatus.RM_PENDING:
-      return userRole === 'Regional Manager';
-    default:
-      return false;
-  }
-};
+
 
 const getStatusColor = (status: GoNoGoVersionStatus): 'default' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning' => {
   switch (status) {
@@ -53,7 +45,7 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
   currentVersion,
   onVersionSelect,
   onApprove,
-  userRole
+  getActionLabel
 }) => {
   return (
     <Paper sx={{ p: 2, mb: 3 }}>
@@ -72,8 +64,13 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
               secondary={
                 <>
                   Created by {version.createdBy} on {new Date(version.createdAt).toLocaleString('en-IN')}
-
-                  <br /> Score: {JSON.parse(version.formData).Summary.TotalScore}
+                  <br />
+                  Score: {(() => {
+                    try {
+                      const fd = typeof version.formData === 'string' ? JSON.parse(version.formData) : version.formData;
+                      return fd?.Summary?.TotalScore ?? 0;
+                    } catch { return 0; }
+                  })()}
                 </>
               }
             />
@@ -83,19 +80,22 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
                 color={getStatusColor(version.status)}
                 size="small"
               />
-              {canUserApprove(version.status, userRole) && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onApprove(version);
-                  }}
-                >
-                  Sent to Approve
-                </Button>
-              )}
+              {(() => {
+                const label = getActionLabel(version.status);
+                return label ? (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onApprove(version);
+                    }}
+                  >
+                    {label}
+                  </Button>
+                ) : null;
+              })()}
             </Box>
           </ListItemButton>
         ))}
