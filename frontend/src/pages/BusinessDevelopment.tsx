@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
+import {
+  Box,
+  Typography,
   TextField,
   Button,
   Divider,
@@ -37,31 +37,31 @@ export const BusinessDevelopment: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [opportunitiesPerPage] = useState(5);
 
- 
+
   const fetchOpportunities = async () => {
     try {
       if (!currentUser) {
-        console.log('No current user, skipping opportunity fetch');
         return;
       }
 
-      console.log('Current User:', currentUser);
-      console.log('User Roles:', currentUser.roles);
+      const isAdmin = currentUser.roleDetails?.permissions.includes(PermissionType.SYSTEM_ADMIN) ||
+        currentUser.roleDetails?.permissions.includes(PermissionType.Tenant_ADMIN);
 
       let response: OpportunityTracking[] = [];
-      
-      if (currentUser.roles.some(role => role.name === "Business Development Manager")) {
+
+      if (isAdmin) {
+        response = (await opportunityApi.getAll()) as OpportunityTracking[];
+      } else if (currentUser.roles.some(role => role.name === "Business Development Manager")) {
         response = (await opportunityApi.getByUserId(currentUser.id)) as OpportunityTracking[];
-      } else if (currentUser.roles.some(role => role.name ===  "Regional Manager")) {
+      } else if (currentUser.roles.some(role => role.name === "Regional Manager")) {
         response = (await opportunityApi.getByReviewManagerId(currentUser.id)) as OpportunityTracking[];
-      }  
-      else if (currentUser.roles.some(role => role.name ===  "RegionalDirector")) {
+      }
+      else if (currentUser.roles.some(role => role.name === "RegionalDirector")) {
         response = (await opportunityApi.getByApprovalManagerId(currentUser.id)) as OpportunityTracking[];
       } else {
         response = (await opportunityApi.getAll()) as OpportunityTracking[];
       }
-      
-      console.log('Fetched Opportunities:', response);
+
       setOpportunities(response);
       setError(undefined);
     } catch (err: unknown) {
@@ -157,9 +157,9 @@ export const BusinessDevelopment: React.FC = () => {
     const searchTermLower = searchTerm.toLowerCase();
     const workName = opportunity.workName?.toLowerCase() || '';
     const client = opportunity.client?.toLowerCase() || '';
-    
+
     return client.includes(searchTermLower) ||
-           workName.includes(searchTermLower);
+      workName.includes(searchTermLower);
   });
 
   const indexOfLastOpportunity = currentPage * opportunitiesPerPage;
@@ -172,7 +172,7 @@ export const BusinessDevelopment: React.FC = () => {
     const checkUserPermissions = async () => {
       try {
         const user = await authApi.getCurrentUser();
-        
+
         if (!user) {
           console.log('No user found, setting error');
           setError('Please log in to access Business Development');
@@ -192,10 +192,10 @@ export const BusinessDevelopment: React.FC = () => {
           const hasOpportunityCreatePermission = user.roleDetails.permissions.includes(
             PermissionType.CREATE_BUSINESS_DEVELOPMENT
           );
-          
+
           console.log('View Permission:', hasOpportunityViewPermission);
           console.log('Create Permission:', hasOpportunityCreatePermission);
-          
+
           setCanViewOpportunities(hasOpportunityViewPermission);
           setCanCreateOpportunity(hasOpportunityCreatePermission);
 
@@ -217,13 +217,13 @@ export const BusinessDevelopment: React.FC = () => {
   }, []);
 
   useEffect(() => {
-      if (currentUser && canViewOpportunities) {
+    if (currentUser && canViewOpportunities) {
       console.log('Attempting to fetch opportunities');
       fetchOpportunities();
     } else {
-      console.log('Cannot fetch opportunities', { 
-        currentUser: !!currentUser, 
-        canViewOpportunities 
+      console.log('Cannot fetch opportunities', {
+        currentUser: !!currentUser,
+        canViewOpportunities
       });
     }
   }, [currentUser, canViewOpportunities]);
@@ -238,7 +238,7 @@ export const BusinessDevelopment: React.FC = () => {
 
   return (
     <Box
-      sx={{ 
+      sx={{
         minHeight: `calc(100vh - ${NAVBAR_HEIGHT})`,
         pt: `${NAVBAR_HEIGHT}`,
         bgcolor: 'background.default',
@@ -246,7 +246,7 @@ export const BusinessDevelopment: React.FC = () => {
       }}
     >
       <Box
-        sx={{ 
+        sx={{
           p: 3,
           bgcolor: '#ffffff',
           borderRadius: '8px',
@@ -254,29 +254,29 @@ export const BusinessDevelopment: React.FC = () => {
           boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
         }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3
         }}>
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               fontWeight: 500,
               color: '#1a237e'
             }}
           >
             Business Development
           </Typography>
-          
+
           {canCreateOpportunity && (
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               color="primary"
               startIcon={<AddCircleOutlineIcon />}
               onClick={handleCreateOpportunity}
-              sx={{ 
+              sx={{
                 textTransform: 'none',
                 borderRadius: 2,
                 px: 3
@@ -288,8 +288,8 @@ export const BusinessDevelopment: React.FC = () => {
         </Box>
 
         {isCreatingOpportunity && (
-          <Dialog 
-            open={isCreatingOpportunity} 
+          <Dialog
+            open={isCreatingOpportunity}
             onClose={handleCancelOpportunity}
             maxWidth="md"
             fullWidth
@@ -305,14 +305,14 @@ export const BusinessDevelopment: React.FC = () => {
         )}
 
         <BusinessDevelopmentCharts />
-        
+
         <Divider sx={{ mb: 3 }} />
 
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3
         }}>
           <TextField
             variant="outlined"
@@ -326,28 +326,28 @@ export const BusinessDevelopment: React.FC = () => {
                   <SearchIcon />
                 </IconButton>
               ),
-              sx: { 
+              sx: {
                 borderRadius: 2,
                 backgroundColor: 'background.paper'
               }
             }}
-            sx={{ 
+            sx={{
               width: 250,
             }}
           />
         </Box>
 
-<OpportunityList
-  opportunities={currentOpportunities}
-  emptyMessage="No business development opportunities found"
-  onOpportunityDeleted={fetchOpportunities}
-  onOpportunityUpdated={fetchOpportunities}
-/>
+        <OpportunityList
+          opportunities={currentOpportunities}
+          emptyMessage="No business development opportunities found"
+          onOpportunityDeleted={fetchOpportunities}
+          onOpportunityUpdated={fetchOpportunities}
+        />
 
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          mt: 3 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          mt: 3
         }}>
           <Pagination
             projectsPerPage={opportunitiesPerPage}

@@ -20,7 +20,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  Alert,
   Chip,
   Tooltip
 } from '@mui/material';
@@ -141,7 +140,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                 typeOfBid: formData.HeaderInfo.TypeOfBid,
                 sector: formData.HeaderInfo.Sector || '',
                 tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
-                emd: formData.HeaderInfo.EmdAmount?.toString() || '',
+                emd: formData.HeaderInfo.Emd?.toString() || '',
                 office: formData.HeaderInfo.Office,
                 bdHead: formData.HeaderInfo.BdHead || ''
               }));
@@ -154,9 +153,13 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
               }));
             }
           }
-        } catch (error) {
-          console.error('Error loading Go/No Go decision:', error);
-          setServerError('Error loading Go/No Go decision:');
+        } catch (error: any) {
+          if (error.response?.status === 404) {
+            console.log('No Go/No Go decision found for this opportunity. Starting with a new form.');
+          } else {
+            console.error('Error loading Go/No Go decision:', error);
+            setServerError('Error loading Go/No Go decision');
+          }
         }
       }
     };
@@ -225,7 +228,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     bidtimeandcosts: { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
-  const [_serverError, setServerError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const MAX_POSSIBLE_SCORE = 120; // 12 criteria × 10 points each
 
@@ -336,7 +339,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       typeOfBid: formData.HeaderInfo.TypeOfBid,
       sector: formData.HeaderInfo.Sector || '',
       tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
-      emd: formData.HeaderInfo.EmdAmount?.toString() || '',
+      emd: formData.HeaderInfo.Emd?.toString() || '',
       office: formData.HeaderInfo.Office,
       bdHead: formData.HeaderInfo.BdHead || ''
     }));
@@ -696,11 +699,6 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
 
   return (
     <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
-      {serverError && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setServerError(null)}>
-          {serverError}
-        </Alert>
-      )}
       {isLoading && (
         <Typography variant="body1" sx={{ mb: 2 }}>
           Loading...
@@ -867,17 +865,6 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
         </Typography>
         
         {/* Perfect Score Success Indicator - Requirement 2.5 */}
-        {isPerfectScore() && (
-          <Alert 
-            severity="success" 
-            icon={<CheckCircleIcon />}
-            sx={{ mb: 2 }}
-          >
-            <Typography variant="body2" fontWeight="medium">
-              Excellent! You've achieved a perfect score of 100%.
-            </Typography>
-          </Alert>
-        )}
 
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
