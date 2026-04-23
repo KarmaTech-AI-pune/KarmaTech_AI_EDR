@@ -619,6 +619,80 @@ namespace EDR.API.Controllers
             }
         }
 
+        // GET: api/tenants/{domain}/branding  — NO AUTH required (used by login screen before user logs in)
+        [HttpGet("{domain}/branding")]
+        [AllowAnonymous]
+        public async Task<ActionResult<object>> GetTenantBranding(string domain)
+        {
+            // Smart matching: supports "njs", "njs.localhost", "njs.karmatech.com" etc.
+            var tenant = await _tenantDbContext.Tenants
+                .FirstOrDefaultAsync(t => t.Domain == domain && t.IsActive);
+
+            if (tenant == null && domain.Contains('.'))
+            {
+                var subdomain = domain.Split('.')[0];
+                tenant = await _tenantDbContext.Tenants
+                    .FirstOrDefaultAsync(t => t.Domain == subdomain && t.IsActive);
+            }
+
+            // Always return 200 — null values mean "use defaults" on the frontend
+            return Ok(new
+            {
+                LogoUrl = tenant?.LogoUrl != null ? $"{Request.Scheme}://{Request.Host}{tenant.LogoUrl}" : null,
+                TenantName = tenant?.Name
+            });
+        }
+
+        // POST: api/tenants/{id}/upload-logo — Upload an image file for the tenant logo
+        [HttpPost("{id}/upload-logo")]
+        public async Task<ActionResult<object>> UploadTenantLogo(int id, IFormFile logoFile)
+        {
+            var tenant = await _tenantDbContext.Tenants.FindAsync(id);
+            if (tenant == null)
+                return NotFound(new { message = "Tenant not found" });
+
+            if (logoFile == null || logoFile.Length == 0)
+                return BadRequest(new { message = "No file provided" });
+
+            // Validate: only allow image types
+            var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/svg+xml" };
+            if (!allowedTypes.Contains(logoFile.ContentType.ToLower()))
+                return BadRequest(new { message = "Only image files (JPG, PNG, GIF, WEBP, SVG) are allowed" });
+
+            // Limit to 5 MB
+            if (logoFile.Length > 5 * 1024 * 1024)
+                return BadRequest(new { message = "Logo file size must be under 5 MB" });
+
+            // Build file path: wwwroot/tenant-logos/{domain}.{ext}
+            var ext = Path.GetExtension(logoFile.FileName).ToLower();
+            var safeFileName = $"{tenant.Domain}{ext}";
+            var logoFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "tenant-logos");
+
+            // Ensure directory exists
+            if (!Directory.Exists(logoFolder))
+                Directory.CreateDirectory(logoFolder);
+
+            // Delete old logo file for this tenant if it exists (cleanup)
+            var existingFiles = Directory.GetFiles(logoFolder, $"{tenant.Domain}.*");
+            foreach (var f in existingFiles)
+                System.IO.File.Delete(f);
+
+            var filePath = Path.Combine(logoFolder, safeFileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await logoFile.CopyToAsync(stream);
+            }
+
+            // Store relative URL in DB (e.g. /tenant-logos/njs.png)
+            var logoUrl = $"/tenant-logos/{safeFileName}";
+            tenant.LogoUrl = logoUrl;
+            await _tenantDbContext.SaveChangesAsync();
+
+            _logger.LogInformation("Uploaded logo for tenant {TenantId}: {LogoUrl}", id, logoUrl);
+            return Ok(new { logoUrl });
+        }
+
+
         private bool TenantExists(int id)
         {
             return _tenantDbContext.Tenants.Any(e => e.Id == id);

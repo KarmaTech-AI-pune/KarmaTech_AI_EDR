@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using EDR.Domain.Database;
 using EDR.Domain.Extensions;
@@ -25,6 +25,9 @@ public static class WebApplicationExtensions
             app.UseHttpsRedirection();
         }
 
+
+        // Serve uploaded tenant logos and other static assets from wwwroot
+        app.UseStaticFiles();
 
         app.UseRouting();
 

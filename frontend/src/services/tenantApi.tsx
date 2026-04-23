@@ -2,6 +2,32 @@ import { axiosInstance } from './axiosConfig';
 import { Tenant, CreateTenantRequest, UpdateTenantRequest } from '../models/tenantModel';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+import axios from 'axios';
+
+export interface TenantBranding {
+  logoUrl?: string;
+  tenantName?: string;
+}
+
+export const getTenantBranding = async (subdomain: string): Promise<TenantBranding> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}api/tenants/${subdomain}/branding`);
+    return response.data;
+  } catch {
+    return {};
+  }
+};
+
+export const uploadTenantLogo = async (id: number, file: File): Promise<{ logoUrl: string }> => {
+  const formData = new FormData();
+  formData.append('logoFile', file);
+  const response = await axiosInstance.post(`${API_BASE_URL}api/tenants/${id}/upload-logo`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
 
 export const getAllTenants = async (): Promise<Tenant[]> => {
   const response = await axiosInstance.get(`${API_BASE_URL}api/tenants`);

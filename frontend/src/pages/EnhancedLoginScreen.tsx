@@ -28,6 +28,8 @@ import { projectManagementAppContextType, Credentials } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { Tenant } from '../models/tenantModel';
 import VersionDisplay from '../components/VersionDisplay';
+import { useDomainBranding } from '../hooks/useDomainBranding';
+import { getTenantBranding } from '../services/tenantApi';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -66,9 +68,28 @@ export const EnhancedLoginScreen: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
+    // Dynamic branding state (initialized with URL domain)
+    const urlBranding = useDomainBranding();
+    const [branding, setBranding] = useState(urlBranding);
 
     const { setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
     const navigation = useAppNavigation();
+
+    // Update branding when URL branding loads
+    useEffect(() => {
+        setBranding(urlBranding);
+    }, [urlBranding]);
+
+    // Live update branding when tenant is selected
+    useEffect(() => {
+        if (!selectedTenant) return;
+        getTenantBranding(selectedTenant).then(b => {
+            setBranding(prev => ({
+                logoUrl: b.logoUrl || prev.logoUrl,
+                tenantName: b.tenantName || prev.tenantName
+            }));
+        }).catch(() => {});
+    }, [selectedTenant]);
 
 
     // Fetch available tenants from backend
@@ -227,12 +248,13 @@ export const EnhancedLoginScreen: React.FC = () => {
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
                     <img
-                        src="/KarmaTech_logo.png"
-                        alt="KarmaTech AI"
+                        src={branding.logoUrl || "/KarmaTech_logo.png"}
+                        alt={branding.tenantName || "KarmaTech AI"}
                         style={{
                             maxWidth: '150px',
                             maxHeight: '150px',
-                            marginBottom: '0.5rem'
+                            marginBottom: '0.5rem',
+                            objectFit: 'contain'
                         }}
                     />
                 </Box>
@@ -245,7 +267,7 @@ export const EnhancedLoginScreen: React.FC = () => {
                         color: '#1976d2'
                     }}
                 >
-                    KarmaTech-AI EDR(Enterprise Digital Runner)
+                    {branding.tenantName || "KarmaTech AI EDR(Enterprise Digital Runner)"}
                 </Typography>
                 <Typography
                     variant="h6"

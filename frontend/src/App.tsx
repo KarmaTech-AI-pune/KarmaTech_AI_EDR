@@ -12,6 +12,7 @@ import { PermissionType } from './models';
 import { routes } from './routes/RouteConfig';
 import { UserSubscriptionProvider } from './context/UserSubscriptionContext'; // Import the new provider
 import { initializeCaches } from './utils/cacheInitializer'; // Import cache initializer
+import { TenantBrandingProvider } from './context/TenantBrandingContext';
 
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
@@ -224,13 +225,15 @@ function App() {
   return (
     <projectManagementAppContext.Provider value={contextValue}>
       <TenantProvider>
-        <UserSubscriptionProvider> {/* Wrap the application with UserSubscriptionProvider */}
-          <ProjectProvider>
-            <BusinessDevelopmentProvider>
-              <RouterProvider router={router} />
-            </BusinessDevelopmentProvider>
-          </ProjectProvider>
-        </UserSubscriptionProvider>
+        <TenantBrandingProvider>
+          <UserSubscriptionProvider> {/* Wrap the application with UserSubscriptionProvider */}
+            <ProjectProvider>
+              <BusinessDevelopmentProvider>
+                <RouterProvider router={router} />
+              </BusinessDevelopmentProvider>
+            </ProjectProvider>
+          </UserSubscriptionProvider>
+        </TenantBrandingProvider>
       </TenantProvider>
     </projectManagementAppContext.Provider>
   );

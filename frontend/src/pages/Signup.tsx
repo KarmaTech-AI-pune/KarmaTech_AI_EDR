@@ -22,6 +22,7 @@ import { z } from 'zod';
 import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType } from '../types';
+import { useDomainBranding } from '../hooks/useDomainBranding';
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
@@ -33,6 +34,7 @@ const subscriptionPlanOptions = [
 const theme = createTheme();
 const Signup: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const { logoUrl, tenantName } = useDomainBranding();
   
   // Get plan from query parameters (e.g., /signup?plan=professional)
   const planParam = searchParams.get('plan');
@@ -150,9 +152,9 @@ const Signup: React.FC = () => {
         }}
       >
         <Box sx={{ textAlign: 'center', marginBottom: 4 }}>
-          <img src="/KarmaTech_logo.png" alt="KarmaTech AI Logo" style={{ width: '80px', height: '80px', marginBottom: '16px' }} />
+          <img src={logoUrl} alt={tenantName || "KarmaTech Logo"} style={{ width: '80px', height: '80px', marginBottom: '16px', objectFit: 'contain' }} />
           <Typography variant="h4" component="h1" sx={{ color: '#1869DA', fontWeight: 'bold', marginBottom: 1 }}>
-            KarmaTech-AI EDR(Enterprise Digital Runner)
+            {tenantName}
           </Typography>
           <Typography variant="subtitle1" color="textSecondary">
             <VersionDisplay
@@ -179,7 +181,7 @@ const Signup: React.FC = () => {
             Create Account
           </Typography>
           <Typography variant="body2" color="textSecondary" sx={{ marginBottom: 3, textAlign: 'center' }}>
-            Join thousands of professionals using  EDR enterprise digital runner
+            {tenantName || "KarmaTech-AI EDR(Enterprise Digital Runner)"}
           </Typography>
 
           <FormProvider {...methods}>

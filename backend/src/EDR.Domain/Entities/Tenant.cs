@@ -49,6 +49,9 @@ namespace EDR.Domain.Entities
 
         public int MaxProjects { get; set; } = 50;
 
+        [MaxLength(1000)]
+        public string? LogoUrl { get; set; }
+
         public bool IsActive { get; set; } = true;
         public bool IsIsolated { get; set; } = false;
 
