@@ -1,7 +1,9 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
+using EDR.Domain;
+using EDR.Domain.Services;
 using Npgsql;
 namespace EDR.API.Strategies;
 
@@ -9,12 +11,15 @@ public abstract class TenantUserMigrationStrategyBase
 {
     private readonly TenantDbContext _tenantDbContext;
     private readonly IConfiguration _configuration;
+    private readonly ITenantConnectionResolver _connectionResolver;
 
     public TenantUserMigrationStrategyBase(TenantDbContext context,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ITenantConnectionResolver connectionResolver)
     {
         _tenantDbContext = context;
         _configuration = configuration;
+        _connectionResolver = connectionResolver;
     }
 
     protected async Task<(string? connectionString, string? sourceDb)> ResolveDbAsync(int tenantId)
@@ -25,13 +30,22 @@ public abstract class TenantUserMigrationStrategyBase
             return (null, null);
         }
 
-        var source = _configuration.GetConnectionString("AppDbConnection");
+        var dbType = _configuration[Constants.DbType];
+        string? source = await _connectionResolver.GetDefaultConnectionStringAsync();
         string? sourceDb = null;
 
         if (!string.IsNullOrWhiteSpace(source))
         {
-            var npgsqlBuilder = new NpgsqlConnectionStringBuilder(source);
-            sourceDb = npgsqlBuilder.Database; 
+            if (dbType == Constants.DbServerType)
+            {
+                var npgsqlBuilder = new NpgsqlConnectionStringBuilder(source);
+                sourceDb = npgsqlBuilder.Database;
+            }
+            else
+            {
+                var sqlBuilder = new SqlConnectionStringBuilder(source);
+                sourceDb = sqlBuilder.InitialCatalog;
+            }
         }
 
         return (tenantDb.ConnectionString, sourceDb);

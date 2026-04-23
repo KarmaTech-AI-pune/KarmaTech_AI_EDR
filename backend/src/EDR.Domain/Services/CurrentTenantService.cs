@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,7 +21,7 @@ namespace EDR.Domain.Services
         private readonly TenantDbContext _context;
         private readonly ILogger<CurrentTenantService> _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IConfiguration _configuration;
+        private readonly ITenantConnectionResolver _connectionResolver;
         private int? _tenantId;
         private string? _connectionString;
 
@@ -42,13 +42,13 @@ namespace EDR.Domain.Services
             TenantDbContext context,
             ILogger<CurrentTenantService> logger,
             IServiceProvider serviceProvider,
-            IConfiguration configuration)
+            ITenantConnectionResolver connectionResolver)
         {
             _httpContextAccessor = httpContextAccessor;
             _context = context;
             _logger = logger;
             _serviceProvider = serviceProvider;
-            _configuration = configuration;
+            _connectionResolver = connectionResolver;
             _logger.LogInformation("CurrentTenantService initialized");
         }
 
@@ -94,14 +94,19 @@ namespace EDR.Domain.Services
                 }
 
                 var tenantDb = await _context.TenantDatabases.Where(x => x.TenantId == tenantInfo.Id).FirstOrDefaultAsync();
+                
+                _tenantId = tenant;
+
                 if (tenantDb == null)
                 {
-                    _logger.LogWarning("No database configuration found for tenant: {TenantId}", tenant);
-                    return false;
+                    _logger.LogInformation("No explicit database configuration found for tenant {TenantId}. Falling back to default connection string.", tenant);
+                    _connectionString = await _connectionResolver.GetDefaultConnectionStringAsync();
                 }
-
-                _tenantId = tenant;
-                _connectionString = tenantDb.ConnectionString;
+                else
+                {
+                    _logger.LogInformation("Using specific database configuration for tenant {TenantId}", tenant);
+                    _connectionString = tenantDb.ConnectionString;
+                }
                 
                 var httpContext = _httpContextAccessor.HttpContext;
                 if (httpContext != null)
@@ -139,7 +144,7 @@ namespace EDR.Domain.Services
                 {
                     string connectionString = !string.IsNullOrEmpty(tenant.ConnectionString)
                         ? tenant.ConnectionString
-                        : _configuration.GetConnectionString("AppDbConnection");
+                        : await _connectionResolver.GetDefaultConnectionStringAsync();
 
                     using var scope = _serviceProvider.CreateScope();
                     var dbContext = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();

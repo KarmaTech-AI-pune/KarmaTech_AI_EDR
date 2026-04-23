@@ -29,6 +29,7 @@ export const useAppNavigation = () => {
     if (project && context?.setSelectedProject) {
       context.setSelectedProject(project);
       setProjectId(String(project.id));
+      sessionStorage.setItem('projectId', String(project.id)); // Direct persistent storage
       navigate(`/program-management/projects/project`);
     } else {
       navigate('/program-management');

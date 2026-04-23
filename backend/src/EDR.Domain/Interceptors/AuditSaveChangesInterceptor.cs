@@ -1,10 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using EDR.Domain.Entities;
 using EDR.Domain.Events;
 using EDR.Domain.Services;
 using EDR.Domain.Database;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EDR.Domain.Interceptors
 {
@@ -61,7 +66,7 @@ namespace EDR.Domain.Interceptors
             var oldValues = GetOldValues(entry);
             var newValues = GetNewValues(entry);
             var changedBy = _auditContext.GetCurrentUserName() ?? "Unknown User";
-            var changedAt = DateTime.Now;
+            var changedAt = DateTime.UtcNow;
             var reason = _auditContext.GetReason() ?? "No reason provided";
             var ipAddress = _auditContext.GetIpAddress() ?? "Unknown IP";
             var userAgent = _auditContext.GetUserAgent() ?? "Unknown User Agent";
@@ -140,4 +145,3 @@ namespace EDR.Domain.Interceptors
         }
     }
 }
-

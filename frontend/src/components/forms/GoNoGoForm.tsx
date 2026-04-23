@@ -20,7 +20,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  Alert,
   Chip,
   Tooltip
 } from '@mui/material';
@@ -66,8 +65,6 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   const { opportunityId, opportunity } = useBusinessDevelopment();
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [descriptions, setDescriptions] = useState<ScoringDescriptionsResponse>({ descriptions: {} });
-
-
 
   // Fetch BD Manager name from opportunity data and auto-populate BD Head field
   useEffect(() => {
@@ -141,7 +138,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                 typeOfBid: formData.HeaderInfo.TypeOfBid,
                 sector: formData.HeaderInfo.Sector || '',
                 tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
-                emd: formData.HeaderInfo.EmdAmount?.toString() || '',
+                emd: formData.HeaderInfo.Emd?.toString() || '',
                 office: formData.HeaderInfo.Office,
                 bdHead: formData.HeaderInfo.BdHead || ''
               }));
@@ -154,9 +151,13 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
               }));
             }
           }
-        } catch (error) {
-          console.error('Error loading Go/No Go decision:', error);
-          setServerError('Error loading Go/No Go decision:');
+        } catch (error: any) {
+          if (error.response?.status === 404) {
+            console.log('No Go/No Go decision found for this opportunity. Starting with a new form.');
+          } else {
+            console.error('Error loading Go/No Go decision:', error);
+            setServerError('Error loading Go/No Go decision');
+          }
         }
       }
     };
@@ -166,30 +167,22 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
 
   useEffect(() => {
     const getScoringDescription = async () => {
-
       try {
         const response = await getScoringDescriptions();
-
         setDescriptions(response);
       } catch (error) {
         console.error('Error loading Go/No Go decision:', error);
       }
-
     };
-
     getScoringDescription();
   }, []);
 
   const getDescriptionColor = (range: string) => {
     switch (range) {
-      case 'high':
-        return '#4caf50';
-      case 'medium':
-        return '#ff9800';
-      case 'low':
-        return '#f44336';
-      default:
-        return 'inherit';
+      case 'high': return '#4caf50';
+      case 'medium': return '#ff9800';
+      case 'low': return '#f44336';
+      default: return 'inherit';
     }
   };
   const [versions, setVersions] = useState<GoNoGoVersionDto[]>([]);
@@ -225,12 +218,10 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     bidtimeandcosts: { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
-  const [_serverError, setServerError] = useState<string | null>(null);
-
-  const MAX_POSSIBLE_SCORE = 120; // 12 criteria × 10 points each
+  const [serverError, setServerError] = useState<string | null>(null);
+  const MAX_POSSIBLE_SCORE = 120;
 
   const calculateTotalScore = () => {
-    // Return raw total (0-120) - no capping
     return Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
   };
 
@@ -243,25 +234,11 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     return calculateTotalScore() === MAX_POSSIBLE_SCORE;
   };
 
-  // Legacy function for backward compatibility - prefixed with underscore to indicate intentionally unused
-  const _getRawTotalScore = () => {
-    return calculateTotalScore();
-  };
-
-  // Legacy function for backward compatibility - prefixed with underscore to indicate intentionally unused
-  const _isScoreCapped = () => {
-    return false; // No longer capping scores
-  };
-
-  // Suppress unused variable warnings for legacy functions
-  void _getRawTotalScore;
-  void _isScoreCapped;
-
   const getDecisionStatus = () => {
-    const scorePercentage = calculateScorePercentage(); // Use percentage calculation
-    if (scorePercentage >= 70) return { text: 'GO', color: '#4caf50' }; // Green
-    if (scorePercentage >= 42) return { text: 'GO', color: '#ff9800' }; // Amber
-    return { text: 'NO GO', color: '#f44336' }; // Red
+    const scorePercentage = calculateScorePercentage();
+    if (scorePercentage >= 70) return { text: 'GO', color: '#4caf50' };
+    if (scorePercentage >= 42) return { text: 'GO', color: '#ff9800' };
+    return { text: 'NO GO', color: '#f44336' };
   };
 
   const handleCriteriaChange = (
@@ -273,9 +250,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       ...prev,
       [criteriaKey]: {
         ...prev[criteriaKey],
-        [field]: field === 'score'
-          ? Number(value)
-          : value
+        [field]: field === 'score' ? Number(value) : value
       }
     }));
   };
@@ -302,7 +277,6 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     };
 
     const newCriteria: { [key: string]: ScoringCriteria } = {};
-
     Object.entries(mappings).forEach(([dbKey, stateKey]) => {
       const dbValue = dbCriteria[dbKey];
       if (dbValue) {
@@ -314,7 +288,6 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
         };
       }
     });
-
     return newCriteria;
   };
 
@@ -324,10 +297,8 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     setIsVersionSelected(true);
     const formData = JSON.parse(version.formData);
 
-    // Update decision status when selecting RD-approved version
     if (onDecisionStatusChange) {
       const decision = formData.Summary.TotalScore >= 50 ? "GO" : "NO GO";
-      console.log(`DEBUG: onDecisionStatusChange from handleVersionSelect - version: ${version.versionNumber}, score: ${formData.Summary.TotalScore}, decision: ${decision}`);
       onDecisionStatusChange(decision, version.versionNumber);
     }
 
@@ -336,37 +307,25 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       typeOfBid: formData.HeaderInfo.TypeOfBid,
       sector: formData.HeaderInfo.Sector || '',
       tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
-      emd: formData.HeaderInfo.EmdAmount?.toString() || '',
+      emd: formData.HeaderInfo.Emd?.toString() || '',
       office: formData.HeaderInfo.Office,
       bdHead: formData.HeaderInfo.BdHead || ''
     }));
 
-    // Update scoring criteria
     const mappedCriteria = mapScoringCriteria(formData.ScoringCriteria);
-    setCriteria(prev => ({
-      ...prev,
-      ...mappedCriteria
-    }));
+    setCriteria(prev => ({ ...prev, ...mappedCriteria }));
   }, [onDecisionStatusChange]);
 
   const loadVersions = useCallback(async (headerId: number) => {
     try {
       setIsLoading(true);
       const fetchedVersions = await goNoGoApi.getVersions(headerId);
-
-      // Sort versions by version number in ascending order
       const sortedVersions = [...fetchedVersions].sort((a, b) => a.versionNumber - b.versionNumber);
-
-      // Get versions in order (BDM = 1, RM = 2, RD = 3)
       const bdmVersion = sortedVersions.find(v => v.versionNumber === 1);
       const rmVersion = sortedVersions.find(v => v.versionNumber === 2);
       const rdVersion = sortedVersions.find(v => v.versionNumber === 3);
-
-      // Set the versions in the correct order (RD -> RM -> BDM)
       const orderedVersions = [rdVersion, rmVersion, bdmVersion].filter((v): v is GoNoGoVersionDto => v !== undefined);
       setVersions(orderedVersions);
-
-      // Set the current version to the RD version if it exists
       if (rdVersion) {
         setCurrentVersion(rdVersion);
         setIsVersionSelected(true);
@@ -390,16 +349,12 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       });
       if (version.goNoGoDecisionHeaderId) {
         await loadVersions(version.goNoGoDecisionHeaderId);
-        
-        // Update decision status when RD approves
         if (onDecisionStatusChange && version.versionNumber === 3) {
           const updatedVersions = await goNoGoApi.getVersions(version.goNoGoDecisionHeaderId);
           const rdVersion = updatedVersions.find(v => v.versionNumber === 3);
           if (rdVersion) {
-            console.log('DEBUG: Full rdVersion:', JSON.stringify(rdVersion));
             const formData = JSON.parse(rdVersion.formData);
             const decisionStatus = formData.Summary.TotalScore >= 50 ? "GO" : "NO GO";
-            console.log(`DEBUG: onDecisionStatusChange from handleApproveVersion - score: ${formData.Summary.TotalScore}, decision: ${decisionStatus}`);
             onDecisionStatusChange(decisionStatus, 3);
           }
         }
@@ -411,54 +366,37 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     }
   }, [context?.user?.name, onDecisionStatusChange, loadVersions]);
 
-
   const canEditForm = useCallback((): boolean => {
     if (!currentVersion) return true;
-
     const status = currentVersion.status as GoNoGoVersionStatus;
-    const userRole = context?.user?.roles?.[0].name;
-
-    // Allow editing if it's the user's turn to approve or if they are the creator
     switch (status) {
       case GoNoGoVersionStatus.BDM_PENDING:
-        return userRole === 'Business Development Manager';
+        return !!context?.canEditOpportunity || !!context?.canSubmitForApproval;
       case GoNoGoVersionStatus.RM_PENDING:
-        return userRole === 'Regional Manager';
+        return !!context?.canReviewBD;
       case GoNoGoVersionStatus.RD_PENDING:
-        return userRole === 'Regional Director';
+        return !!context?.canApproveBD;
       case GoNoGoVersionStatus.BDM_APPROVED:
-        return userRole === 'Regional Manager';
+        return !!context?.canReviewBD;
       case GoNoGoVersionStatus.RM_APPROVED:
-        return userRole === 'Regional Director';
+        return !!context?.canApproveBD;
       case GoNoGoVersionStatus.RD_APPROVED:
-        return userRole === 'Regional Director';
+        return !!context?.canApproveBD;
       default:
         return false;
     }
-  }, [currentVersion, context?.user?.roles]);
+  }, [currentVersion, context]);
 
   const isHeaderReadOnly = useCallback((): boolean => {
-    // Header is read-only if:
-    // 1. There is a current version (form has been submitted)
-    // 2. The current version's status is not BDM_PENDING (BDM has submitted it)
-    return !!(currentVersion &&
-      currentVersion.status !== GoNoGoVersionStatus.BDM_PENDING);
+    return !!(currentVersion && currentVersion.status !== GoNoGoVersionStatus.BDM_PENDING);
   }, [currentVersion]);
 
-
   const handleHeaderChange = (field: keyof HeaderInfo, value: string | TypeOfBid) => {
-    // If header is read-only, don't allow changes
-    if (isHeaderReadOnly()) {
-      console.log('Header information cannot be modified after submission.');
-      return;
-    }
-
+    if (isHeaderReadOnly()) return;
     setHeaderInfo(prev => {
       if (field === 'typeOfBid') {
-        // Convert string to TypeOfBid enum
         const enumValue = typeof value === 'string' ? parseInt(value, 10) : value;
-        const typedValue: TypeOfBid = enumValue;
-        return { ...prev, typeOfBid: typedValue };
+        return { ...prev, typeOfBid: enumValue as TypeOfBid };
       }
       return { ...prev, [field]: value };
     });
@@ -482,90 +420,36 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     return displayNames[key] || key;
   };
 
-
   const handleSubmit = async () => {
     try {
-      if (!opportunityId) {
-        console.error('No opportunity ID found in context');
-        return;
-      }
-
+      if (!opportunityId) return;
       const tenderFee = parseFloat(headerInfo.tenderFee) || 0;
       const emdAmount = parseFloat(headerInfo.emd) || 0;
-
       const updatedFields: GoNoGoDecisionPayload = {
         HeaderInfo: {
           TypeOfBid: Number(headerInfo?.typeOfBid || 0),
           Sector: headerInfo?.sector || '',
-          TenderFee: tenderFee || 0,
-          Emd: emdAmount || 0,
+          TenderFee: tenderFee,
+          Emd: emdAmount,
           Office: headerInfo?.office || '',
           BdHead: headerInfo?.bdHead || ''
         },
         ScoringCriteria: {
-          MarketingPlan: {
-            Score: criteria.marketingplan.score,
-            Comments: criteria.marketingplan.comments,
-            ScoringDescriptionId: criteria.marketingplan.scoringDescriptionId
-          },
-          ClientRelationship: {
-            Score: criteria.clientrelationship.score,
-            Comments: criteria.clientrelationship.comments,
-            ScoringDescriptionId: criteria.clientrelationship.scoringDescriptionId
-          },
-          ProjectKnowledge: {
-            Score: criteria.projectknowledge.score,
-            Comments: criteria.projectknowledge.comments,
-            ScoringDescriptionId: criteria.projectknowledge.scoringDescriptionId
-          },
-          TechnicalEligibility: {
-            Score: criteria.technicaleligibility.score,
-            Comments: criteria.technicaleligibility.comments,
-            ScoringDescriptionId: criteria.technicaleligibility.scoringDescriptionId
-          },
-          FinancialEligibility: {
-            Score: criteria.financialeligibility.score,
-            Comments: criteria.financialeligibility.comments,
-            ScoringDescriptionId: criteria.financialeligibility.scoringDescriptionId
-          },
-          StaffAvailability: {
-            Score: criteria.keystaffavailability.score,
-            Comments: criteria.keystaffavailability.comments,
-            ScoringDescriptionId: criteria.keystaffavailability.scoringDescriptionId
-          },
-          CompetitionAssessment: {
-            Score: criteria.projectcompetition.score,
-            Comments: criteria.projectcompetition.comments,
-            ScoringDescriptionId: criteria.projectcompetition.scoringDescriptionId
-          },
-          CompetitivePosition: {
-            Score: criteria.competitionposition.score,
-            Comments: criteria.competitionposition.comments,
-            ScoringDescriptionId: criteria.competitionposition.scoringDescriptionId
-          },
-          FutureWorkPotential: {
-            Score: criteria.futureworkpotential.score,
-            Comments: criteria.futureworkpotential.comments,
-            ScoringDescriptionId: criteria.futureworkpotential.scoringDescriptionId
-          },
-          Profitability: {
-            Score: criteria.projectprofitability.score,
-            Comments: criteria.projectprofitability.comments,
-            ScoringDescriptionId: criteria.projectprofitability.scoringDescriptionId
-          },
-          BidSchedule: {
-            Score: criteria.projectschedule.score,
-            Comments: criteria.projectschedule.comments,
-            ScoringDescriptionId: criteria.projectschedule.scoringDescriptionId
-          },
-          ResourceAvailability: {
-            Score: criteria.bidtimeandcosts.score,
-            Comments: criteria.bidtimeandcosts.comments,
-            ScoringDescriptionId: criteria.bidtimeandcosts.scoringDescriptionId
-          }
+          MarketingPlan: { Score: criteria.marketingplan.score, Comments: criteria.marketingplan.comments, ScoringDescriptionId: criteria.marketingplan.scoringDescriptionId },
+          ClientRelationship: { Score: criteria.clientrelationship.score, Comments: criteria.clientrelationship.comments, ScoringDescriptionId: criteria.clientrelationship.scoringDescriptionId },
+          ProjectKnowledge: { Score: criteria.projectknowledge.score, Comments: criteria.projectknowledge.comments, ScoringDescriptionId: criteria.projectknowledge.scoringDescriptionId },
+          TechnicalEligibility: { Score: criteria.technicaleligibility.score, Comments: criteria.technicaleligibility.comments, ScoringDescriptionId: criteria.technicaleligibility.scoringDescriptionId },
+          FinancialEligibility: { Score: criteria.financialeligibility.score, Comments: criteria.financialeligibility.comments, ScoringDescriptionId: criteria.financialeligibility.scoringDescriptionId },
+          StaffAvailability: { Score: criteria.keystaffavailability.score, Comments: criteria.keystaffavailability.comments, ScoringDescriptionId: criteria.keystaffavailability.scoringDescriptionId },
+          CompetitionAssessment: { Score: criteria.projectcompetition.score, Comments: criteria.projectcompetition.comments, ScoringDescriptionId: criteria.projectcompetition.scoringDescriptionId },
+          CompetitivePosition: { Score: criteria.competitionposition.score, Comments: criteria.competitionposition.comments, ScoringDescriptionId: criteria.competitionposition.scoringDescriptionId },
+          FutureWorkPotential: { Score: criteria.futureworkpotential.score, Comments: criteria.futureworkpotential.comments, ScoringDescriptionId: criteria.futureworkpotential.scoringDescriptionId },
+          Profitability: { Score: criteria.projectprofitability.score, Comments: criteria.projectprofitability.comments, ScoringDescriptionId: criteria.projectprofitability.scoringDescriptionId },
+          BidSchedule: { Score: criteria.projectschedule.score, Comments: criteria.projectschedule.comments, ScoringDescriptionId: criteria.projectschedule.scoringDescriptionId },
+          ResourceAvailability: { Score: criteria.bidtimeandcosts.score, Comments: criteria.bidtimeandcosts.comments, ScoringDescriptionId: criteria.bidtimeandcosts.scoringDescriptionId }
         },
         Summary: {
-          TotalScore: calculateTotalScore(), // Raw total score (0-120)
+          TotalScore: calculateTotalScore(),
           Status: getDecisionStatus().text === 'GO' ? GoNoGoStatus.Green : GoNoGoStatus.Red,
           DecisionComments: '',
           ActionPlan: ''
@@ -580,15 +464,12 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       };
 
       if (decisionId && currentVersion !== null) {
-        // Get the next status based on current user's role
-        const userRole = context?.user?.roles?.[0].name;
         let nextStatus = GoNoGoVersionStatus.BDM_PENDING;
-
-        if (userRole === 'Business Development Manager') {
+        if (context?.canEditOpportunity || context?.canSubmitForApproval) {
           nextStatus = GoNoGoVersionStatus.RM_PENDING;
-        } else if (userRole === 'Regional Manager') {
+        } else if (context?.canReviewBD) {
           nextStatus = GoNoGoVersionStatus.RD_PENDING;
-        } else if (userRole === 'Regional Director') {
+        } else if (context?.canApproveBD) {
           nextStatus = GoNoGoVersionStatus.RD_APPROVED;
         }
 
@@ -605,34 +486,16 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
         const response = await goNoGoApi.createVersion(decisionId, createGoNoAfterUpdate);
         if (response.goNoGoDecisionHeaderId) {
           await loadVersions(response.goNoGoDecisionHeaderId);
-
-          // Call onDecisionStatusChange with current status and version
           if (onDecisionStatusChange && nextStatus === GoNoGoVersionStatus.RD_APPROVED) {
-            onDecisionStatusChange(
-              getDecisionStatus().text,
-              currentVersion.versionNumber
-            );
+            onDecisionStatusChange(getDecisionStatus().text, currentVersion.versionNumber);
           }
-
-          // Scroll to top to make version visible to user
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-      }
-      else {
-        // For new decisions, start with version 1 and BDM_PENDING status
-        // Send the structured payload directly
+      } else {
         const response = await goNoGoApi.create(updatedFields);
         if (response.headerId) {
           await loadVersions(response.headerId);
-
-          // Scroll to top to make version visible to user
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       }
     } catch (error) {
@@ -658,14 +521,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   const renderScoringDescriptions = (criteriaKey: string, currentScore: number) => {
     const key = criteriaKey.toLowerCase();
     const description = descriptions?.descriptions?.[key];
-
-    if (!description) {
-      return (
-        <Typography color="error">
-          No scoring descriptions available for {showName(criteriaKey)}
-        </Typography>
-      );
-    }
+    if (!description) return <Typography color="error">No scoring descriptions available for {showName(criteriaKey)}</Typography>;
 
     return (
       <List dense>
@@ -696,22 +552,19 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
 
   return (
     <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
-      {serverError && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setServerError(null)}>
-          {serverError}
-        </Alert>
-      )}
-      {isLoading && (
-        <Typography variant="body1" sx={{ mb: 2 }}>
-          Loading...
-        </Typography>
-      )}
-
+      {isLoading && <Typography variant="body1" sx={{ mb: 2 }}>Loading...</Typography>}
       {currentVersion && isVersionSelected && (
         <GoNoGoApprovalStatus
           status={currentVersion.status as GoNoGoVersionStatus}
           onApprove={() => handleApproveVersion(currentVersion)}
-          userRole={String(context?.user?.roles?.[0].name || '')}
+          canApprove={
+            // RM can only act when current version is RM_PENDING
+            (Number(currentVersion.status) === GoNoGoVersionStatus.RM_PENDING && !!context?.canReviewBD && !context?.canApproveBD) ||
+            // RD can only act when current version is RD_PENDING
+            (Number(currentVersion.status) === GoNoGoVersionStatus.RD_PENDING && !!context?.canApproveBD) ||
+            // BDM can act when BDM_PENDING
+            (Number(currentVersion.status) === GoNoGoVersionStatus.BDM_PENDING && !!context?.canEditOpportunity && !context?.canReviewBD && !context?.canApproveBD)
+          }
           isEditable={canEditForm() && isEditing}
           score={calculateTotalScore()}
         />
@@ -723,12 +576,20 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
           currentVersion={currentVersion?.versionNumber || 1}
           onVersionSelect={handleVersionSelect}
           onApprove={handleApproveVersion}
-          userRole={String(context?.user?.roles?.[0].name || '')}
+          getActionLabel={(status) => {
+            const s = Number(status);
+            // RD sees 'Approve' only on RD_PENDING versions
+            if (s === GoNoGoVersionStatus.RD_PENDING && !!context?.canApproveBD) return 'Approve';
+            // RM sees 'Send to Approve' only on RM_PENDING versions (and RM does NOT have canApproveBD)
+            if (s === GoNoGoVersionStatus.RM_PENDING && !!context?.canReviewBD && !context?.canApproveBD) return 'Send to Approve';
+            // BDM sees 'Send to Approve' on BDM_PENDING
+            if (s === GoNoGoVersionStatus.BDM_PENDING && !!context?.canEditOpportunity && !context?.canReviewBD && !context?.canApproveBD) return 'Send to Approve';
+            return null;
+          }}
           score={totalScore || 0}
         />
       )}
 
-      {/* Title section matching WBS form style */}
       <Paper sx={{ p: 2, mb: 3, border: '1px solid rgba(224, 224, 224, 1)', boxShadow: 'none' }}>
         <Typography variant="h5">Go/No Go Decision Form</Typography>
       </Paper>
@@ -746,7 +607,6 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                   value={headerInfo.typeOfBid.toString()}
                   onChange={(e) => handleHeaderChange('typeOfBid', Number(e.target.value) as TypeOfBid)}
                   label="Type of Bid"
-                  data-testid="type-of-bid-select"
                 >
                   <MenuItem value={TypeOfBid.TimeAndExpense.toString()}>Time&Expense</MenuItem>
                   <MenuItem value={TypeOfBid.Lumpsum.toString()}>Lumpsum</MenuItem>
@@ -755,104 +615,42 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Sector"
-                value={headerInfo.sector}
-                onChange={(e) => handleHeaderChange('sector', e.target.value)}
-                disabled={isHeaderReadOnly()}
-              />
+              <TextField fullWidth label="Sector" value={headerInfo.sector} onChange={(e) => handleHeaderChange('sector', e.target.value)} disabled={isHeaderReadOnly()} />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="BD Head"
-                value={headerInfo.bdHead}
-                InputProps={{
-                  readOnly: true,
-                }}
-                helperText="Auto-populated from Opportunity"
-              />
+              <TextField fullWidth label="BD Head" value={headerInfo.bdHead} InputProps={{ readOnly: true }} helperText="Auto-populated from Opportunity" />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Office"
-                value={headerInfo.office}
-                onChange={(e) => handleHeaderChange('office', e.target.value)}
-                disabled={isHeaderReadOnly()}
-              />
+              <TextField fullWidth label="Office" value={headerInfo.office} onChange={(e) => handleHeaderChange('office', e.target.value)} disabled={isHeaderReadOnly()} />
             </Grid>
-            {isHeaderReadOnly() && (
-              <Grid item xs={12}>
-                <Typography variant="caption" color="text.secondary">
-                  Header information cannot be modified after submission.
-                </Typography>
-              </Grid>
-            )}
           </Grid>
         </AccordionDetails>
       </Accordion>
 
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Scoring Criteria
-        </Typography>
+        <Typography variant="h6" gutterBottom>Scoring Criteria</Typography>
         {Object.entries(criteria).map(([key, value]) => (
           <Card key={key} sx={{ mb: 2 }}>
             <CardContent>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle1">
-                    {showName(key)}
-                  </Typography>
-                </Grid>
+                <Grid item xs={12} sm={6}><Typography variant="subtitle1">{showName(key)}</Typography></Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth size="small">
                     <InputLabel>Score</InputLabel>
-                    <Select
-                      value={value.score}
-                      onChange={(e) => handleScoreChange(key, e.target.value)}
-                      label="Score"
-                      data-testid={`${key}-score-select`}
-                    >
-                      {scoreRanges.map((range) => (
-                        <MenuItem key={range.value} value={range.value}>
-                          {range.label}
-                        </MenuItem>
-                      ))}
+                    <Select value={value.score} onChange={(e) => handleScoreChange(key, e.target.value)} label="Score">
+                      {scoreRanges.map((range) => <MenuItem key={range.value} value={range.value}>{range.label}</MenuItem>)}
                     </Select>
                   </FormControl>
                 </Grid>
+                <Grid item xs={12}>{renderScoringDescriptions(key, value.score)}</Grid>
                 <Grid item xs={12}>
-                  {renderScoringDescriptions(key, value.score)}
-                </Grid>
-                <Grid item xs={12}>
-                  <Button
-                    startIcon={<CommentIcon />}
-                    onClick={() => handleCriteriaChange(key, 'showComments', !value.showComments)}
-                    size="small"
-                  >
+                  <Button startIcon={<CommentIcon />} onClick={() => handleCriteriaChange(key, 'showComments', !value.showComments)} size="small">
                     {value.showComments ? 'Hide Comments' : 'Add Comments'}
                   </Button>
                 </Grid>
                 <Grid item xs={12}>
                   <Collapse in={value.showComments}>
-                    <Box sx={{ mt: 2 }}>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                          <TextField
-                            fullWidth
-                            multiline
-                            rows={2}
-                            label="Comments/Actions"
-                            value={value.comments}
-                            onChange={(e) => handleCriteriaChange(key, 'comments', e.target.value)}
-                            size="small"
-                          />
-                        </Grid>
-                      </Grid>
-                    </Box>
+                    <Box sx={{ mt: 2 }}><TextField fullWidth multiline rows={2} label="Comments/Actions" value={value.comments} onChange={(e) => handleCriteriaChange(key, 'comments', e.target.value)} size="small" /></Box>
                   </Collapse>
                 </Grid>
               </Grid>
@@ -862,61 +660,24 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       </Box>
 
       <Paper elevation={3} sx={{ p: 3, mt: 4, bgcolor: '#f5f5f5' }}>
-        <Typography variant="h6" gutterBottom>
-          Decision Summary
-        </Typography>
-        
-        {/* Perfect Score Success Indicator - Requirement 2.5 */}
-        {isPerfectScore() && (
-          <Alert 
-            severity="success" 
-            icon={<CheckCircleIcon />}
-            sx={{ mb: 2 }}
-          >
-            <Typography variant="body2" fontWeight="medium">
-              Excellent! You've achieved a perfect score of 100%.
-            </Typography>
-          </Alert>
-        )}
-
+        <Typography variant="h6" gutterBottom>Decision Summary</Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body1">
-                Total Score:
-              </Typography>
-              {/* Display percentage with "%" suffix - Requirement 2.1 */}
-              <Chip 
-                label={`${calculateScorePercentage()}%`}
-                color={isPerfectScore() ? "success" : "default"}
-                size="medium"
-                sx={{ fontWeight: 'bold', fontSize: '1rem' }}
-              />
-              <Tooltip title={`Raw total: ${calculateTotalScore()}/120`}>
-                <InfoOutlinedIcon color="action" fontSize="small" sx={{ cursor: 'help' }} />
-              </Tooltip>
+              <Typography variant="body1">Total Score:</Typography>
+              <Chip label={`${calculateScorePercentage()}%`} color={isPerfectScore() ? "success" : "default"} size="medium" sx={{ fontWeight: 'bold', fontSize: '1rem' }} />
+              <Tooltip title={`Raw total: ${calculateTotalScore()}/120`}><InfoOutlinedIcon color="action" fontSize="small" sx={{ cursor: 'help' }} /></Tooltip>
             </Box>
-            {/* Show raw score for transparency and indicate maximum possible score - Requirements 2.2, 2.3 */}
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
               {calculateScorePercentage()}% ({calculateTotalScore()}/120) - Maximum possible score: 120
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography
-              variant="body1"
-              sx={{ color: getDecisionStatus().color, fontWeight: 'bold' }}
-            >
-              Decision Status: {getDecisionStatus().text}
-            </Typography>
+            <Typography variant="body1" sx={{ color: getDecisionStatus().color, fontWeight: 'bold' }}>Decision Status: {getDecisionStatus().text}</Typography>
           </Grid>
         </Grid>
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={!canEditForm()}
-          >
+          <Button variant="contained" color="primary" onClick={handleSubmit} disabled={!canEditForm()}>
             {(currentVersion?.versionNumber || decisionId) ? 'Update Decision' : 'Submit Decision'}
           </Button>
         </Box>

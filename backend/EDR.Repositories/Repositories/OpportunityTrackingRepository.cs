@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
 using EDR.Repositories.Interfaces;
@@ -17,8 +17,8 @@ namespace EDR.Repositories.Repositories
         public async Task<OpportunityTracking> AddAsync(OpportunityTracking opportunityTracking)
         {
             // Set audit fields
-            opportunityTracking.CreatedAt = DateTime.Now;
-            opportunityTracking.UpdatedAt = DateTime.Now;
+            opportunityTracking.CreatedAt = DateTime.UtcNow;
+            opportunityTracking.UpdatedAt = DateTime.UtcNow;
 
             _context.OpportunityTrackings.Add(opportunityTracking);
             await _context.SaveChangesAsync();
@@ -51,7 +51,7 @@ namespace EDR.Repositories.Repositories
             var existingOpportunity = await GetByIdAsync(opportunityTracking.Id);
 
             // Update audit fields
-            opportunityTracking.UpdatedAt = DateTime.Now;
+            opportunityTracking.UpdatedAt = DateTime.UtcNow;
 
             // Update all properties
             _context.Entry(existingOpportunity).CurrentValues.SetValues(opportunityTracking);

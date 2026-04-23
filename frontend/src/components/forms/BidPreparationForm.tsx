@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { projectManagementAppContext } from '../../App';
+import { projectManagementAppContextType } from '../../types';
 import BidVersionHistory from './BidVersionHistory';
 import {
   Box,
@@ -252,9 +254,10 @@ const initializeCategories = (): DocumentCategory[] => {
 
 const BidPreparationForm: React.FC = () => {
   const { opportunityId } = useBusinessDevelopment();
+  const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [categories, setCategories] = useState<DocumentCategory[]>(initializeCategories());
   const [editMode, setEditMode] = useState(false);
-  const [currentRole, setCurrentRole] = useState<'Business Development Manager' | 'Regional Manager' | 'Regional Director'>('Business Development Manager');
+
   const [status, setStatus] = useState<BidPreparationStatus>(BidPreparationStatus.Draft);
   const [comments, setComments] = useState('');
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -262,21 +265,14 @@ const BidPreparationForm: React.FC = () => {
   const [versionHistory, setVersionHistory] = useState<BidVersionHistoryType[]>([]);
   // This state is used to track the latest version from history
   const [currentVersion, setCurrentVersion] = useState<BidVersionHistoryType | undefined>();
-  const [_error, setError] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     loadBidPreparationData();
     setEditMode(false);
   }, []);
 
-  useEffect(() => {
-    const user = localStorage.getItem('user')
-    if (user) {
-      const userData = JSON.parse(user);
-      const role = userData.roles?.[0]?.name || null;
-      setCurrentRole(role);
-    }
-  }, []);
+
 
   const loadBidPreparationData = async () => {
     try {
@@ -385,7 +381,7 @@ const BidPreparationForm: React.FC = () => {
       // Ensure we're passing a number to the API
       const opportunityIdNum = Number(opportunityId);
       
-      if ((currentRole === 'Regional Director' || currentRole === 'Regional Manager')) {
+      if (context?.canApproveBD || context?.canReviewBD) {
         await bidPreparationApi.approveOrReject(
           opportunityIdNum,
           approvalAction === 'approve' ? true : false,
@@ -562,14 +558,14 @@ const BidPreparationForm: React.FC = () => {
       <Container maxWidth="xl" sx={{ py: 2 }}>
         <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6">
-            Status: {getStatusLabel(status)} {currentRole === 'Regional Director' ? '(Reviewer)' : '(Editor)'}
+            Status: {getStatusLabel(status)} {context?.canApproveBD ? '(Reviewer)' : '(Editor)'}
             {currentVersion && <span style={{ fontSize: '0.8rem', marginLeft: '8px' }}>
               (Version: {currentVersion.version})
             </span>}
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
-            {currentRole === 'Business Development Manager' && (status === BidPreparationStatus.Draft) && (
+            {(context?.canEditOpportunity || context?.canSubmitForApproval) && (status === BidPreparationStatus.Draft) && (
               <>
                 {editMode && (
                   <Button
@@ -601,7 +597,7 @@ const BidPreparationForm: React.FC = () => {
               </>
             )}
 
-            {(currentRole === 'Regional Director' || currentRole === 'Regional Manager') && status === BidPreparationStatus.PendingApproval && (
+            {(context?.canApproveBD || context?.canReviewBD) && status === BidPreparationStatus.PendingApproval && (
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
                   variant="contained"
@@ -622,11 +618,6 @@ const BidPreparationForm: React.FC = () => {
           </Box>
         </Box>
 
-        {error && (
-          <Alert data-testid="error-alert" severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
 
         <Paper sx={{ mb: 2 }}>
           <Table>
@@ -646,7 +637,7 @@ const BidPreparationForm: React.FC = () => {
           </Table>
         </Paper>
 
-        {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && status === BidPreparationStatus.Draft && editMode && (
+        {(context?.canEditOpportunity || context?.canReviewBD) && status === BidPreparationStatus.Draft && editMode && (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"

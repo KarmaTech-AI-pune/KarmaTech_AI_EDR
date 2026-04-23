@@ -1,6 +1,6 @@
 import { createContext, useState, ReactNode, useContext, useEffect, useCallback } from 'react';
 import { OpportunityTracking, OpportunityHistory } from '../models';
-import { opportunityApi } from '../dummyapi/opportunityApi';
+import { opportunityApi } from '../services/opportunityApi';
 import { getOpportunityHistoriesByOpportunityId } from '../dummyapi/dummyOpportunityHistoryApi';
 
 interface BusinessDevelopmentContextType {

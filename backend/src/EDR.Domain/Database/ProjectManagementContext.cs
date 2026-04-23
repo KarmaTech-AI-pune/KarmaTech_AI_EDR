@@ -10,9 +10,9 @@ namespace EDR.Domain.Database
 {
     public class ProjectManagementContext : IdentityDbContext<User, Role, string>
     {
-        public int? TenantId { get; private set; }
+        public int? TenantId => _currentTenantService?.TenantId ?? 1;
         private readonly ICurrentTenantService _currentTenantService;
-        public string CurrentTenantConnectionString { get; set; }
+        public string? CurrentTenantConnectionString => _currentTenantService?.ConnectionString;
         private readonly IConfiguration _configuration;
 
 
@@ -23,22 +23,21 @@ namespace EDR.Domain.Database
         ) : base(options)
         {
             _currentTenantService = currentTenantService;
-            TenantId = _currentTenantService?.TenantId ?? 1;
-            CurrentTenantConnectionString = _currentTenantService?.ConnectionString;
             _configuration = configuration;
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (!string.IsNullOrEmpty(CurrentTenantConnectionString))
+            var connectionString = CurrentTenantConnectionString;
+            if (!string.IsNullOrEmpty(connectionString))
             {
                 if (_configuration[Constants.DbType] == Constants.DbServerType)
                 {
-                    optionsBuilder.UseNpgsql(CurrentTenantConnectionString);
+                    optionsBuilder.UseNpgsql(connectionString);
                 }
                 else
                 {
-                    optionsBuilder.UseSqlServer(CurrentTenantConnectionString,
+                    optionsBuilder.UseSqlServer(connectionString,
                         sqlOptions => sqlOptions.UseCompatibilityLevel(130)); // SQL Server 2016
                 }
             }
@@ -1264,7 +1263,7 @@ namespace EDR.Domain.Database
                 entity.HasOne(h => h.Project)
                     .WithMany()
                     .HasForeignKey(h => h.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)

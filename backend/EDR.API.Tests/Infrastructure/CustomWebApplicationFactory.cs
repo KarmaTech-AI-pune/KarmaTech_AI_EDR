@@ -227,7 +227,7 @@ namespace EDR.API.Tests.Infrastructure
         public string GetUserTypeFromClaims() => "TenantUser";
         public bool IsSuperAdminFromClaims() => true;
         public Task<bool> SetTenantContextAsync(string tenantDomain) => Task.FromResult(true);
-        public Task<bool> ValidateTenantAccessAsync(string userId, int tenantId) => Task.FromResult(true);
+        public Task<TenantAccessResult> ValidateTenantAccessAsync(string userId, int tenantId) => Task.FromResult(TenantAccessResult.Success);
     }
 
     /// <summary>

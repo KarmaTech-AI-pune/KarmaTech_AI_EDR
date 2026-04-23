@@ -43,6 +43,10 @@ export interface projectManagementAppContextType {
     setCanEditOpportunity: (can: boolean) => void;
     canDeleteOpportunity: boolean;
     setCanDeleteOpportunity: (can: boolean) => void;
+    canCreateOpportunity: boolean;
+    setCanCreateOpportunity: (can: boolean) => void;
+    canViewOpportunity: boolean;
+    setCanViewOpportunity: (can: boolean) => void;
     //canSubmitForReview: boolean;
     //setCanSubmitForReview: (can: boolean) => void;
     canReviewBD: boolean;

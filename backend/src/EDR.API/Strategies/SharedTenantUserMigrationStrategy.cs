@@ -1,6 +1,7 @@
-﻿using EDR.Application.Services.IContract;
+using EDR.Application.Services.IContract;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
+using EDR.Domain.Services;
 
 namespace EDR.API.Strategies;
 
@@ -10,7 +11,9 @@ public class SharedTenantUserMigrationStrategy : TenantUserMigrationStrategyBase
     private readonly ILogger<TenantUserMigrationStrategyBase> _logger;
 
     public SharedTenantUserMigrationStrategy(TenantDbContext context, ITenantMigrationService tenantMigrationService,
-        IConfiguration configuration, ILogger<TenantUserMigrationStrategyBase> logger) : base(context, configuration)
+        IConfiguration configuration, ILogger<TenantUserMigrationStrategyBase> logger,
+        ITenantConnectionResolver connectionResolver) 
+        : base(context, configuration, connectionResolver)
     {
         _tenantMigrationService = tenantMigrationService;
         _logger = logger;
