@@ -25,6 +25,7 @@ import { VersionDisplay } from '../components/VersionDisplay';
 import ReleaseNotesModal from '../components/ReleaseNotesModal';
 import { releaseNotesApi } from '../services/releaseNotesApi';
 import { versionApi } from '../services/versionApi';
+import { useDomainBranding } from '../hooks/useDomainBranding';
 
 const MANUAL_VERSION_OVERRIDE = '1.5.0'; // Set this to e.g. '1.5.0' to force a version display
 
@@ -37,6 +38,7 @@ export const LoginScreen: React.FC = () => {
     const [requiresOtp, setRequiresOtp] = useState(false);
     const [isReleaseNotesModalOpen, setIsReleaseNotesModalOpen] = useState(false);
     const [currentVersion, setCurrentVersion] = useState('');
+    const { logoUrl, tenantName } = useDomainBranding();
     const { isAuthenticated, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
     const { refreshSubscription } = useContext(UserSubscriptionContext)!; // Access refreshSubscription
     const navigation = useAppNavigation();
@@ -171,12 +173,13 @@ export const LoginScreen: React.FC = () => {
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
                     <img
-                        src="/KarmaTech_logo.png"
-                        alt="KarmaTech AI"
+                        src={logoUrl}
+                        alt={tenantName || "KarmaTech AI"}
                         style={{
                             maxWidth: '150px',
                             maxHeight: '150px',
-                            marginBottom: '0.5rem'
+                            marginBottom: '0.5rem',
+                            objectFit: 'contain'
                         }}
                     />
                 </Box>
@@ -189,7 +192,7 @@ export const LoginScreen: React.FC = () => {
                         fontWeight: 'bold',
                     }}
                 >
-                    KarmaTech-AI EDR(Enterprise Digital Runner)
+                    {tenantName || "KarmaTech-AI EDR(Enterprise Digital Runner)"}
                 </Typography>
                 <VersionDisplay
                     variant="h6"

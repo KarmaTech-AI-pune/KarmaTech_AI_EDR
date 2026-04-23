@@ -46,6 +46,28 @@ export const getTenantContext = (): string | null => {
   return subdomain && subdomain !== hostname ? hostname : '1';
 };
 
+/**
+ * Extracts just the subdomain from the current URL — fully environment-agnostic.
+ * Works identically in local dev and production with no hardcoding.
+ *
+ * Examples:
+ *   localhost              → null   (super admin / no tenant branding)
+ *   njs.localhost          → 'njs'
+ *   tenant1.localhost      → 'tenant1'
+ *   njs.karmatech-ai.com   → 'njs'
+ *   karmatech-ai.com       → null   (main domain = super admin)
+ */
+export const getTenantSubdomain = (): string | null => {
+  const parts = window.location.hostname.split('.');
+  // Single part = plain "localhost" or top-level domain with no subdomain
+  if (parts.length <= 1) return null;
+  const sub = parts[0];
+  // Ignore www as it is not a tenant
+  if (sub === 'www') return null;
+  return sub;
+};
+
+
 
 /**
  * Constructs the appropriate API base URL based on tenant context

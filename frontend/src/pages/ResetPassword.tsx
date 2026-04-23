@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { passwordApi } from '../services/passwordApi';
+import { useDomainBranding } from '../hooks/useDomainBranding';
 
 export const ResetPassword: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -21,6 +22,7 @@ export const ResetPassword: React.FC = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const { logoUrl, tenantName } = useDomainBranding();
 
     // Get token and email from URL parameters
     const token = searchParams.get('token');
@@ -93,12 +95,13 @@ export const ResetPassword: React.FC = () => {
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
                     <img
-                        src="/KarmaTech_logo.png"
-                        alt="KarmaTech AI"
+                        src={logoUrl}
+                        alt={tenantName || "KarmaTech AI Logo"}
                         style={{
                             maxWidth: '150px',
                             maxHeight: '150px',
-                            marginBottom: '0.5rem'
+                            marginBottom: '0.5rem',
+                            objectFit: 'contain'
                         }}
                     />
                 </Box>

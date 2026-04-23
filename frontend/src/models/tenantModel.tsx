@@ -7,6 +7,7 @@ export interface Tenant {
   companyName?: string;
   contactEmail?: string;
   contactPhone?: string;
+  logoUrl?: string;
   status: TenantStatus;
   createdAt: string;
   trialEndDate?: string;
@@ -75,6 +76,7 @@ export interface CreateTenantRequest {
   maxUsers?: number;
   maxProjects?: number;
   status?: TenantStatus;
+  logoUrl?: string;
 }
 
 export interface UpdateTenantRequest {
@@ -89,4 +91,5 @@ export interface UpdateTenantRequest {
   maxProjects?: number;
   status?: TenantStatus;
   isActive?: boolean;
+  logoUrl?: string;
 } 

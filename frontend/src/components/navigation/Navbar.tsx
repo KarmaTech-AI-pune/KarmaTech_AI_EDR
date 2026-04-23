@@ -22,6 +22,7 @@ import { authApi } from '../../services/authApi';
 import { PermissionType } from '../../models';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 import PasswordChangeDropdown from './PasswordChangeDropdown';
+import { useTenantBranding } from '../../context/TenantBrandingContext';
 
 const navLinks = [
   {
@@ -38,28 +39,43 @@ const navLinks = [
 
 
 
-const LogoComponent = () => (
-  <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-    <Box
-      sx={{
-        height: '50px',
-        display: 'flex',
-        alignItems: 'center',
-        cursor: 'pointer',
-      }}
-    >
-      <img
-        src="/KarmaTech_logo.png"
-        alt="KarmaTech AI"
-        style={{
-          height: '100%',
-          width: 'auto',
-          objectFit: 'contain',
+const LogoComponent = () => {
+  const { logoUrl, tenantName } = useTenantBranding();
+  return (
+    <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Box
+        sx={{
+          height: '50px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          cursor: 'pointer',
         }}
-      />
-    </Box>
-  </Link>
-);
+      >
+        <img
+          src={logoUrl}
+          alt={tenantName || 'KarmaTech AI'}
+          style={{
+            height: '100%',
+            width: 'auto',
+            objectFit: 'contain',
+          }}
+        />
+        <Typography
+          variant="subtitle1"
+          noWrap
+          sx={{
+            color: 'white',
+            fontWeight: 600,
+            display: { xs: 'none', md: 'block' },
+          }}
+        >
+          {tenantName}
+        </Typography>
+      </Box>
+    </Link>
+  );
+};
 
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);

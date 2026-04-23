@@ -75,6 +75,7 @@ export interface LoginResponse {
     token?: string;
     message?: string;
     requiresOtp?: boolean; 
+    errorCode?: string;
 }
 
 export interface OpportunityItemProps {

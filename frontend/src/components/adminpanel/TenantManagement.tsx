@@ -58,7 +58,10 @@ const TenantManagement = () => {
     maxProjects: 50,
     status: TenantStatus.Active,
     isIsolated: false,
+    applicationName: '',
+    logoUrl: '',
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -103,13 +106,17 @@ const TenantManagement = () => {
       maxProjects: 50,
       status: TenantStatus.Active,
       isIsolated: false,
+      applicationName: '',
+      logoUrl: '',
     });
+    setLogoFile(null);
     setError(null);
   };
 
   const handleClose = () => {
     setOpen(false);
     setEditingTenant(null);
+    setLogoFile(null);
     setError(null);
   };
 
@@ -127,7 +134,10 @@ const TenantManagement = () => {
       maxProjects: tenant.maxProjects,
       status: tenant.status,
       isIsolated: tenant.isIsolated,
+      applicationName: tenant.applicationName || '',
+      logoUrl: tenant.logoUrl || '',
     });
+    setLogoFile(null);
     setOpen(true);
   };
 
@@ -139,11 +149,19 @@ const TenantManagement = () => {
         subscriptionPlanId: formData.subscriptionPlanId ? parseInt(formData.subscriptionPlanId) : undefined,
       };
 
+      let newTenantId = editingTenant?.id;
+
       if (editingTenant) {
         await tenantApi.updateTenant(editingTenant.id, dataToSubmit);
       } else {
-        await tenantApi.createTenant(dataToSubmit);
+        const created = await tenantApi.createTenant(dataToSubmit as any);
+        newTenantId = created.id;
       }
+
+      if (logoFile && newTenantId) {
+        await tenantApi.uploadTenantLogo(newTenantId, logoFile);
+      }
+
       await loadTenants();
       handleClose();
     } catch (error) {
@@ -413,6 +431,31 @@ const TenantManagement = () => {
                 value={formData.contactPhone}
                 onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
               />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Button
+                variant="outlined"
+                component="label"
+                fullWidth
+                sx={{ height: '56px', justifyContent: 'flex-start', textTransform: 'none' }}
+              >
+                {logoFile ? logoFile.name : 'Upload Logo Image...'}
+                <input
+                  type="file"
+                  hidden
+                  accept="image/jpeg, image/png, image/gif, image/webp, image/svg+xml"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setLogoFile(e.target.files[0]);
+                    }
+                  }}
+                />
+              </Button>
+              {formData.logoUrl && !logoFile && (
+                <Box sx={{ mt: 1 }}>
+                  <img src={formData.logoUrl} alt="Current Logo" style={{ maxHeight: 40, objectFit: 'contain' }} />
+                </Box>
+              )}
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>

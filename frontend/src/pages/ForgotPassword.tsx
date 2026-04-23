@@ -11,12 +11,14 @@ import {
     Link
 } from '@mui/material';
 import { passwordApi } from '../services/passwordApi';
+import { useDomainBranding } from '../hooks/useDomainBranding';
 
 export const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const { logoUrl, tenantName } = useDomainBranding();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -60,12 +62,13 @@ export const ForgotPassword: React.FC = () => {
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
                     <img
-                        src="/KarmaTech_logo.png"
-                        alt="KarmaTech AI"
+                        src={logoUrl}
+                        alt={tenantName || "KarmaTech AI Logo"}
                         style={{
                             maxWidth: '150px',
                             maxHeight: '150px',
-                            marginBottom: '0.5rem'
+                            marginBottom: '0.5rem',
+                            objectFit: 'contain'
                         }}
                     />
                 </Box>
