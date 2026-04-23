@@ -318,6 +318,13 @@ export const Navbar = () => {
               </MenuItem>
               <MenuItem 
                 component={Link} 
+                to="/company-details" 
+                onClick={handleCloseUserMenu}
+              >
+                <Typography textAlign="center">Company Details</Typography>
+              </MenuItem>
+              <MenuItem 
+                component={Link} 
                 to="/profile?section=2fa" 
                 onClick={handleCloseUserMenu}
               >

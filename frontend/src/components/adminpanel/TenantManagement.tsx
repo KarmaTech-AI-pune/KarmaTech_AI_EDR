@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Typography,
   Paper,
@@ -46,6 +47,7 @@ const TenantManagement = () => {
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
   const [open, setOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     id: 0,
     name: '',
@@ -58,6 +60,9 @@ const TenantManagement = () => {
     maxProjects: 50,
     status: TenantStatus.Active,
     isIsolated: false,
+    companyUrl: '',
+    linkedinUrl: '',
+    headquarters: '',
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,6 +108,9 @@ const TenantManagement = () => {
       maxProjects: 50,
       status: TenantStatus.Active,
       isIsolated: false,
+      companyUrl: '',
+      linkedinUrl: '',
+      headquarters: '',
     });
     setError(null);
   };
@@ -127,6 +135,9 @@ const TenantManagement = () => {
       maxProjects: tenant.maxProjects,
       status: tenant.status,
       isIsolated: tenant.isIsolated,
+      companyUrl: (tenant as any).companyUrl || '',
+      linkedinUrl: (tenant as any).linkedinUrl || '',
+      headquarters: (tenant as any).headquarters || '',
     });
     setOpen(true);
   };
@@ -288,7 +299,22 @@ const TenantManagement = () => {
                     icon={<BusinessIcon />}
                   />
                 </TableCell>
-                <TableCell>{tenant.companyName || '-'}</TableCell>
+                <TableCell>
+                  <Typography
+                    variant="body2"
+                    onClick={() => navigate('/tenant-company-details')}
+                    sx={{
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      fontWeight: 600,
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
+                    }}
+                  >
+                    {tenant.companyName || '-'}
+                  </Typography>
+                </TableCell>
                 <TableCell>
                   <Typography variant="body2">{tenant.contactEmail || '-'}</Typography>
                   <Typography variant="caption" color="textSecondary">
@@ -471,6 +497,28 @@ const TenantManagement = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Company URL"
+                name="companyUrl"
+                value={formData.companyUrl}
+                onChange={(e) => setFormData({ ...formData, companyUrl: e.target.value })}
+                placeholder="https://www.company.com"
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="LinkedIn URL"
+                name="linkedinUrl"
+                value={formData.linkedinUrl}
+                onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
+                placeholder="https://www.linkedin.com/company/company-name"
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -481,6 +529,20 @@ const TenantManagement = () => {
                   />
                 }
                 label="Isolated Tenant"
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Headquarters Details"
+                name="headquarters"
+                value={formData.headquarters}
+                onChange={(e) => setFormData({ ...formData, headquarters: e.target.value })}
+                placeholder="Enter company headquarters details..."
+                helperText="Company headquarters location and details"
+                multiline
+                rows={3}
               />
             </Grid>
           </Grid>

@@ -14,6 +14,7 @@ const NotFound = lazy(() => import('../pages/NotFound'));
 const ForgotPassword = lazy(() => import('../pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('../pages/ResetPassword'));
 const UserProfile = lazy(() => import('../pages/UserProfile'));
+const CompanyDetails = lazy(() => import('../pages/CompanyDetails'));
 
 const protectedRoutes: RouteObject[] = [
   ...businessDevelopmentRoutes,
@@ -57,6 +58,10 @@ export const routes: RouteObject[] = [
           {
             path: 'profile',
             element: <UserProfile />,
+          },
+          {
+            path: 'company-details',
+            element: <CompanyDetails />,
           },                 
           ...protectedRoutes,
         ],

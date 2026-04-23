@@ -2,7 +2,7 @@ import { projectManagementAppContextType, UserWithRole  } from './types'
 import { User} from './models'
 import { Project, OpportunityTracking } from "./models"
 import { GoNoGoDecision } from "./models/goNoGoDecisionModel"
-import { createContext, useState, useEffect, useMemo } from 'react'
+import { createContext, useState, useEffect, useMemo, Suspense } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ProjectProvider } from './context/ProjectContext';
 import { BusinessDevelopmentProvider } from './context/BusinessDevelopmentContext';
@@ -217,7 +217,9 @@ function App() {
         <UserSubscriptionProvider> {/* Wrap the application with UserSubscriptionProvider */}
           <ProjectProvider>
             <BusinessDevelopmentProvider>
-              <RouterProvider router={router} />
+              <Suspense fallback={<span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</span>}>
+                <RouterProvider router={router} />
+              </Suspense>
             </BusinessDevelopmentProvider>
           </ProjectProvider>
         </UserSubscriptionProvider>
