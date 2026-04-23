@@ -24,7 +24,7 @@ import { usePrograms } from '../../hooks/usePrograms';
 import { Pagination } from '../../components/Pagination';
 import CreateProgramDialog from '../../components/ProgramManagement/CreateProgramDialog';
 import EditProgramDialog from '../../components/ProgramManagement/EditProgramDialog';
-import { programApi } from '../../services/api/programApi';
+import { programApi } from '../../services/programApi';
 import { Program } from '../../types/program';
 import { useProject } from '../../context/ProjectContext';
 
@@ -164,19 +164,21 @@ const ProgramManagement: React.FC = () => {
             Program Management
           </Typography>
 
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={() => setIsCreateDialogOpen(true)}
-            sx={{
-              textTransform: 'none',
-              borderRadius: 2,
-              px: 3
-            }}
-          >
-            Create Program
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={() => setIsCreateDialogOpen(true)}
+              sx={{
+                textTransform: 'none',
+                borderRadius: 2,
+                px: 3
+              }}
+            >
+              Create Program
+            </Button>
+          </Box>
         </Box>
 
         <Divider sx={{ mb: 3 }} />
@@ -219,7 +221,7 @@ const ProgramManagement: React.FC = () => {
 
         {/* Programs List */}
         {!isLoading && currentPrograms.length > 0 && (
-          <List sx={{ 
+          <List sx={{
             width: '100%',
             '& > *:not(:last-child)': {
               mb: 1
@@ -276,6 +278,7 @@ const ProgramManagement: React.FC = () => {
                   gap: 1,
                   ml: 2
                 }}>
+
                   <Button
                     size="small"
                     onClick={(e) => {
@@ -312,11 +315,11 @@ const ProgramManagement: React.FC = () => {
 
         {/* Empty State */}
         {!isLoading && filteredPrograms.length === 0 && (
-          <Box 
-            display="flex" 
+          <Box
+            display="flex"
             flexDirection="column"
-            justifyContent="center" 
-            alignItems="center" 
+            justifyContent="center"
+            alignItems="center"
             minHeight="200px"
             width="100%"
           >
@@ -376,7 +379,7 @@ const ProgramManagement: React.FC = () => {
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
             Are you sure you want to delete the program <strong>"{programToDelete?.name}"</strong>?
-            This action cannot be undone and will permanently remove the program.
+            This action cannot be undone and will permanently remove the program along with ALL its associated projects and related data.
           </DialogContentText>
           {deleteError && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -385,16 +388,16 @@ const ProgramManagement: React.FC = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={handleDeleteCancel} 
+          <Button
+            onClick={handleDeleteCancel}
             disabled={isDeleting}
             sx={{ textTransform: 'none' }}
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
             variant="contained"
             disabled={isDeleting}
             sx={{ textTransform: 'none' }}

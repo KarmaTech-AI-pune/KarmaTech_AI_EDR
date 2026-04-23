@@ -27,6 +27,7 @@ vi.mock('../../services/dashboardService', () => ({
     getRegionalPortfolio: vi.fn(),
     getNpvProfitability: vi.fn(),
     getMilestoneBilling: vi.fn(),
+    getTaskPriorityMatrix: vi.fn(),
   }
 }));
 
@@ -53,6 +54,7 @@ describe('DashboardLayout Component', () => {
       lastUpdated: new Date().toISOString()
     } as any);
     vi.mocked(dashboardService.getMilestoneBilling).mockResolvedValue([]);
+    vi.mocked(dashboardService.getTaskPriorityMatrix).mockResolvedValue([]);
   };
 
   it('shows loading state initially', () => {

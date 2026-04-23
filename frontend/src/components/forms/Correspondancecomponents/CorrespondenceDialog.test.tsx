@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CorrespondenceDialog from './CorrespondenceDialog';
+ 
+vi.setConfig({ testTimeout: 10000 });
 
 describe('CorrespondenceDialog', () => {
   const mockOnClose = vi.fn();

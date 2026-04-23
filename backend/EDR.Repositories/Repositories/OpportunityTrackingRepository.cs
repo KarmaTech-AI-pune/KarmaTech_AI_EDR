@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
 using EDR.Repositories.Interfaces;
@@ -17,8 +17,8 @@ namespace EDR.Repositories.Repositories
         public async Task<OpportunityTracking> AddAsync(OpportunityTracking opportunityTracking)
         {
             // Set audit fields
-            opportunityTracking.CreatedAt = DateTime.Now;
-            opportunityTracking.UpdatedAt = DateTime.Now;
+            opportunityTracking.CreatedAt = DateTime.UtcNow;
+            opportunityTracking.UpdatedAt = DateTime.UtcNow;
 
             _context.OpportunityTrackings.Add(opportunityTracking);
             await _context.SaveChangesAsync();
@@ -51,7 +51,7 @@ namespace EDR.Repositories.Repositories
             var existingOpportunity = await GetByIdAsync(opportunityTracking.Id);
 
             // Update audit fields
-            opportunityTracking.UpdatedAt = DateTime.Now;
+            opportunityTracking.UpdatedAt = DateTime.UtcNow;
 
             // Update all properties
             _context.Entry(existingOpportunity).CurrentValues.SetValues(opportunityTracking);
@@ -87,6 +87,26 @@ namespace EDR.Repositories.Repositories
             return await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status)
                 .Where(o => o.ApprovalManagerId == regionalDirectorId)
                 .ToListAsync();
+        }
+
+        public async Task<int?> GetStatusIdByNameAsync(string statusName)
+        {
+            var status = await _context.OpportunityStatuses
+                .FirstOrDefaultAsync(s => s.Status.ToLower() == statusName.ToLower());
+            return status?.Id;
+        }
+
+        public async Task<string?> GetValidUserIdAsync(string userIdOrEmail)
+        {
+            if (string.IsNullOrWhiteSpace(userIdOrEmail) || userIdOrEmail.ToLower() == "string")
+            {
+                return null;
+            }
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userIdOrEmail || u.Email.ToLower() == userIdOrEmail.ToLower());
+
+            return user?.Id;
         }
     }
 }

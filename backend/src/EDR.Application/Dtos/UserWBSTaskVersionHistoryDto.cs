@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace EDR.Application.Dtos
 {
@@ -10,6 +10,7 @@ namespace EDR.Application.Dtos
         public string Name { get; set; }
         public string Unit { get; set; }
         public decimal CostRate { get; set; }
+        public double TotalHours { get; set; }
         public decimal TotalCost { get; set; }
         public DateTime AssignedDate { get; set; }
         public string Role { get; set; }

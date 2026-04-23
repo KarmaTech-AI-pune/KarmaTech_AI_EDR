@@ -9,6 +9,14 @@
 export const formatDateForInput = (date: Date | string | null | undefined): string => {
   if (!date) return '';
 
+  if (typeof date === 'string') {
+    // If it's already in DD-MM-YYYY format, convert to YYYY-MM-DD for native <input type="date">
+    if (/^\d{2}-\d{2}-\d{4}$/.test(date)) {
+      const [day, month, year] = date.split('-');
+      return `${year}-${month}-${day}`;
+    }
+  }
+
   try {
     const d = new Date(date);
     // Check if the date is valid
@@ -35,13 +43,21 @@ export const parseDateFromInput = (dateString: string): string | null => {
   if (!dateString) return null;
 
   try {
+    const parts = dateString.split('-');
+    // Assuming native input gives YYYY-MM-DD
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    
+    // Fallback if date is not YYYY-MM-DD
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
       return null;
     }
-    // To keep the date consistent and avoid timezone issues, convert it to an ISO string.
-    // The backend should be prepared to handle this format.
-    return date.toISOString();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   } catch (error) {
     console.error("Error parsing date string:", error);
     return null;
@@ -56,4 +72,25 @@ export const getMonthName = (month: string): string => {
     return date.toLocaleString('default', { month: 'long' });
   }
   return month; // Return original string if it's not a number 1-12
+};
+
+export const formatDateToDDMMYYYY = (date: Date | string | null | undefined): string | null => {
+  if (!date) return null;
+
+  if (typeof date === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(date)) {
+    return date;
+  }
+
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+      return null;
+    }
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch (error) {
+    return null;
+  }
 };

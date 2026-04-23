@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { programApi } from '../services/api/programApi';
+import { programApi } from '../services/programApi';
 import { Program } from '../types/program';
 
 export const usePrograms = () => {

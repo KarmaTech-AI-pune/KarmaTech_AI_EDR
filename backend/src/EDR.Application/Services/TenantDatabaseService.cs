@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
+using EDR.Domain.Services;
 using System;
 using System.Threading.Tasks;
 
@@ -19,15 +20,18 @@ namespace EDR.Application.Services
         private readonly IConfiguration _configuration;
         private readonly TenantDbContext _tenantDbContext;
         private readonly IDbContextFactory<ProjectManagementContext> _contextFactory;
+        private readonly ITenantConnectionResolver _connectionResolver;
 
         public TenantDatabaseService(
             IConfiguration configuration,
             TenantDbContext tenantDbContext,
-            IDbContextFactory<ProjectManagementContext> contextFactory)
+            IDbContextFactory<ProjectManagementContext> contextFactory,
+            ITenantConnectionResolver connectionResolver)
         {
             _configuration = configuration;
             _tenantDbContext = tenantDbContext;
             _contextFactory = contextFactory;
+            _connectionResolver = connectionResolver;
         }
 
         public async Task<bool> CreateTenantDatabaseAsync(TenantDatabase tenantDatabase)
@@ -41,7 +45,7 @@ namespace EDR.Application.Services
                 // Create the actual database and apply migrations
                 string connectionString = !string.IsNullOrEmpty(tenantDatabase.ConnectionString)
                     ? tenantDatabase.ConnectionString
-                    : _configuration.GetConnectionString("AppDbConnection");
+                    : await _connectionResolver.GetDefaultConnectionStringAsync();
 
                 await EnsureDatabaseCreatedAsync(connectionString);
 

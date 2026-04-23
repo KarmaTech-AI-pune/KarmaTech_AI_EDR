@@ -59,7 +59,14 @@ const RegionalPortfolio: React.FC<RegionalPortfolioProps> = ({ data }) => {
                   color="text.secondary"
                   sx={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}
                 >
-                  Q4: {region.q4} projects
+                  Q{(() => {
+                    const month = new Date().getMonth() + 1;
+                    return Math.ceil(month / 3);
+                  })()}: {(() => {
+                    const month = new Date().getMonth() + 1;
+                    const quarter = Math.ceil(month / 3);
+                    return Number(region[`q${quarter}` as keyof RegionalData]) || 0;
+                  })()} projects
                 </Typography>
                 <Typography 
                   variant="caption" 
@@ -75,6 +82,7 @@ const RegionalPortfolio: React.FC<RegionalPortfolioProps> = ({ data }) => {
                 sx={{
                   height: isMobile ? 6 : 8,
                   borderRadius: 4,
+                  mb: 1.5,
                   backgroundColor: theme.palette.grey[200],
                   '& .MuiLinearProgress-bar': {
                     borderRadius: 4,
@@ -82,6 +90,23 @@ const RegionalPortfolio: React.FC<RegionalPortfolioProps> = ({ data }) => {
                   }
                 }}
               />
+              <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                {region.projectDetails?.map((pd, idx) => (
+                  <Typography 
+                    key={idx} 
+                    variant="caption" 
+                    color="text.secondary"
+                    sx={{ 
+                      fontSize: isMobile ? '0.65rem' : '0.7rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5
+                    }}
+                  >
+                    • {pd.programName && pd.programName !== "" ? `${pd.programName} - ` : ""}{pd.projectName}
+                  </Typography>
+                ))}
+              </Box>
             </Box>
           ))}
         </Box>

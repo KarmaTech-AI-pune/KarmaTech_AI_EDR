@@ -14,6 +14,8 @@ namespace EDR.Repositories.Interfaces
         Task<IEnumerable<OpportunityTracking>> GetAllAsync();
         Task<OpportunityTracking> UpdateAsync(OpportunityTracking opportunityTracking);
         Task DeleteAsync(int id);
+        Task<int?> GetStatusIdByNameAsync(string statusName);
+        Task<string?> GetValidUserIdAsync(string userIdOrEmail);
     }
 }
 

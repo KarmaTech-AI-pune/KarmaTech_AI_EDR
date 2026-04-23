@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchIssuesForSprintAPI, updateIssueAPI, updateSubtaskAPI, createIssueAPI, deleteIssueAPI, createSubtaskAPI, deleteSubtaskAPI, SprintEmployee, SprintPlanDto, fetchActiveSprintIdAPI, updateSprintPlanAPI, fetchNextSprintAPI } from '../data/todolistData';
+import { fetchIssuesForSprintAPI, updateIssueAPI, updateSubtaskAPI, createIssueAPI, deleteIssueAPI, createSubtaskAPI, deleteSubtaskAPI, SprintEmployee, SprintPlanDto, updateSprintPlanAPI, fetchNextSprintAPI } from '../data/todolistData';
 import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment, TeamMember } from '../types/todolist';
 import { commentService } from '../services/commentService';
 import { useProject } from '../context/ProjectContext';
@@ -21,17 +21,26 @@ export const useTodolistIssues = () => {
     avatar: (emp.employeeName.match(/\b\w/g) || []).join('').substring(0, 2).toUpperCase() || emp.employeeName.substring(0, 2).toUpperCase()
   }));
 
-  // 1. Watch projectId change (RESET & FETCH ACTIVE SPRINT)
+  const [fetchingSprintId, setFetchingSprintId] = useState<number | null>(null);
+
+  // 1. Watch projectId change (TRIGGER FETCH ACTIVE SPRINT)
   useEffect(() => {
-    const fetchSprintId = async () => {
-      if (!projectId) {
-        setSprintId(null);
-        setIssues([]);
-        setSprintPlan(null);
-        setSprintEmployees([]);
-        setLoading(false);
-        return;
-      }
+    if (projectId) {
+      setFetchingSprintId(0); // 0 means fetch active/planned sprint
+    } else {
+      setSprintId(null);
+      setIssues([]);
+      setSprintPlan(null);
+      setSprintEmployees([]);
+      setFetchingSprintId(null);
+      setLoading(false);
+    }
+  }, [projectId]);
+
+  // 2. Load Sprint Data
+  useEffect(() => {
+    const loadIssues = async () => {
+      if (fetchingSprintId === null || !projectId) return;
 
       try {
         setLoading(true);
@@ -41,49 +50,33 @@ export const useTodolistIssues = () => {
         setSprintEmployees([]);
         setError(null);
 
-        const activeId = await fetchActiveSprintIdAPI(projectId);
-        setSprintId(activeId);
-
-        if (!activeId) {
-          setLoading(false); // If no sprint, stop loading (empty state)
-        }
-      } catch (err) {
-        console.error('Failed to fetch active sprint:', err);
-        setError('Failed to load project schedule');
-        setLoading(false);
-      }
-    };
-
-    fetchSprintId();
-  }, [projectId]);
-
-  // 2. Load Sprint Data when sprintId changes
-  useEffect(() => {
-    const loadIssues = async () => {
-      if (!sprintId) return;
-
-      try {
-        setLoading(true);
         // Pass projectId for validation to prevent sprint mixing across projects
-        const data = await fetchIssuesForSprintAPI(sprintId, projectId || undefined);
+        const data = await fetchIssuesForSprintAPI(fetchingSprintId, projectId);
 
-        setIssues(data.issues);
-        setSprintPlan(data.sprintPlan);
-        setSprintEmployees(data.sprintEmployees);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to load issues:', err);
-        setError('Failed to load issues from server');
-        setIssues([]);
-        setSprintPlan(null);
-        setSprintEmployees([]);
+        if (data.sprintPlan) {
+          setIssues(data.issues);
+          setSprintPlan(data.sprintPlan);
+          setSprintEmployees(data.sprintEmployees);
+          setSprintId(data.sprintPlan.sprintId); // Store actual sprint ID
+        } else {
+          setSprintId(null);
+        }
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          // Normal case when no active sprint is found
+           console.log("No sprint found.");
+           setSprintId(null);
+        } else {
+          console.error('Failed to load issues:', err);
+          setError('Failed to load issues from server');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadIssues();
-  }, [sprintId, projectId]);  // Add projectId to dependencies for proper re-fetching
+  }, [fetchingSprintId, projectId]);
 
   const getNextIssueKey = () => {
     if (!issues || issues.length === 0) return 'PROJ-001';
@@ -359,11 +352,12 @@ export const useTodolistIssues = () => {
         text: c.commentText,
         hoursLogged: c.hoursLogged,
         description: c.description,
+        workedStoryPoints: c.workedStoryPoint,
         createdDate: c.createdDate.split('T')[0]
       }));
 
       setIssues(prevIssues => prevIssues.map(issue =>
-        issue.id === issueId ? { ...issue, comments: transformedComments, totalLoggedHours: response.totalLoggedHours } : issue
+        issue.id === issueId ? { ...issue, comments: transformedComments, totalLoggedHours: response.totalLoggedHours, allWorkStoryPoints: response.totalWorkedStoryPoints } : issue
       ));
     } catch (error) {
       console.error('Failed to fetch task comments:', error);
@@ -417,7 +411,7 @@ export const useTodolistIssues = () => {
     }
   };
 
-  const addComment = async (issueId: string, commentText: string) => {
+  const addComment = async (issueId: string, commentText: string, workedStoryPoint?: number) => {
     const issue = issues.find(i => i.id === issueId);
     const author = issue?.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
 
@@ -427,6 +421,7 @@ export const useTodolistIssues = () => {
       author: author,
       text: commentText,
       createdDate: new Date().toISOString().split('T')[0],
+      workedStoryPoints: workedStoryPoint
     };
 
     setIssues(prevIssues =>
@@ -448,6 +443,7 @@ export const useTodolistIssues = () => {
         {
           commentText,
           createdBy: author.name,
+          workedStoryPoint: workedStoryPoint
         }
       );
       // Wait for comments and total logged hours to be refreshed from server
@@ -461,7 +457,6 @@ export const useTodolistIssues = () => {
   const addSubtaskComment = async (subtaskId: string, commentText: string) => {
     // Find the parent task and the subtask itself
     let parentTaskId: string | null = null;
-
     for (const issue of issues) {
       const subtask = issue.subtasks.find(s => s.id === subtaskId);
       if (subtask) {
@@ -690,12 +685,26 @@ export const useTodolistIssues = () => {
       }
 
       // 4. Next sprint exists -> Load it
-      setSprintId(nextSprint.sprintId);
+      setFetchingSprintId(nextSprint.sprintId);
 
     } catch (err: any) {
       console.error('Failed to complete sprint:', err);
       setLoading(false);
       window.alert("Failed to complete sprint or load next sprint.");
+    }
+  };
+
+  const updateSprintPlan = async (updatedPlan: Partial<SprintPlanDto>) => {
+    if (!sprintPlan) return;
+    try {
+      setLoading(true);
+      await updateSprintPlanAPI({ ...sprintPlan, ...updatedPlan });
+      setSprintPlan({ ...sprintPlan, ...updatedPlan } as SprintPlanDto);
+    } catch (error) {
+      console.error('Failed to update sprint plan:', error);
+      setError('Failed to update sprint plan');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -724,6 +733,7 @@ export const useTodolistIssues = () => {
     deleteSubtaskComment,
     fetchSubtaskComments,
     teamMembers,
-    navigateToSprint: setSprintId // Expose setter to allow manual navigation
+    navigateToSprint: setFetchingSprintId, // Expose setter to allow manual navigation
+    updateSprintPlan
   };
 };

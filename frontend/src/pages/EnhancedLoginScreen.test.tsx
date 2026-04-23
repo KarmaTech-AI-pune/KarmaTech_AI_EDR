@@ -256,7 +256,7 @@ describe('EnhancedLoginScreen', () => {
         await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
 
         await user.type(screen.getByLabelText(/Email/i), 'tenantadmin@example.com');
-        await user.type(screen.getByLabelText(/Password/i), 'password');
+        await user.type(document.querySelector('input[type="password"]') as HTMLElement, 'password');
         await user.click(screen.getByRole('button', { name: /Login to tenantone/i }));
 
         await waitFor(() => {
@@ -285,7 +285,7 @@ describe('EnhancedLoginScreen', () => {
         await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
 
         await user.type(screen.getByLabelText(/Email/i), 'wrong@example.com');
-        await user.type(screen.getByLabelText(/Password/i), 'wrongpass');
+        await user.type(document.querySelector('input[type="password"]') as HTMLElement, 'wrongpass');
         await user.click(screen.getByRole('button', { name: /Login to tenantone/i }));
 
         await waitFor(() => {

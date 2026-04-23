@@ -1,7 +1,9 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using EDR.Application.Services.IContract;
+using EDR.Domain;
+using EDR.Domain.Services;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -13,13 +15,15 @@ namespace EDR.Application.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<TenantMigrationService> _logger;
+        private readonly ITenantConnectionResolver _connectionResolver;
         private readonly string _migrationScriptsPath;
         private readonly string _nonIsolatedTenetScriptPath;
 
-        public TenantMigrationService(IConfiguration configuration, ILogger<TenantMigrationService> logger)
+        public TenantMigrationService(IConfiguration configuration, ILogger<TenantMigrationService> logger, ITenantConnectionResolver connectionResolver)
         {
             _configuration = configuration;
             _logger = logger;
+            _connectionResolver = connectionResolver;
 
             // Try multiple paths to find the migration scripts directory
             var possiblePaths = new[]
@@ -76,105 +80,6 @@ namespace EDR.Application.Services
             }
         }
 
-        public async Task<bool> ExecuteTenantMigrationsAsyncSQL(string connectionString, int tenantId,
-            string? sourceDatabaseName = null)
-        {
-            try
-            {
-                if (!Directory.Exists(_migrationScriptsPath))
-                {
-                    _logger.LogError("Migration scripts directory not found: {Path}", _migrationScriptsPath);
-                    return false;
-                }
-
-                // Extract database name from connection string
-                var builder = new SqlConnectionStringBuilder(connectionString);
-                var targetDatabaseName = builder.InitialCatalog;
-
-                // If source database/server not provided, use the default from configuration
-                if (string.IsNullOrEmpty(sourceDatabaseName))
-                {
-                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
-                    if (!string.IsNullOrEmpty(defaultConnectionString))
-                    {
-                        var defaultBuilder = new SqlConnectionStringBuilder(defaultConnectionString);
-                        sourceDatabaseName = defaultBuilder.InitialCatalog;
-                    }
-                }
-
-                // Define the order of migration scripts
-                var migrationScripts = new[]
-                {
-                    "01_Permissions.sql",
-                    "04_PMWorkFlow.Sql",
-                    "05_OpportunityStatuses.Sql"
-                };
-
-                using var connection = new SqlConnection(connectionString);
-                await connection.OpenAsync();
-
-                foreach (var scriptFileName in migrationScripts)
-                {
-                    var scriptPath = Path.Combine(_migrationScriptsPath, scriptFileName);
-
-                    if (!File.Exists(scriptPath))
-                    {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
-                        continue;
-                    }
-
-                    _logger.LogInformation("Executing migration script: {ScriptName}", scriptFileName);
-
-                    var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
-
-                    // Replace placeholders in the script
-                    scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName,
-                        null, null, null);
-
-                    // Split script into batches (by GO statements)
-                    var batches = SplitScriptIntoBatches(scriptContent);
-
-                    foreach (var batch in batches)
-                    {
-                        if (string.IsNullOrWhiteSpace(batch))
-                            continue;
-
-                        try
-                        {
-                            using var command = new SqlCommand(batch, connection);
-                            command.CommandTimeout = 300; // 5 minutes timeout for migrations
-                            await command.ExecuteNonQueryAsync();
-
-                            _logger.LogDebug("Successfully executed batch from {ScriptName}", scriptFileName);
-                        }
-                        catch (SqlException ex)
-                        {
-                            // Log error but continue with next batch
-                            _logger.LogError(ex, "Error executing batch from {ScriptName}: {ErrorMessage}",
-                                scriptFileName, ex.Message);
-
-                            // For certain errors, we might want to continue (e.g., object already exists)
-                            if (ex.Number != 2714 &&
-                                ex.Number != 1750) // Object already exists, or cannot create constraint
-                            {
-                                throw;
-                            }
-                        }
-                    }
-
-                    _logger.LogInformation("Completed migration script: {ScriptName}", scriptFileName);
-                }
-
-                _logger.LogInformation("All migration scripts executed successfully for tenant {TenantId}", tenantId);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error executing tenant migrations for tenant {TenantId}", tenantId);
-                return false;
-            }
-        }
-
         public async Task<bool> ExecuteTenantMigrationsAsync(
             string connectionString,
             int tenantId,
@@ -188,18 +93,48 @@ namespace EDR.Application.Services
                     return false;
                 }
 
-                // Extract database name
-                var builder = new NpgsqlConnectionStringBuilder(connectionString);
-                var targetDatabaseName = builder.Database;
+                // Extract database name dynamically
+                var dbType = _configuration[Constants.DbType];
+                string targetDatabaseName;
 
-                // PostgreSQL does NOT support cross-database queries
+                if (dbType == Constants.DbServerType)
+                {
+                    var nBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+                    targetDatabaseName = nBuilder.Database;
+                }
+                else
+                {
+                    var sBuilder = new SqlConnectionStringBuilder(connectionString);
+                    targetDatabaseName = sBuilder.InitialCatalog;
+                }
+
+                // If sourceDatabaseName not provided, use ITenantConnectionResolver to try and find default
+                if (string.IsNullOrEmpty(sourceDatabaseName))
+                {
+                    var defaultConn = await _connectionResolver.GetDefaultConnectionStringAsync();
+                    if (!string.IsNullOrEmpty(defaultConn))
+                    {
+                        if (dbType == EDR.Domain.Constants.DbServerType)
+                        {
+                            var sBuilder = new NpgsqlConnectionStringBuilder(defaultConn);
+                            sourceDatabaseName = sBuilder.Database;
+                        }
+                        else
+                        {
+                            var sBuilder = new SqlConnectionStringBuilder(defaultConn);
+                            sourceDatabaseName = sBuilder.InitialCatalog;
+                        }
+                    }
+                }
+
                 sourceDatabaseName ??= targetDatabaseName;
 
                 var migrationScripts = new[]
                 {
                     "01_Permissions.sql",
                     "04_PMWorkFlow.sql",
-                    "05_OpportunityStatuses.sql"
+                    "05_OpportunityStatuses.sql",
+                    "BDScoring_PostgresSQL.Sql"
                 };
 
                 await using var connection = new NpgsqlConnection(connectionString);
@@ -207,11 +142,12 @@ namespace EDR.Application.Services
 
                 foreach (var scriptFileName in migrationScripts)
                 {
-                    var scriptPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+                    var scriptPath = GetCorrectCaseFilePath(_migrationScriptsPath, scriptFileName);
 
-                    if (!File.Exists(scriptPath))
+                    if (string.IsNullOrEmpty(scriptPath))
                     {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        var fullPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", fullPath);
                         continue;
                     }
 
@@ -276,120 +212,6 @@ namespace EDR.Application.Services
             }
         }
 
-        public async Task<bool> ExecuteTenantUserMigrationsAsyncSQL(string connectionString, int tenantId,
-            string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
-        {
-            try
-            {
-                if (!Directory.Exists(_migrationScriptsPath))
-                {
-                    _logger.LogError("Migration scripts directory not found: {Path}", _migrationScriptsPath);
-                    return false;
-                }
-
-                // Extract database name from connection string
-                var builder = new SqlConnectionStringBuilder(connectionString);
-                var targetDatabaseName = builder.InitialCatalog;
-
-                // If source database not provided, use the default from configuration
-                if (string.IsNullOrEmpty(sourceDatabaseName))
-                {
-                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
-                    if (!string.IsNullOrEmpty(defaultConnectionString))
-                    {
-                        var defaultBuilder = new SqlConnectionStringBuilder(defaultConnectionString);
-                        sourceDatabaseName = defaultBuilder.InitialCatalog;
-                    }
-                }
-
-                // Define the order of migration scripts for user migration
-                // Note: 02_Add_Roles_Mapp_Role_Permissions.sql is included to ensure roles exist
-                // Error handling will skip duplicate role inserts (error 2627 = duplicate key)
-                var migrationScripts = new[]
-                {
-                    "02_Add_Roles_Mapp_Role_Permissions.sql",
-                    "03_Migrate_User_From_Soure_Target_DBs.sql"
-                };
-
-                using var connection = new SqlConnection(connectionString);
-                await connection.OpenAsync();
-
-                foreach (var scriptFileName in migrationScripts)
-                {
-                    var scriptPath = Path.Combine(_migrationScriptsPath, scriptFileName);
-
-                    if (!File.Exists(scriptPath))
-                    {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
-                        continue;
-                    }
-
-                    _logger.LogInformation("Executing migration script: {ScriptName}", scriptFileName);
-
-                    var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
-
-                    // Replace placeholders in the script
-                    scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName,
-                        userEmail, roleName, permissionName);
-
-                    // Split script into batches (by GO statements)
-                    var batches = SplitScriptIntoBatches(scriptContent);
-
-                    foreach (var batch in batches)
-                    {
-                        if (string.IsNullOrWhiteSpace(batch))
-                            continue;
-
-                        try
-                        {
-                            using var command = new SqlCommand(batch, connection);
-                            command.CommandTimeout = 300; // 5 minutes timeout for migrations
-                            await command.ExecuteNonQueryAsync();
-
-                            _logger.LogDebug("Successfully executed batch from {ScriptName}", scriptFileName);
-                        }
-                        catch (SqlException ex)
-                        {
-                            // Log error but continue with next batch for certain non-critical errors
-                            _logger.LogWarning(ex,
-                                "Error executing batch from {ScriptName}: {ErrorMessage} (Error Number: {ErrorNumber})",
-                                scriptFileName, ex.Message, ex.Number);
-
-                            // Handle non-critical errors that we can safely ignore:
-                            // 2714 = Object already exists (table, procedure, etc.)
-                            // 1750 = Cannot create constraint (usually because object already exists)
-                            // 2627 = Violation of PRIMARY KEY constraint (duplicate key - roles already exist)
-                            // 2601 = Cannot insert duplicate key row (duplicate key)
-                            if (ex.Number == 2714 || ex.Number == 1750 || ex.Number == 2627 || ex.Number == 2601)
-                            {
-                                _logger.LogInformation(
-                                    "Skipping duplicate insert in {ScriptName} - object already exists",
-                                    scriptFileName);
-                                continue; // Skip this batch and continue with next
-                            }
-
-                            // For other errors, rethrow to fail the migration
-                            throw;
-                        }
-                    }
-
-                    _logger.LogInformation("Completed migration script: {ScriptName}", scriptFileName);
-                }
-
-                _logger.LogInformation(
-                    "All user migration scripts executed successfully for tenant {TenantId} and user {UserEmail}",
-                    tenantId, userEmail);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex,
-                    "Error executing tenant user migrations for tenant {TenantId} and user {UserEmail}", tenantId,
-                    userEmail);
-                return false;
-            }
-        }
-
         public async Task<bool> ExecuteTenantUserMigrationsAsync(
             string connectionString,
             int tenantId,
@@ -413,11 +235,20 @@ namespace EDR.Application.Services
                 // If source database not provided, use the default from configuration
                 if (string.IsNullOrEmpty(sourceDatabaseName))
                 {
-                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                    var defaultConnectionString = await _connectionResolver.GetDefaultConnectionStringAsync();
                     if (!string.IsNullOrEmpty(defaultConnectionString))
                     {
-                        var defaultBuilder = new Npgsql.NpgsqlConnectionStringBuilder(defaultConnectionString);
-                        sourceDatabaseName = defaultBuilder.Database;
+                        var dbType = _configuration[Constants.DbType];
+                        if (dbType == Constants.DbServerType)
+                        {
+                            var defaultBuilder = new Npgsql.NpgsqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.Database;
+                        }
+                        else
+                        {
+                            var defaultBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.InitialCatalog;
+                        }
                     }
                 }
 
@@ -433,11 +264,12 @@ namespace EDR.Application.Services
 
                 foreach (var scriptFileName in migrationScripts)
                 {
-                    var scriptPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+                    var scriptPath = GetCorrectCaseFilePath(_migrationScriptsPath, scriptFileName);
 
-                    if (!File.Exists(scriptPath))
+                    if (string.IsNullOrEmpty(scriptPath))
                     {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        var fullPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", fullPath);
                         continue;
                     }
 
@@ -450,12 +282,12 @@ namespace EDR.Application.Services
                         userEmail, roleName, permissionName);
 
                     // Split script into batches using semicolons (PostgreSQL doesn't use GO)
-                   // var batches = scriptContent.Split(";", StringSplitOptions.RemoveEmptyEntries);
+                    // var batches = scriptContent.Split(";", StringSplitOptions.RemoveEmptyEntries);
 
                     //foreach (var batchRaw in batches)
                     {
-                       // var batch = batchRaw.Trim();
-                       // if (string.IsNullOrWhiteSpace(scriptContent))
+                        // var batch = batchRaw.Trim();
+                        // if (string.IsNullOrWhiteSpace(scriptContent))
                         //    continue;
 
                         try
@@ -520,11 +352,20 @@ namespace EDR.Application.Services
                 // If source database/server not provided, use the default from configuration
                 if (string.IsNullOrEmpty(sourceDatabaseName))
                 {
-                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                    var defaultConnectionString = await _connectionResolver.GetDefaultConnectionStringAsync();
                     if (!string.IsNullOrEmpty(defaultConnectionString))
                     {
-                        var defaultBuilder = new SqlConnectionStringBuilder(defaultConnectionString);
-                        sourceDatabaseName = defaultBuilder.InitialCatalog;
+                        var dbType = _configuration[Constants.DbType];
+                        if (dbType == Constants.DbServerType)
+                        {
+                            var defaultBuilder = new Npgsql.NpgsqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.Database;
+                        }
+                        else
+                        {
+                            var defaultBuilder = new SqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.InitialCatalog;
+                        }
                     }
                 }
 
@@ -532,9 +373,10 @@ namespace EDR.Application.Services
                 var migrationScripts = new[]
                 {
                     "01_DropIndex.Sql",
-                    "03_PMWorkFlow.Sql",
-                    "04_OpportunityStatuses.Sql",
-                    "05_Setup_user.Sql"
+                    "03_Setup_user.Sql",
+                    "04_PMWorkFlow.Sql",
+                    "05_OpportunityStatuses.Sql",
+                    "BDScoring_PostgresSQL.Sql"
                 };
 
                 using var connection = new SqlConnection(connectionString);
@@ -542,11 +384,12 @@ namespace EDR.Application.Services
 
                 foreach (var scriptFileName in migrationScripts)
                 {
-                    var scriptPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+                    var scriptPath = GetCorrectCaseFilePath(_nonIsolatedTenetScriptPath, scriptFileName);
 
-                    if (!File.Exists(scriptPath))
+                    if (string.IsNullOrEmpty(scriptPath))
                     {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        var fullPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", fullPath);
                         continue;
                     }
 
@@ -602,7 +445,8 @@ namespace EDR.Application.Services
             }
         }
 
-        public async Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsyncSQL(string connectionString, int tenantId,
+
+        public async Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsync(string connectionString, int tenantId,
             string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
         {
             try
@@ -614,38 +458,48 @@ namespace EDR.Application.Services
                 }
 
                 // Extract database name from connection string
-                var builder = new SqlConnectionStringBuilder(connectionString);
-                var targetDatabaseName = builder.InitialCatalog;
+                var builder = new NpgsqlConnectionStringBuilder(connectionString);
+                var targetDatabaseName = builder.Database;
 
                 // If source database not provided, use the default from configuration
                 if (string.IsNullOrEmpty(sourceDatabaseName))
                 {
-                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                    var defaultConnectionString = await _connectionResolver.GetDefaultConnectionStringAsync();
                     if (!string.IsNullOrEmpty(defaultConnectionString))
                     {
-                        var defaultBuilder = new SqlConnectionStringBuilder(defaultConnectionString);
-                        sourceDatabaseName = defaultBuilder.InitialCatalog;
+                        var dbType = _configuration[Constants.DbType];
+                        if (dbType == Constants.DbServerType)
+                        {
+                            var defaultBuilder = new NpgsqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.Database;
+                        }
+                        else
+                        {
+                            var defaultBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(defaultConnectionString);
+                            sourceDatabaseName = defaultBuilder.InitialCatalog;
+                        }
                     }
                 }
 
                 var migrationScripts = new[]
                 {
-                    "01_DropIndex.Sql",
                     "04_PMWorkFlow.Sql",
                     "05_OpportunityStatuses.Sql",
-                    "03_Setup_user.Sql"
+                    "03_Setup_user.Sql",
+                    "BDScoring_PostgresSQL.sql"
                 };
 
-                using var connection = new SqlConnection(connectionString);
+                await using var connection = new NpgsqlConnection(connectionString);
                 await connection.OpenAsync();
 
                 foreach (var scriptFileName in migrationScripts)
                 {
-                    var scriptPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+                    var scriptPath = GetCorrectCaseFilePath(_nonIsolatedTenetScriptPath, scriptFileName);
 
-                    if (!File.Exists(scriptPath))
+                    if (string.IsNullOrEmpty(scriptPath))
                     {
-                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        var fullPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", fullPath);
                         continue;
                     }
 
@@ -667,7 +521,7 @@ namespace EDR.Application.Services
 
                         try
                         {
-                            using var command = new SqlCommand(batch, connection);
+                            using var command = new NpgsqlCommand(batch, connection);
                             command.CommandTimeout = 300; // 5 minutes timeout for migrations
                             await command.ExecuteNonQueryAsync();
 
@@ -700,104 +554,19 @@ namespace EDR.Application.Services
                 return false;
             }
         }
-        
-        public async Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsync(string connectionString, int tenantId,
-                    string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
-                {
-                    try
-                    {
-                        if (!Directory.Exists(_nonIsolatedTenetScriptPath))
-                        {
-                            _logger.LogError("Migration scripts directory not found: {Path}", _nonIsolatedTenetScriptPath);
-                            return false;
-                        }
-        
-                        // Extract database name from connection string
-                        var builder = new NpgsqlConnectionStringBuilder(connectionString);
-                        var targetDatabaseName = builder.Database;
-        
-                        // If source database not provided, use the default from configuration
-                        if (string.IsNullOrEmpty(sourceDatabaseName))
-                        {
-                            var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
-                            if (!string.IsNullOrEmpty(defaultConnectionString))
-                            {
-                                var defaultBuilder = new NpgsqlConnectionStringBuilder(defaultConnectionString);
-                                sourceDatabaseName = defaultBuilder.Database;
-                            }
-                        }
-        
-                        var migrationScripts = new[]
-                        {
-                            "04_PMWorkFlow.Sql",
-                            "05_OpportunityStatuses.Sql",
-                            "03_Setup_user.Sql"
-                        };
 
-                        await using var connection = new NpgsqlConnection(connectionString);
-                        await connection.OpenAsync();
-        
-                        foreach (var scriptFileName in migrationScripts)
-                        {
-                            var scriptPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
-        
-                            if (!File.Exists(scriptPath))
-                            {
-                                _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
-                                continue;
-                            }
-        
-                            _logger.LogInformation("Executing migration script: {ScriptName}", scriptFileName);
-        
-                            var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
-        
-                            // Replace placeholders in the script
-                            scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName,
-                                userEmail, roleName, permissionName);
-        
-                            // Split script into batches (by GO statements)
-                            var batches = SplitScriptIntoBatches(scriptContent);
-        
-                            foreach (var batch in batches)
-                            {
-                                if (string.IsNullOrWhiteSpace(batch))
-                                    continue;
-        
-                                try
-                                {
-                                    using var command = new NpgsqlCommand(batch, connection);
-                                    command.CommandTimeout = 300; // 5 minutes timeout for migrations
-                                    await command.ExecuteNonQueryAsync();
-        
-                                    _logger.LogDebug("Successfully executed batch from {ScriptName}", scriptFileName);
-                                }
-                                catch (SqlException ex)
-                                {
-                                    // Log error but continue with next batch for certain non-critical errors
-                                    _logger.LogWarning(ex,
-                                        "Error executing batch from {ScriptName}: {ErrorMessage} (Error Number: {ErrorNumber})",
-                                        scriptFileName, ex.Message, ex.Number);
-        
-                                    throw;
-                                }
-                            }
-        
-                            _logger.LogInformation("Completed migration script: {ScriptName}", scriptFileName);
-                        }
-        
-                        _logger.LogInformation(
-                            "All user migration scripts executed successfully for tenant {TenantId} and user {UserEmail}",
-                            tenantId, userEmail);
-                        return true;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex,
-                            "Error executing tenant user migrations for tenant {TenantId} and user {UserEmail}", tenantId,
-                            userEmail);
-                        return false;
-                    }
-                }
+        private string? GetCorrectCaseFilePath(string directory, string fileName)
+        {
+            if (!Directory.Exists(directory)) return null;
+
+            // Direct check first (efficient for Windows or if correctly cased on Linux)
+            var directPath = Path.Combine(directory, fileName);
+            if (File.Exists(directPath)) return directPath;
+
+            // Case-insensitive search
+            var files = Directory.GetFiles(directory);
+            return files.FirstOrDefault(f => Path.GetFileName(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
+        }
 
         private string ReplacePlaceholdersSQL(string scriptContent, int tenantId, string targetDatabaseName,
             string? sourceDatabaseName, string? userEmail = null, string? roleName = null,
@@ -846,8 +615,8 @@ namespace EDR.Application.Services
 
             return scriptContent;
         }
-        
-        
+
+
         private string ReplacePlaceholders(
             string scriptContent,
             int tenantId,
@@ -858,24 +627,41 @@ namespace EDR.Application.Services
             string? permissionName = null)
         {
             // Read source connection details
-            var sourceConn = new NpgsqlConnectionStringBuilder(
-                _configuration.GetConnectionString("AppDbConnection")
-            );
+            var defaultConnectionString = _connectionResolver.GetDefaultConnectionStringAsync().GetAwaiter().GetResult();
+            var dbType = _configuration[Constants.DbType];
+            
+            if (dbType == Constants.DbServerType)
+            {
+                var sourceConn = new NpgsqlConnectionStringBuilder(defaultConnectionString);
+                return scriptContent
+                    // ---- dblink connection ----
+                    .Replace("{{SOURCE_DB}}", sourceDatabaseName ?? sourceConn.Database)
+                    .Replace("{{SOURCE_HOST}}", sourceConn.Host)
+                    .Replace("{{SOURCE_PORT}}", sourceConn.Port.ToString())
+                    .Replace("{{SOURCE_USER}}", sourceConn.Username)
+                    .Replace("{{SOURCE_PASSWORD}}", sourceConn.Password)
 
-            return scriptContent
-                // ---- dblink connection ----
-                .Replace("{{SOURCE_DB}}", sourceDatabaseName ?? sourceConn.Database)
-                .Replace("{{SOURCE_HOST}}", sourceConn.Host)
-                .Replace("{{SOURCE_PORT}}", sourceConn.Port.ToString())
-                .Replace("{{SOURCE_USER}}", sourceConn.Username)
-                .Replace("{{SOURCE_PASSWORD}}", sourceConn.Password)
-
-                // ---- business values ----
-                .Replace("{{TENANT_ID}}", tenantId.ToString())
-                .Replace("{{USER_EMAIL}}", EscapeSql(userEmail))
-                .Replace("{{ROLE_NAME}}", EscapeSql(roleName))
-                .Replace("{{PERMISSION_NAME}}", EscapeSql(permissionName));
+                    // ---- business values ----
+                    .Replace("{{TENANT_ID}}", tenantId.ToString())
+                    .Replace("{{USER_EMAIL}}", EscapeSql(userEmail))
+                    .Replace("{{ROLE_NAME}}", EscapeSql(roleName))
+                    .Replace("{{PERMISSION_NAME}}", EscapeSql(permissionName));
+            }
+            else
+            {
+                var sourceConn = new SqlConnectionStringBuilder(defaultConnectionString);
+                return scriptContent
+                    // ---- placeholders ----
+                    .Replace("{{SOURCE_DB}}", sourceDatabaseName ?? sourceConn.InitialCatalog)
+                    
+                    // ---- business values ----
+                    .Replace("{{TENANT_ID}}", tenantId.ToString())
+                    .Replace("{{USER_EMAIL}}", EscapeSql(userEmail))
+                    .Replace("{{ROLE_NAME}}", EscapeSql(roleName))
+                    .Replace("{{PERMISSION_NAME}}", EscapeSql(permissionName));
+            }
         }
+
         private static string EscapeSql(string? value)
         {
             return value == null ? string.Empty : value.Replace("'", "''");

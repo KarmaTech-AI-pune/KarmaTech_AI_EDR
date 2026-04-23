@@ -133,5 +133,72 @@ namespace EDR.API.Tests.CQRS.WBSVersion
             Assert.NotNull(result);
             Assert.Equal("1.0", result.Version);
         }
+
+        [Fact]
+        public async Task GetWBSVersionQueryHandler_ReturnsVersionDetails()
+        {
+            // Arrange
+            var version = new WBSVersionHistory { Id = 1, WBSHeaderId = 1, Version = "1.0" };
+            _wbsVersionRepositoryMock.Setup(x => x.GetByVersionAsync(10, "1.0")).ReturnsAsync(version);
+            _wbsVersionRepositoryMock.Setup(x => x.GetTaskVersionsAsync(1)).ReturnsAsync(new List<WBSTaskVersionHistory>());
+            _wbsVersionRepositoryMock.Setup(x => x.GetWorkflowHistoryAsync(1)).ReturnsAsync(new List<WBSVersionWorkflowHistory>());
+
+            var loggerMock = new Mock<ILogger<GetWBSVersionQueryHandler>>();
+            var handler = new GetWBSVersionQueryHandler(_wbsVersionRepositoryMock.Object, loggerMock.Object);
+            var query = new GetWBSVersionQuery(10, "1.0");
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("1.0", result.Version);
+        }
+
+        [Fact]
+        public async Task GetWBSVersionWorkflowHistoryQueryHandler_ReturnsHistory()
+        {
+            // Arrange
+            var history = new List<WBSVersionWorkflowHistory>
+            {
+                new WBSVersionWorkflowHistory { Id = 1, WBSVersionHistoryId = 1, Action = "Submit" }
+            };
+            _wbsVersionRepositoryMock.Setup(x => x.GetWorkflowHistoryAsync(1)).ReturnsAsync(history);
+
+            var loggerMock = new Mock<ILogger<GetWBSVersionWorkflowHistoryQueryHandler>>();
+            var handler = new GetWBSVersionWorkflowHistoryQueryHandler(_wbsVersionRepositoryMock.Object, loggerMock.Object);
+            var query = new GetWBSVersionWorkflowHistoryQuery(1);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("Submit", result[0].Action);
+        }
+
+        [Fact]
+        public async Task GetWBSVersionsQueryHandler_ReturnsVersionList()
+        {
+            // Arrange
+            var versions = new List<WBSVersionHistory>
+            {
+                new WBSVersionHistory { Id = 1, Version = "1.0" },
+                new WBSVersionHistory { Id = 2, Version = "2.0" }
+            };
+            _wbsVersionRepositoryMock.Setup(x => x.GetByProjectIdAsync(10)).ReturnsAsync(versions);
+
+            var loggerMock = new Mock<ILogger<GetWBSVersionsQueryHandler>>();
+            var handler = new GetWBSVersionsQueryHandler(_wbsVersionRepositoryMock.Object, loggerMock.Object);
+            var query = new GetWBSVersionsQuery(10);
+
+            // Act
+            var result = await handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(2, result.Count);
+            Assert.Contains(result, v => v.Version == "1.0");
+            Assert.Contains(result, v => v.Version == "2.0");
+        }
     }
 }

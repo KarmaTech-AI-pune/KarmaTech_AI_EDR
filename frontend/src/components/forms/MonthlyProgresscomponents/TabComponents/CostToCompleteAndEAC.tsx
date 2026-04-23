@@ -111,53 +111,61 @@ const CostToCompleteAndEAC: React.FC = () => {
   const net = watch('financialAndContractDetails.net') || 0;
   const budgetOdcs = watch('financialAndContractDetails.budgetOdcs');
   const budgetStaff = watch('financialAndContractDetails.budgetStaff');
+  const manpowerPlanning = watch('manpowerPlanning');
+  const extraCostTotal = manpowerPlanning?.manpowerTotal?.extraCostTotal || 0;
   
   const totalCumulativeOdcs = watch('actualCost.totalCumulativeOdc') || 0;
   const totalCumulativeStaff = watch('actualCost.totalCumulativeStaff') || 0;
-  const actualSubtotal = watch('actualCost.actualSubtotal') || 0;
-
   const ctcODC = watch('ctcAndEac.ctcODC');
   const ctcStaff = watch('ctcAndEac.ctcStaff');
   const actualctcODC = watch('ctcAndEac.actualctcODC');
-  const actualCtcStaff = watch('ctcAndEac.actualCtcStaff');
+
+  // Expected gross profit comes from the original JobStartForm profit percentage (nullable)
+  const expectedGrossProfitPercentage = watch('budgetTable.originalBudget.profitPercentage') ?? null;
 
   const calculatedValues = useMemo(() => {
     const calculatedCtcODC = (budgetOdcs ?? 0) - totalCumulativeOdcs;
     const calculatedCtcStaff = (budgetStaff ?? 0) - totalCumulativeStaff;
     const ctcSubtotal = calculatedCtcODC + calculatedCtcStaff;
     
-    const actualCtcSubtotal = (actualctcODC ?? 0) + (actualCtcStaff ?? 0);
+    // actualCtcStaff = Cost to Complete Staff + Extra Cost Total
+    const calculatedActualCtcStaff = calculatedCtcStaff + Number(extraCostTotal);
+    const actualCtcSubtotal = (actualctcODC ?? 0) + calculatedActualCtcStaff;
     
     const eacOdc = actualctcODC != null ? (totalCumulativeOdcs + actualctcODC) : (budgetOdcs ?? 0);
-    const eacStaff = actualCtcStaff != null ? (totalCumulativeStaff + actualCtcStaff) : (budgetStaff ?? 0);
+    const eacStaff = totalCumulativeStaff + calculatedActualCtcStaff;
     const totalEAC = eacOdc + eacStaff;
     
+    // Current gross profit: based on actual EAC vs net fee
     const grossProfitPercentage = calculateGrossPercentage(net, totalEAC);
 
     return {
       calculatedCtcODC,
       calculatedCtcStaff,
       ctcSubtotal,
+      calculatedActualCtcStaff,
       actualCtcSubtotal,
       eacOdc,
       eacStaff,
       totalEAC,
       grossProfitPercentage,
     };
-  }, [budgetOdcs, budgetStaff, totalCumulativeOdcs, totalCumulativeStaff, actualctcODC, actualCtcStaff, actualSubtotal, net]);
+  }, [budgetOdcs, budgetStaff, totalCumulativeOdcs, totalCumulativeStaff, actualctcODC, net, extraCostTotal]);
 
   useEffect(() => {
     setValue('ctcAndEac.ctcODC', calculatedValues.calculatedCtcODC);
     setValue('ctcAndEac.ctcStaff', calculatedValues.calculatedCtcStaff);
     setValue('ctcAndEac.ctcSubtotal', calculatedValues.ctcSubtotal);
+    setValue('ctcAndEac.actualCtcStaff', calculatedValues.calculatedActualCtcStaff);
     setValue('ctcAndEac.actualCtcSubtotal', calculatedValues.actualCtcSubtotal);
     setValue('ctcAndEac.eacOdc', calculatedValues.eacOdc);
     setValue('ctcAndEac.eacStaff', calculatedValues.eacStaff);
     setValue('ctcAndEac.totalEAC', calculatedValues.totalEAC);
     setValue('ctcAndEac.grossProfitPercentage', calculatedValues.grossProfitPercentage);
+    setValue('ctcAndEac.expectedGrossProfitPercentage', expectedGrossProfitPercentage ?? 0);
     setValue('budgetTable.currentBudgetInMIS.profitPercentage', calculatedValues.grossProfitPercentage);
     setValue('budgetTable.currentBudgetInMIS.cost', calculatedValues.totalEAC);
-  }, [calculatedValues, setValue]);
+  }, [calculatedValues, expectedGrossProfitPercentage, setValue]);
 
   const sections: SectionProps[] = [
     {
@@ -183,7 +191,7 @@ const CostToCompleteAndEAC: React.FC = () => {
       control,
       fields: [
         { name: "actualctcODC", label: "ODCs"},
-        { name: "actualCtcStaff", label: "Staff"},
+        { name: "actualCtcStaff", label: "Staff", readOnly: true, value: calculatedValues.calculatedActualCtcStaff },
         { name: "actualCtcSubtotal", label: "Subtotal", readOnly: true, value: calculatedValues.actualCtcSubtotal },
       ],
     },
@@ -200,7 +208,8 @@ const CostToCompleteAndEAC: React.FC = () => {
       title: "Gross Profit",
       control,
       fields: [
-        { name: "grossProfitPercentage", label: "Gross Profit %", readOnly: true, value: calculatedValues.grossProfitPercentage ?? 0 },
+        { name: "expectedGrossProfitPercentage", label: "Expected Gross Profit %", readOnly: true, value: expectedGrossProfitPercentage ?? 0 },
+        { name: "grossProfitPercentage", label: "Actual Gross Profit %", readOnly: true, value: calculatedValues.grossProfitPercentage ?? 0 },
       ],
     },
   ];

@@ -7,22 +7,30 @@ describe('TaskPriorityMatrix Component', () => {
     {
       id: 1,
       title: 'Fix critical database issue',
-      category: 'urgent_important' as const
+      category: 'urgent_important' as const,
+      project: 'Project Alpha',
+      assignee: 'Alice'
     },
     {
       id: 2,
       title: 'Update Q3 roadmap',
-      category: 'important_not_urgent' as const
+      category: 'important_not_urgent' as const,
+      project: 'Internal',
+      assignee: 'Bob'
     },
     {
       id: 3,
       title: 'Reply to client email',
-      category: 'urgent_not_important' as const
+      category: 'urgent_not_important' as const,
+      project: 'Client X',
+      assignee: 'Charlie'
     },
     {
       id: 4,
       title: 'Organize desk drawer',
-      category: 'neither' as const
+      category: 'neither' as const,
+      project: 'Internal',
+      assignee: 'Dave'
     }
   ];
 
@@ -45,5 +53,40 @@ describe('TaskPriorityMatrix Component', () => {
     expect(screen.getByText('Update Q3 roadmap')).toBeInTheDocument();
     expect(screen.getByText('Reply to client email')).toBeInTheDocument();
     expect(screen.getByText('Organize desk drawer')).toBeInTheDocument();
+  });
+
+  it('groups tasks with the same title', () => {
+    const tasksWithDuplicates = [
+      ...mockTasks,
+      {
+        id: 5,
+        title: 'Fix critical database issue',
+        category: 'urgent_important' as const,
+        project: 'Project Beta',
+        assignee: 'Bob'
+      }
+    ];
+
+    render(<TaskPriorityMatrix tasks={tasksWithDuplicates} />);
+
+    // Should only show the title once in the quadrant
+    const titles = screen.getAllByText('Fix critical database issue');
+    expect(titles.length).toBe(1);
+
+    // Should show the combination indicator
+    expect(screen.getByText('2 Tasks Combined')).toBeInTheDocument();
+  });
+
+  it('handles multiple unique assignees for the same title', () => {
+    const tasksWithThreeUsers = [
+      { id: 1, title: 'Test Task', category: 'urgent_important' as const, project: 'Project A', assignee: 'User 1' },
+      { id: 2, title: 'Test Task', category: 'urgent_important' as const, project: 'Project A', assignee: 'User 2' },
+      { id: 3, title: 'Test Task', category: 'urgent_important' as const, project: 'Project A', assignee: 'User 3' },
+    ];
+
+    render(<TaskPriorityMatrix tasks={tasksWithThreeUsers} />);
+
+    // Should show "3 Tasks Combined"
+    expect(screen.getByText('3 Tasks Combined')).toBeInTheDocument();
   });
 });

@@ -1,0 +1,150 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using MediatR;
+using EDR.Application.CQRS.Dashboard.Dashboard.Queries;
+using Microsoft.EntityFrameworkCore;
+using EDR.Application.Dtos.Dashboard;
+using EDR.Domain.Database;
+using EDR.Domain.Entities;
+using EDR.Domain.Enums;
+using Microsoft.Extensions.Logging;
+
+namespace EDR.Application.CQRS.Dashboard.Dashboard.Handlers
+{
+    public class GetProjectsAtRiskQueryHandler : IRequestHandler<GetProjectsAtRiskQuery, ProjectsAtRiskResponseDto>
+    {
+        private readonly ProjectManagementContext _context;
+        private readonly Microsoft.Extensions.Logging.ILogger<GetProjectsAtRiskQueryHandler> _logger;
+
+        public GetProjectsAtRiskQueryHandler(ProjectManagementContext context, Microsoft.Extensions.Logging.ILogger<GetProjectsAtRiskQueryHandler> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
+
+        public async Task<ProjectsAtRiskResponseDto> Handle(GetProjectsAtRiskQuery request, CancellationToken cancellationToken)
+        {
+            var projects = await _context.Projects
+                .Include(p => p.ProjectManager)
+                .Include(p => p.Program)
+                .Where(p => p.Status == ProjectStatus.OnHold || // Using OnHold as proxy for at-risk statuses, as Delayed/AtRisk/Critical are not in enum
+                           p.Status == ProjectStatus.Active ||
+                           p.Status == ProjectStatus.Opportunity)
+                .Select(p => new
+                {
+                    Project = p,
+                    ProjectManager = p.ProjectManager,
+                    Program = p.Program,
+                    ProgramName = p.Program != null ? p.Program.Name : _context.Programs.IgnoreQueryFilters().Where(pr => pr.Id == p.ProgramId).Select(pr => pr.Name).FirstOrDefault(),
+                    LatestSchedule = _context.Schedules
+                        .Where(s => s.MonthlyProgress.ProjectId == p.Id)
+                        .OrderByDescending(s => s.MonthlyProgress.Year)
+                        .ThenByDescending(s => s.MonthlyProgress.Month)
+                        .FirstOrDefault()
+                })
+                .ToListAsync(cancellationToken);
+
+            _logger.LogInformation($"ProjectsAtRisk: Found {projects.Count} projects with Active/OnHold status.");
+
+            var projectsList = new List<ProjectAtRiskDto>();
+
+            foreach (var item in projects)
+            {
+                var p = item.Project;
+                _logger.LogInformation($"Project {p.Id} ({p.Name}): ProgramId={p.ProgramId}, Program Loaded={item.Program != null}");
+                
+                var schedule = item.LatestSchedule;
+
+                // Calculate delay
+                int delayDays = 0;
+                if (schedule?.CompletionDateAsPerContract != null)
+                {
+                    var compareDate = schedule.ExpectedCompletionDate ?? DateTime.Now;
+                    delayDays = (int)(compareDate - schedule.CompletionDateAsPerContract.Value).TotalDays;
+                    _logger.LogInformation($"Project {p.Id} ({p.Name}): Schedule found. Contract: {schedule.CompletionDateAsPerContract}, Expected: {schedule.ExpectedCompletionDate}, Delay: {delayDays}");
+                }
+                else if (p.EndDate != null && p.EndDate < DateTime.Now && p.Status != ProjectStatus.Completed)
+                {
+                    delayDays = (int)(DateTime.Now - p.EndDate.Value).TotalDays;
+                    _logger.LogInformation($"Project {p.Id} ({p.Name}): No schedule found, but EndDate {p.EndDate} is in the past. Fallback delay: {delayDays}");
+                }
+                else
+                {
+                    _logger.LogInformation($"Project {p.Id} ({p.Name}): No schedule or contract date found.");
+                }
+
+                // Calculate budget
+                var budgetTotal = p.EstimatedProjectCost; // Using EstimatedProjectCost as budget total since WBSTasks is not a direct navigation property
+                var budgetSpent = await _context.ContractAndCosts
+                    .Where(cc => cc.MonthlyProgress.ProjectId == p.Id)
+                    .OrderByDescending(cc => cc.MonthlyProgress.Year)
+                    .ThenByDescending(cc => cc.MonthlyProgress.Month)
+                    .Select(cc => cc.TotalCumulativeCost ?? 0m)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                var budgetPercentage = budgetTotal > 0
+                    ? (int)((budgetSpent / budgetTotal) * 100)
+                    : 0;
+
+                // Determine status
+                string status = "on_track";
+                var issues = new List<string>();
+
+                if (delayDays > 15)
+                {
+                    status = "falling_behind";
+                    issues.Add($"Delayed by {delayDays} days");
+                }
+
+                var percentComplete = p.Progress; // Using Project.Progress
+
+                if (budgetPercentage > 85 && percentComplete < 70)
+                {
+                    status = "cost_overrun";
+                    issues.Add("Budget overrun risk");
+                }
+                
+                var hasScopeChange = await _context.ChangeControls
+                    .AnyAsync(cc => cc.ProjectId == p.Id && cc.WorkflowStatusId == (int)PMWorkflowStatusEnum.SentForApproval, cancellationToken); // Using WorkflowStatusId as per PMWorkflowStatusEnum
+
+                if (hasScopeChange)
+                {
+                    status = "scope_issue";
+                    issues.Add("Pending scope changes");
+                }
+
+                // Only include if actually at risk
+                if (delayDays > 0 || budgetPercentage > 80 || hasScopeChange)
+                {
+                    projectsList.Add(new ProjectAtRiskDto
+                    {
+                        ProjectId = p.Id,
+                        ProjectName = p.Name,
+                        Priority = delayDays > 15 ? "P3" : "P5",
+                        Region = p.Region,
+                        Status = status,
+                        DelayDays = delayDays,
+                        BudgetSpent = budgetSpent,
+                        BudgetTotal = budgetTotal ?? 0,
+                        BudgetPercentage = budgetPercentage,
+                        Issues = issues,
+                        Manager = item.ProjectManager?.Name ?? "Unknown",
+                        ProgramName = item.ProgramName ?? item.Program?.Name ?? "General"
+                    });
+                }
+            }
+
+            return new ProjectsAtRiskResponseDto
+            {
+                CriticalCount = projectsList.Count(p => p.Priority == "P3"),
+                Projects = projectsList.OrderBy(p => p.Priority)
+                                      .ThenByDescending(p => p.DelayDays)
+                                      .ToList()
+            };
+        }
+    }
+}
+

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -85,10 +85,13 @@ namespace EDR.API.Controllers
                     _logger.LogInformation($"Login attempt for tenant: {tenant}");
                 }
 
-                var (success, user, token) = await _authService.ValidateUserAsync(model.Email, model.Password);
+                var authResult = await _authService.ValidateUserAsync(model.Email, model.Password);
 
-                if (success)
+                if (authResult.Success)
                 {
+                    var user = authResult.User;
+                    var token = authResult.Token;
+                   
                     // Check if 2FA is required for this user
                    
                     if (await _twoFactorService.IsOtpRequiredAsync(model.Email))
@@ -161,7 +164,21 @@ namespace EDR.API.Controllers
                     });
                 }
 
-                return Unauthorized(new { success = false, message = "Invalid credentials" });
+                string errorCode = "INVALID_CREDENTIALS";
+                if (authResult.ResultType == AuthResultType.UserInactive)
+                {
+                    errorCode = "USER_ACCOUNT_INACTIVE";
+                }
+                else if (authResult.ResultType == AuthResultType.TenantInactive)
+                {
+                    errorCode = "TENANT_BLOCKED";
+                }
+                else if (authResult.ResultType == AuthResultType.NoTenantMapping)
+                {
+                    errorCode = "USER_NOT_ASSIGNED_TO_TENANT";
+                }
+
+                return Unauthorized(new { success = false, message = authResult.Message ?? "Invalid credentials", errorCode = errorCode });
             }
             catch (Exception ex)
             {

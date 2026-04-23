@@ -12,18 +12,24 @@ const ProjectForms = lazy(() => import('../pages/projectManagement/ProjectForms'
 const ProjectDocuments = lazy(() => import('../pages/projectManagement/ProjectDocuments'));
 const ProjectTimeline = lazy(() => import('../pages/projectManagement/ProjectTimeline'));
 const ProjectBudgetHistory = lazy(() => import('../pages/projectManagement/ProjectBudgetHistory'));
+const ProjectDashboard = lazy(() => import('../pages/projectManagement/ProjectDashboard'));
+const ProgramDashboard = lazy(() => import('../pages/ProgramManagement/ProgramDashboard'));
 
 export const programManagementRoutes: RouteObject[] = [
-  {
-    path: 'program-management',
-    handle: { requiredPermission: PermissionType.VIEW_PROJECT },
-    children: [
-      {
-        index: true,
-        element: <ProgramManagement />,
-      },
-      {
-        path: 'projects',
+    {
+        path: 'program-management',
+        handle: { requiredPermission: PermissionType.VIEW_PROJECT },
+        children: [
+            {
+                index: true,
+                element: <ProgramManagement />,
+            },
+            {
+                path: 'dashboard',
+                element: <ProgramDashboard />,
+            },
+            {
+                path: 'projects',
         children: [
           {
             index: true,
@@ -33,6 +39,10 @@ export const programManagementRoutes: RouteObject[] = [
             path: 'project',
             element: <ProjectDetails />,
             children: [
+              {
+                path: 'dashboard',
+                element: <ProjectDashboard />,
+              },
               {
                 index: true,
                 element: <Navigate to="overview" replace />,

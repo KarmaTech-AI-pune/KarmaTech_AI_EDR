@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.WorkBreakdownStructures.Queries;
@@ -47,6 +47,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             // Optimized data retrieval: Load all necessary data in single operations
             var wbsHeader = await _context.WBSHeaders
                 .Where(h => h.ProjectId == request.ProjectId && h.IsActive)
+                .OrderByDescending(h => h.Id)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -60,7 +61,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                 };
             }
 
-            // Load all WBSTasks for the project with related data in optimized queries
+            // Load all WBSTasks for the project with related data in optimized queries for the SPECIFIC header
             var wbsTasks = await _context.WBSTasks
                 .Include(t => t.UserWBSTasks)
                     .ThenInclude(ut => ut.User)
@@ -68,25 +69,25 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     .ThenInclude(ut => ut.ResourceRole)
                 .Include(t => t.PlannedHours)
                 .Include(t => t.WBSOption)
-                .Where(t => t.WorkBreakdownStructure.WBSHeader.ProjectId == request.ProjectId && 
+                .Where(t => t.WorkBreakdownStructure.WBSHeaderId == wbsHeader.Id && 
                            !t.IsDeleted)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
             // Load all WBSOptions for the tenant to build hierarchy
-            var tenantId = await _context.Projects
+            var tenantId = projectExists ? await _context.Projects
                 .Where(p => p.Id == request.ProjectId)
                 .Select(p => p.TenantId)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken) : 0;
 
             var wbsOptions = await _context.WBSOptions
                 .Where(o => o.TenantId == tenantId)
                 .AsNoTracking()
                 .ToDictionaryAsync(o => o.Id, cancellationToken);
 
-            // Load WorkBreakdownStructures for the project
+            // Load WorkBreakdownStructures for the SPECIFIC header
             var wbsStructures = await _context.WorkBreakdownStructures
-                .Where(wbs => wbs.WBSHeader.ProjectId == request.ProjectId)
+                .Where(wbs => wbs.WBSHeaderId == wbsHeader.Id)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 

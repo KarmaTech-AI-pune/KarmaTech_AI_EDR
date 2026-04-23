@@ -23,6 +23,24 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_'
+        }
+      ],
+      'react-hooks/rules-of-hooks': 'warn',
+      'prefer-const': 'warn',
+      '@typescript-eslint/ban-ts-comment': 'warn',
+      'no-empty-pattern': 'warn',
+      '@typescript-eslint/no-unused-expressions': 'warn',
+      'no-prototype-builtins': 'warn',
+      'no-useless-catch': 'warn',
+      'no-empty': 'warn',
+      '@typescript-eslint/no-require-imports': 'warn'
     },
   },
 )

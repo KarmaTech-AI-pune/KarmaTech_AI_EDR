@@ -177,21 +177,30 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
         const newMilestone = await PaymentScheduleAPI.addPaymentMilestone(projectId, milestone);
         console.log('useCashFlowData: Milestone added successfully:', newMilestone);
         
-        // Refresh ONLY payment schedule data (not entire cashflow)
+        // IMPORTANT: Refresh BOTH payment schedule AND cashflow data
+        // This ensures Monthly Budget Breakdown shows updated revenue from payment milestones
         try {
+          console.log('useCashFlowData: Refreshing all cashflow data after milestone addition...');
+          
+          // Fetch updated cashflow data (includes revenue from new payment milestone)
+          const cashflowResult = await CashFlowAPI.getProjectCashFlow(projectId);
+          console.log('useCashFlowData: Refreshed cashflow data:', cashflowResult);
+          
+          // Transform the data
+          const transformedData = transformToMonthlyBudget(cashflowResult);
+          
+          // Fetch updated payment schedule
           const paymentScheduleResult = await PaymentScheduleAPI.getPaymentMilestones(projectId);
           console.log('useCashFlowData: Refreshed payment schedule data:', paymentScheduleResult);
           
-          // Update only the payment schedule in the existing data
-          if (data) {
-            setData({
-              ...data,
-              paymentSchedule: paymentScheduleResult,
-            });
-          }
+          // Update with both cashflow and payment schedule
+          transformedData.paymentSchedule = paymentScheduleResult;
+          setData(transformedData);
+          
+          console.log('useCashFlowData: Successfully refreshed all data after milestone addition');
         } catch (refreshError) {
-          console.error('useCashFlowData: Error refreshing payment schedule:', refreshError);
-          // Don't throw - milestone was added successfully
+          console.error('useCashFlowData: Error refreshing data after milestone addition:', refreshError);
+          // Don't throw - milestone was added successfully, just log the refresh error
         }
         
         return newMilestone;
@@ -202,7 +211,7 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
         throw err;
       }
     },
-    [projectId, data]
+    [projectId]
   );
 
   return {

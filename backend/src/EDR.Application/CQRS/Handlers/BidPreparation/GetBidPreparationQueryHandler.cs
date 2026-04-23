@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -21,13 +21,10 @@ namespace EDR.Application.CQRS.Handlers.BidPreparation
         public async Task<BidPreparationDto> Handle(GetBidPreparationQuery request, CancellationToken cancellationToken)
         {
             var bidPreparation = await _context.BidPreparations
-                 .Where(b => b.OpportunityId == request.OpportunityId
-                 && (b.UserId == request.UserId 
-                  || b.RegionalMangerId == request.UserId
-                  || b.RegionalDirectorId == request.UserId))
-                 .OrderByDescending(b => b.CreatedAt)
-                 .Include(b => b.VersionHistory)
-                 .FirstOrDefaultAsync(cancellationToken);
+                .Where(b => b.OpportunityId == request.OpportunityId)
+                .OrderByDescending(b => b.CreatedAt)
+                .Include(b => b.VersionHistory)
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (bidPreparation == null)
             {
@@ -67,4 +64,3 @@ namespace EDR.Application.CQRS.Handlers.BidPreparation
         }
     }
 }
-

@@ -13,7 +13,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { programApi } from '../../services/api/programApi';
+import { programApi } from '../../services/programApi';
 import { ProgramFormDto } from '../../types/program';
 
 // Zod validation schema

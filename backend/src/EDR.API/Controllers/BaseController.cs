@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using EDR.Application.Services.IContract;
 using EDR.Repositories.Interfaces;
 
@@ -62,7 +62,8 @@ namespace EDR.API.Controllers
             if (!_currentUserService.IsAuthenticated)
                 return false;
 
-            return await _tenantService.ValidateTenantAccessAsync(CurrentUserId, tenantId);
+            var result = await _tenantService.ValidateTenantAccessAsync(CurrentUserId, tenantId);
+            return result == EDR.Repositories.Interfaces.TenantAccessResult.Success;
         }
 
         /// <summary>

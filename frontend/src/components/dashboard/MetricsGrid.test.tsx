@@ -36,7 +36,8 @@ describe('MetricsGrid Component', () => {
     // Titles
     expect(screen.getByText('Total Revenue-Expected')).toBeInTheDocument();
     expect(screen.getByText('Total Revenue-Actual')).toBeInTheDocument();
-    expect(screen.getByText('Profit Margin')).toBeInTheDocument();
+    expect(screen.getByText('Expected Gross Profit %')).toBeInTheDocument();
+    expect(screen.getByText('Actual Gross Profit %')).toBeInTheDocument();
     expect(screen.getByText('Revenue at Risk')).toBeInTheDocument();
     expect(screen.getByText('Pending Approvals')).toBeInTheDocument();
 

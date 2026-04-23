@@ -3,7 +3,8 @@ import { WBSStructureAPI } from '../features/wbs/services/wbsApi';
 import { projectApi } from './projectApi';
 import { MonthlyProgressSchemaType } from '../schemas/monthlyProgress/MonthlyProgressSchema';
 import { addCalculation, percentageCalculation } from '../utils/calculations';
-import { MonthlyProgressAPI, ManpowerResourcesResponse, MonthlyHourDto } from './monthlyProgressApi';
+import { MonthlyProgressAPI, ManpowerResourcesResponse } from './monthlyProgressApi';
+import { formatDateToDDMMYYYY } from '../utils/dateUtils';
 
 // Define types for the expected API responses for better type safety
 interface JobStartData {
@@ -29,11 +30,26 @@ interface ProjectData {
   // Add other properties from the project API response as needed
 }
 
+interface AssigneeProgressDto {
+  assigneeId: string | null;
+  assigneeName: string;
+  roleId: string | null;
+  roleName: string;
+  month: string;
+  estimatedHours: number;
+  actualHours: number;
+  remainingHours: number;
+  employeeLoggedHours: number;
+}
+
 const transformDataForMonthlyProgress = (
   jobStartResult: PromiseSettledResult<JobStartData[]>,
   wbsResult: PromiseSettledResult<WBSResponse>,
   projectResult: PromiseSettledResult<ProjectData>,
-  manpowerResult: PromiseSettledResult<ManpowerResourcesResponse>
+  manpowerResult: PromiseSettledResult<ManpowerResourcesResponse>,
+  assigneeProgressResult: PromiseSettledResult<AssigneeProgressDto[]>,
+  selectedYear?: number,
+  selectedMonth?: number
 ): Partial<MonthlyProgressSchemaType> => {
   const transformedData: Partial<MonthlyProgressSchemaType> = {
     financialAndContractDetails: {
@@ -67,6 +83,7 @@ const transformDataForMonthlyProgress = (
       eacStaff: null,
       totalEAC: null,
       grossProfitPercentage: null,
+      expectedGrossProfitPercentage: null,
     },
     budgetTable: {
       originalBudget: {
@@ -95,7 +112,10 @@ const transformDataForMonthlyProgress = (
       manpowerTotal: {
         plannedTotal: 0,
         consumedTotal: 0,
+        approvedTotal: 0,
         balanceTotal: 0,
+        paymentTotal: 0,
+        extraHoursTotal: 0,
         nextMonthPlanningTotal: 0,
       },
     },
@@ -136,13 +156,27 @@ const transformDataForMonthlyProgress = (
 
   // Process WBS data if the promise was fulfilled
   if (wbsResult.status === 'fulfilled' && wbsResult.value) {
-    const wbsData = wbsResult.value.tasks || [];
-    const budgetOdcs = wbsData
-      .filter(row => row.taskType === 1)
-      .reduce((sum, row) => sum + (row.totalCost || 0), 0);
-    const budgetStaff = wbsData
-      .filter(row => row.taskType === 0)
-      .reduce((sum, row) => sum + (row.totalCost || 0), 0);
+    let budgetOdcs = 0;
+    let budgetStaff = 0;
+
+    if (wbsResult.value.workBreakdownStructures) {
+      wbsResult.value.workBreakdownStructures.forEach(structure => {
+        if (structure.tasks) {
+          structure.tasks.forEach((row: any) => {
+            if (row.taskType === 1) budgetOdcs += (row.totalCost || 0);
+            if (row.taskType === 0) budgetStaff += (row.totalCost || 0);
+          });
+        }
+      });
+    } else if (wbsResult.value.tasks) {
+      // Fallback in case it's flat
+      budgetOdcs = wbsResult.value.tasks
+        .filter((row: any) => row.taskType === 1)
+        .reduce((sum: number, row: any) => sum + (row.totalCost || 0), 0);
+      budgetStaff = wbsResult.value.tasks
+        .filter((row: any) => row.taskType === 0)
+        .reduce((sum: number, row: any) => sum + (row.totalCost || 0), 0);
+    }
 
     if (transformedData.financialAndContractDetails) {
       transformedData.financialAndContractDetails.budgetOdcs = budgetOdcs;
@@ -166,29 +200,36 @@ const transformDataForMonthlyProgress = (
       }
     }
     if (transformedData.schedule) {
-      transformedData.schedule.dateOfIssueWOLOI = project.startDate;
-      transformedData.schedule.completionDateAsPerContract = project.endDate;
-      transformedData.schedule.completionDateAsPerExtension = project.endDate;
-      transformedData.schedule.expectedCompletionDate = project.endDate;
+      transformedData.schedule.dateOfIssueWOLOI = formatDateToDDMMYYYY(project.startDate) || null;
+      transformedData.schedule.completionDateAsPerContract = formatDateToDDMMYYYY(project.endDate) || null;
+      transformedData.schedule.completionDateAsPerExtension = formatDateToDDMMYYYY(project.endDate) || null;
+      transformedData.schedule.expectedCompletionDate = formatDateToDDMMYYYY(project.endDate) || null;
     }
   }
 
   if (manpowerResult.status === 'fulfilled' && manpowerResult.value) {
-    const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
-      const currentDate = new Date();
-      const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
-      const currentYear = currentDate.getFullYear();
+    console.log('🚀 Processing manpower data...');
+    console.log('📅 Selected month/year:', { selectedMonth, selectedYear });
+    
+    const getMonthlyHours = (plannedHours: any[]) => {
+      // Use selected month/year if provided, otherwise use current date
+      const targetDate = selectedYear && selectedMonth 
+        ? new Date(selectedYear, selectedMonth - 1, 1)
+        : new Date();
+      
+      const currentMonth = targetDate.toLocaleString('default', { month: 'long' });
+      const currentYear = targetDate.getFullYear();
 
-      const nextDate = new Date(currentDate);
+      const nextDate = new Date(targetDate);
       nextDate.setMonth(nextDate.getMonth() + 1);
       const nextMonth = nextDate.toLocaleString('default', { month: 'long' });
       const nextYear = nextDate.getFullYear();
 
-      const currentMonthData = monthlyHours?.find(item =>
+      const currentMonthData = plannedHours?.find(item =>
         item.month === currentMonth && item.year === currentYear
       );
 
-      const nextMonthData = monthlyHours?.find(item =>
+      const nextMonthData = plannedHours?.find(item =>
         item.month === nextMonth && item.year === nextYear
       );
 
@@ -197,29 +238,106 @@ const transformDataForMonthlyProgress = (
         nextMonthHours: nextMonthData?.plannedHours || 0
       };
     };
-    const manpowerData = manpowerResult.value.resources.map(resource => {
-      const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.monthlyHours);
+
+    // Extract all manpower tasks (taskType === 0) from the WBS structures array
+    let allManpowerTasks: any[] = [];
+    if (wbsResult.status === 'fulfilled' && wbsResult.value && wbsResult.value.workBreakdownStructures) {
+      wbsResult.value.workBreakdownStructures.forEach(structure => {
+        if (structure.tasks && Array.isArray(structure.tasks)) {
+           const staffTasks = structure.tasks.filter((t: any) => t.taskType === 0 && t.assignedUserName);
+           allManpowerTasks = [...allManpowerTasks, ...staffTasks];
+        }
+      });
+    }
+
+    const manpowerData = allManpowerTasks.map(resource => {
+      const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.plannedHours || []);
+      
+      // Get assignee progress data for this employee
+      let consumedHours = 0; // employeeLoggedHours
+      let approvedHours = 0; // actualHours
+      
+      if (assigneeProgressResult.status === 'fulfilled' && assigneeProgressResult.value) {
+        const targetDate = selectedYear && selectedMonth 
+          ? new Date(selectedYear, selectedMonth - 1, 1)
+          : new Date();
+        
+        // Backend returns month in MM-YYYY format, so we need to match that
+        const targetMonthNumber = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const targetYear = targetDate.getFullYear();
+        const targetMonthYear = `${targetMonthNumber}-${targetYear}`;
+        
+        const normalizeString = (str: any) => 
+          str?.toString().trim().toLowerCase().replace(/\s+/g, ' ') || '';
+        
+        const normalizedEmployeeName = normalizeString(resource.assignedUserName);
+        
+        // WBS API task structure might have different property names for RoleId
+        const resourceRoleId = normalizeString(
+          (resource as any).resourceRoleId || 
+          resource.resource_role || 
+          (resource as any).resource_role_id
+        );
+        
+        console.log(`🔍 Matching for ${resource.assignedUserName} (Role: ${resourceRoleId}) in ${targetMonthYear}`);
+        
+        // Match by name + month + roleId for exact identification
+        const match = assigneeProgressResult.value.find(apRaw => {
+          // Handle both camelCase and PascalCase from backend
+          const ap = apRaw as any;
+          const apName = normalizeString(ap.assigneeName || ap.AssigneeName);
+          const apMonth = normalizeString(ap.month || ap.Month);
+          const apRoleId = normalizeString(ap.roleId || ap.RoleId);
+          
+          const nameMatch = apName === normalizedEmployeeName;
+          const monthMatch = apMonth === targetMonthYear;
+          const roleMatch = apRoleId === resourceRoleId;
+          
+          return nameMatch && monthMatch && roleMatch;
+        });
+        
+        if (match) {
+          const ap = match as any;
+          consumedHours = (ap.employeeLoggedHours ?? ap.EmployeeLoggedHours) || 0;
+          approvedHours = (ap.actualHours ?? ap.ActualHours) || 0;
+          console.log(`✅ Match found for ${resource.assignedUserName}: Consumed=${consumedHours}, Approved=${approvedHours}`);
+        } else {
+          console.warn(`❌ No match found for ${resource.assignedUserName} (Role: ${resourceRoleId})`);
+        }
+      }
+      
       return {
-        workAssignment: resource.taskTitle,
-        assignee: resource.employeeName,
+        workAssignment: resource.title || resource.wbsOptionLabel,
+        assignee: resource.assignedUserName,
+        rate: resource.costRate || 0,
         planned: currentMonthHours,
-        consumed: null,
-        balance: currentMonthHours,
+        consumed: consumedHours,
+        approved: approvedHours,
+        balance: currentMonthHours - approvedHours,
+        payment: (resource.costRate && consumedHours) ? resource.costRate * consumedHours : 0,
+        extraHours: consumedHours - approvedHours,
+        extraCost: (consumedHours - approvedHours) * (resource.costRate || 0),
         nextMonthPlanning: nextMonthHours,
         manpowerComments: ""
       };
     });
 
     const plannedTotal = manpowerData.reduce((sum, entry) => sum + (entry.planned || 0), 0);
+    const consumedTotal = manpowerData.reduce((sum, entry) => sum + (entry.consumed || 0), 0);
+    const paymentTotal = manpowerData.reduce((sum, entry) => sum + (entry.payment || 0), 0);
+    const balanceTotal = plannedTotal - consumedTotal;
     const nextMonthPlanningTotal = manpowerData.reduce((sum, entry) => sum + (entry.nextMonthPlanning || 0), 0);
 
     if (transformedData.manpowerPlanning) {
       transformedData.manpowerPlanning.manpower = manpowerData;
       transformedData.manpowerPlanning.manpowerTotal = {
-        plannedTotal: plannedTotal,
-        consumedTotal: 0,
-        balanceTotal: plannedTotal,
-        nextMonthPlanningTotal: nextMonthPlanningTotal,
+        plannedTotal,
+        consumedTotal,
+        approvedTotal: manpowerData.reduce((sum, entry) => sum + (entry.approved || 0), 0),
+        balanceTotal,
+        paymentTotal,
+        extraHoursTotal: manpowerData.reduce((sum, entry) => sum + ((entry.consumed || 0) - (entry.approved || 0)), 0),
+        nextMonthPlanningTotal,
       };
     }
   }
@@ -228,16 +346,19 @@ const transformDataForMonthlyProgress = (
 };
 
 export const getAggregatedMonthlyProgressData = async (
-  projectId: string
+  projectId: string,
+  year?: number,
+  month?: number
 ): Promise<Partial<MonthlyProgressSchemaType>> => {
   const results = await Promise.allSettled([
     getJobStartFormByProjectId(projectId),
     WBSStructureAPI.getProjectWBS(projectId),
     projectApi.getById(projectId),
     MonthlyProgressAPI.getManpowerResources(projectId),
+    MonthlyProgressAPI.getAssigneeProgress(projectId),
   ]);
 
-  const [jobStartResult, wbsResult, projectResult, manpowerResult] = results;
+  const [jobStartResult, wbsResult, projectResult, manpowerResult, assigneeProgressResult] = results;
 
   // Basic error logging. In a real app, you might want a more robust logging service.
   results.forEach(result => {
@@ -250,7 +371,10 @@ export const getAggregatedMonthlyProgressData = async (
     jobStartResult as PromiseSettledResult<JobStartData[]>,
     wbsResult as PromiseSettledResult<WBSResponse>,
     projectResult as PromiseSettledResult<ProjectData>,
-    manpowerResult as PromiseSettledResult<ManpowerResourcesResponse>
+    manpowerResult as PromiseSettledResult<ManpowerResourcesResponse>,
+    assigneeProgressResult as PromiseSettledResult<AssigneeProgressDto[]>,
+    year,
+    month
   );
 };
 
@@ -308,11 +432,22 @@ export const getMonthlyProgressData = async (
 
     // Check if the response is not null and has keys, indicating existing data
     if (monthlyProgressData && Object.keys(monthlyProgressData).length > 0) {
-      const aggregatedData = await getAggregatedMonthlyProgressData(projectId);
+      const aggregatedData = await getAggregatedMonthlyProgressData(projectId, year, month);
+      
+      // Format schedule dates before merging
+      const formattedSchedule = monthlyProgressData.schedule ? {
+        ...monthlyProgressData.schedule,
+        dateOfIssueWOLOI: formatDateToDDMMYYYY(monthlyProgressData.schedule.dateOfIssueWOLOI) || null,
+        completionDateAsPerContract: formatDateToDDMMYYYY(monthlyProgressData.schedule.completionDateAsPerContract) || null,
+        completionDateAsPerExtension: formatDateToDDMMYYYY(monthlyProgressData.schedule.completionDateAsPerExtension) || null,
+        expectedCompletionDate: formatDateToDDMMYYYY(monthlyProgressData.schedule.expectedCompletionDate) || null,
+      } : undefined;
+
       return {
         ...aggregatedData,
         ...previousMonthData, // Merge previous month's data
         ...monthlyProgressData,
+        ...(formattedSchedule ? { schedule: formattedSchedule } : {}),
         lastMonthActions: previousMonthData.lastMonthActions || monthlyProgressData.lastMonthActions || [],
       };
     }
@@ -325,7 +460,7 @@ export const getMonthlyProgressData = async (
   }
 
   // If no existing data or if the fetch failed, get aggregated data
-  const aggregatedData = await getAggregatedMonthlyProgressData(projectId);
+  const aggregatedData = await getAggregatedMonthlyProgressData(projectId, year, month);
   return {
     ...aggregatedData,
     ...previousMonthData, // Merge previous month's data even if current month data is new

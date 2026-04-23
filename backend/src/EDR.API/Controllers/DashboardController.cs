@@ -1,19 +1,13 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EDR.Application.CQRS.Dashboard.TotalRevenueExpected.Queries;
-using EDR.Application.CQRS.Dashboard.TotalRevenueActual.Queries;
-using EDR.Application.CQRS.Dashboard.PendingApproval.Query;
-using EDR.Application.CQRS.Dashboard.ProfitMargin.Query;
-using EDR.Application.CQRS.Dashboard.RevenueAtRisk.Query;
-using EDR.Application.CQRS.Dashboard.ProjectsAtRisk.Query;
-using EDR.Application.DTOs.Dashboard; // Corrected DTO namespace
-using EDR.Application.Dtos.Dashboard; // Added for compatibility with other DTOs
-using EDR.Application.CQRS.Dashboard.Cashflow.Queries;
-using EDR.Application.CQRS.Dashboard.Regional.Queries;
-using EDR.Application.CQRS.Dashboard.NpvProfitability.Queries;
-using EDR.Application.CQRS.Dashboard.MilestoneBilling.Queries;
+using EDR.Application.CQRS.Dashboard.Dashboard.Queries;
+using EDR.Application.Dtos.Dashboard;
+using EDR.Application.CQRS.Dashboard;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using System;
 
 namespace EDR.API.Controllers
 {
@@ -39,7 +33,7 @@ namespace EDR.API.Controllers
         }
 
         [HttpGet("total-revenue-expected")]
-        public async Task<ActionResult<TotalRevenueExpectedDto>> GetTotalRevenueExpected() // Reverted DTO name
+        public async Task<ActionResult<TotalRevenueExpectedDto>> GetTotalRevenueExpected()
         {
             var query = new GetTotalRevenueExpectedQuery();
             var totalRevenueExpected = await _mediator.Send(query);
@@ -48,7 +42,7 @@ namespace EDR.API.Controllers
         }
 
         [HttpGet("total-revenue-actual")]
-        public async Task<ActionResult<TotalRevenueActualDto>> GetTotalRevenueActual() // Reverted DTO name
+        public async Task<ActionResult<TotalRevenueActualDto>> GetTotalRevenueActual()
         {
             var query = new GetTotalRevenueActualQuery();
             var totalRevenueActual = await _mediator.Send(query);
@@ -112,6 +106,15 @@ namespace EDR.API.Controllers
         public async Task<ActionResult<List<MilestoneBillingDto>>> GetMilestoneBilling()
         {
             var query = new GetMilestoneBillingQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        [HttpGet("task-priority-matrix")]
+        [ProducesResponseType(typeof(List<TaskPriorityItemDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<TaskPriorityItemDto>>> GetTaskPriorityMatrix()
+        {
+            var query = new GetTaskPriorityMatrixQuery();
             var result = await _mediator.Send(query);
             return Ok(result);
         }

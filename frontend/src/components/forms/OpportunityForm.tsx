@@ -1,4 +1,4 @@
-﻿import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   Button,
   TextField,
@@ -8,7 +8,6 @@ import {
   InputLabel,
   Select,
   SelectChangeEvent,
-  Alert,
   Typography,
   Divider,
   Box,
@@ -335,16 +334,6 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   return (
     <Box>
       <form onSubmit={handleSubmit}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        {validationError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {validationError}
-          </Alert>
-        )}
         <Grid container spacing={3}>
           {/* Workflow Status Chip */}
           {project?.id && ( // Only show if editing an existing opportunity

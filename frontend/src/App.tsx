@@ -2,7 +2,7 @@ import { projectManagementAppContextType, UserWithRole  } from './types'
 import { User} from './models'
 import { Project, OpportunityTracking } from "./models"
 import { GoNoGoDecision } from "./models/goNoGoDecisionModel"
-import { createContext, useState, useEffect } from 'react'
+import { createContext, useState, useEffect, useMemo } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ProjectProvider } from './context/ProjectContext';
 import { BusinessDevelopmentProvider } from './context/BusinessDevelopmentContext';
@@ -14,6 +14,8 @@ import { UserSubscriptionProvider } from './context/UserSubscriptionContext'; //
 import { initializeCaches } from './utils/cacheInitializer'; // Import cache initializer
 
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
+
+const router = createBrowserRouter(routes);
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -27,6 +29,8 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
+  const [canCreateOpportunity, setCanCreateOpportunity] = useState(false);
+  const [canViewOpportunity, setCanViewOpportunity] = useState(false);
   const [canSubmitForReview, setCanSubmitForReview] = useState(false);
   const [canReviewBD, setCanReviewBD] = useState(false);
   const [canApproveBD, setCanApproveBD] = useState(false);
@@ -46,6 +50,8 @@ function App() {
           setCurrentUser(null);
           setCanEditOpportunity(false);
           setCanDeleteOpportunity(false);
+          setCanCreateOpportunity(false);
+          setCanViewOpportunity(false);
           setCanSubmitForReview(false);
           setCanReviewBD(false);
           setCanApproveBD(false);
@@ -64,9 +70,12 @@ function App() {
           setCanDeleteOpportunity(
             user.roleDetails.permissions.includes(PermissionType.DELETE_BUSINESS_DEVELOPMENT)
           );
-          // setCanSubmitForReview(
-          //   user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
-          // );
+          setCanCreateOpportunity(
+            user.roleDetails.permissions.includes(PermissionType.CREATE_BUSINESS_DEVELOPMENT)
+          );
+          setCanViewOpportunity(
+            user.roleDetails.permissions.includes(PermissionType.VIEW_BUSINESS_DEVELOPMENT)
+          );
           setCanSubmitForApproval(
             user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL)
           );
@@ -142,20 +151,7 @@ function App() {
     setCurrentGoNoGoDecision(null);
   };
 
-  if (isLoading) {
-    return (
-      <span style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
-        Loading...
-      </span>
-    );
-  }
-
-  const contextValue = {
+  const contextValue = useMemo(() => ({
     isAuthenticated,
     setIsAuthenticated,
     user,
@@ -175,8 +171,10 @@ function App() {
     setCanEditOpportunity,
     canDeleteOpportunity,
     setCanDeleteOpportunity,
-    canSubmitForReview,
-    setCanSubmitForReview,
+    canCreateOpportunity,
+    setCanCreateOpportunity,
+    canViewOpportunity,
+    setCanViewOpportunity,
     canReviewBD,
     setCanReviewBD,
     canApproveBD,
@@ -189,9 +187,39 @@ function App() {
     setProjectCanSubmitForApproval,
     canProjectCanApprove,
     setProjectCanApprove,
-  };
+  }), [
+    isAuthenticated,
+    user,
+    selectedProject,
+    currentGoNoGoDecision,
+    goNoGoDecisionStatus,
+    goNoGoVersionNumber,
+    currentUser,
+    canEditOpportunity,
+    canDeleteOpportunity,
+    canCreateOpportunity,
+    canViewOpportunity,
+    canReviewBD,
+    canApproveBD,
+    canSubmitForApproval,
+    canProjectSubmitForReview,
+    canProjectSubmitForApproval,
+    canProjectCanApprove
+  ]);
 
-  const router = createBrowserRouter(routes);
+  if (isLoading) {
+    return (
+      <span style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
+      }}>
+        Loading...
+      </span>
+    );
+  }
+
 
   return (
     <projectManagementAppContext.Provider value={contextValue}>

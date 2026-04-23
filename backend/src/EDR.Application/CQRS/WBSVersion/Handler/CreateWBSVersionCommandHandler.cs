@@ -83,8 +83,15 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     await _context.SaveChangesAsync(cancellationToken);
                 }
 
+                // Deduplicate tasks by ID before copying
+                var uniqueTasks = wbs.Tasks
+                    .Where(t => !t.IsDeleted && t.Id > 0)
+                    .GroupBy(t => t.Id)
+                    .Select(t => t.First())
+                    .ToList();
+
                 // Copy tasks to version history
-                await CopyTasksToVersion(wbs.Tasks, wbsVersion.Id, cancellationToken);
+                await CopyTasksToVersion(uniqueTasks, wbsVersion.Id, nextVersion, request.ProjectId, cancellationToken);
 
                 // Update the WBSHeader to point to the latest version
                 wbs.WBSHeader.LatestVersionHistoryId = wbsVersion.Id;
@@ -104,7 +111,7 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             }
         }
 
-        private async Task CopyTasksToVersion(ICollection<WBSTask> tasks, int wbsVersionHistoryId, CancellationToken cancellationToken)
+        private async Task CopyTasksToVersion(ICollection<WBSTask> tasks, int wbsVersionHistoryId, string version, int projectId, CancellationToken cancellationToken)
         {
             var taskMap = new Dictionary<int, int>(); // Original task ID -> Version task ID
 
@@ -123,7 +130,9 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                     EstimatedBudget = task.EstimatedBudget,
                     StartDate = task.StartDate,
                     EndDate = task.EndDate,
-                    TaskType = task.TaskType
+                    TaskType = task.TaskType,
+                    ParentId = task.ParentId,
+                    WBSOptionId = task.WBSOptionId
                 };
 
                 await _wbsVersionRepository.CreateTaskVersionAsync(taskVersion);
@@ -136,8 +145,22 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
             {
                 var taskVersion = await _wbsVersionRepository.GetTaskVersionByIdAsync(taskMap[task.Id]);
                 
+                // Get the correct planned hour header for this task's type and version
+                var plannedHourHeader = await _context.Set<WBSTaskPlannedHourHeader>()
+                    .Where(h => h.ProjectId == projectId && h.TaskType == task.TaskType && h.Version == version)
+                    .OrderByDescending(h => h.Id)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                var hoursToCopy = task.PlannedHours;
+                if (plannedHourHeader != null)
+                {
+                    hoursToCopy = task.PlannedHours
+                        .Where(ph => ph.WBSTaskPlannedHourHeaderId == plannedHourHeader.Id)
+                        .ToList();
+                }
+
                 // Copy planned hours
-                foreach (var plannedHour in task.PlannedHours)
+                foreach (var plannedHour in hoursToCopy)
                 {
                     var plannedHourVersion = new WBSTaskPlannedHourVersionHistory
                     {
@@ -159,7 +182,12 @@ namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
                         TenantId = _context.TenantId ?? 0,
                         WBSTaskVersionHistoryId = taskVersion.Id,
                         UserId = userAssignment.UserId,
-                        ResourceRoleId = userAssignment.ResourceRoleId
+                        ResourceRoleId = userAssignment.ResourceRoleId,
+                        CostRate = userAssignment.CostRate,
+                        TotalHours = userAssignment.TotalHours,
+                        TotalCost = userAssignment.TotalCost,
+                        Name = userAssignment.Name,
+                        Unit = userAssignment.Unit
                     };
                     await _wbsVersionRepository.CreateUserAssignmentVersionAsync(userAssignmentVersion);
                 }

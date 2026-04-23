@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace EDR.Application.DTOs.Dashboard
+namespace EDR.Application.Dtos.Dashboard
 {
     public class PendingFormsResponseDto
     {

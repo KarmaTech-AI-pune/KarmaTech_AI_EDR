@@ -1,8 +1,10 @@
-﻿using MediatR;
+using MediatR;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,17 +39,52 @@ namespace EDR.Application.CQRS.SprintWbsPlans.Commands
 
                 if (item.SprintNumber == 0)
                 {
-                    var firstHalf = item.PlannedHours / 2;
-                    var secondHalf = item.PlannedHours - firstHalf;
+                    int totalHours = (int)Math.Round(item.PlannedHours);
+                    int sprintCount = 2; // Default to 2 sprints
 
-                    entities.Add(CreateEntity(item, tenantId, 1, firstHalf, firstHalf));
-                    entities.Add(CreateEntity(item, tenantId, 2, secondHalf, secondHalf));
+                    int baseHours = totalHours / sprintCount;
+                    int remainder = totalHours % sprintCount;
+
+                    for (int i = 1; i <= sprintCount; i++)
+                    {
+                        int allocatedHours = baseHours + (remainder > 0 ? 1 : 0);
+                        if (remainder > 0)
+                        {
+                            remainder--;
+                        }
+
+                        entities.Add(CreateEntity(item, tenantId, i, allocatedHours, allocatedHours));
+                    }
                 }
                 else
                 {
-                    entities.Add(CreateEntity(item, tenantId, item.SprintNumber, item.PlannedHours, item.RemainingHours));
+                    int allocatedHours = (int)Math.Round(item.PlannedHours);
+                    int remainingHours = (int)Math.Round(item.RemainingHours);
+                    entities.Add(CreateEntity(item, tenantId, item.SprintNumber, allocatedHours, remainingHours));
                 }
             }
+
+            // ─── Backlog Versioning Logic ───────────────────────────────────────────
+            // Collect distinct ProjectIds from the incoming batch
+            var projectIds = entities.Select(e => e.ProjectId).Distinct().ToList();
+
+            foreach (var projectId in projectIds)
+            {
+                // Find the highest existing BacklogVersion for this project (using EF async query)
+                var maxVersion = await _context.SprintWbsPlans
+                    .Where(x => x.ProjectId == projectId)
+                    .Select(x => (int?)x.BacklogVersion)
+                    .MaxAsync(cancellationToken);
+
+                int newVersion = (maxVersion ?? 0) + 1;
+
+                // Assign new version to all incoming entities for this project
+                foreach (var e in entities.Where(e => e.ProjectId == projectId))
+                {
+                    e.BacklogVersion = newVersion;
+                }
+            }
+            // ───────────────────────────────────────────────────────────────────────
 
             _context.SprintWbsPlans.AddRange(entities);
             await _context.SaveChangesAsync(cancellationToken);
@@ -82,8 +119,8 @@ namespace EDR.Application.CQRS.SprintWbsPlans.Commands
                 AcceptanceCriteria = item.AcceptanceCriteria,
                 TaskDescription = item.TaskDescription,
                 CreatedOn = DateTime.UtcNow
+                // BacklogVersion is set by the versioning logic above
             };
         }
     }
 }
-

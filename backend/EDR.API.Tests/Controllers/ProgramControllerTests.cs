@@ -44,7 +44,7 @@ namespace EDR.API.Tests.Controllers
             var context = new ProjectManagementContext(options, _currentTenantServiceMock.Object, new Mock<Microsoft.Extensions.Configuration.IConfiguration>().Object);
 
             _tenantServiceMock.Setup(t => t.ValidateTenantAccessAsync(It.IsAny<string>(), It.IsAny<int>()))
-                .ReturnsAsync(true);
+                .ReturnsAsync(TenantAccessResult.Success);
             _currentTenantServiceMock.SetupGet(c => c.TenantId).Returns(1);
 
             _controller = new ProgramController(

@@ -14,6 +14,7 @@ import {
   Box,
   Chip,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -30,6 +31,7 @@ const RolesManagement = () => {
   const [roles, setRoles] = useState<RoleWithPermissionsDto[]>([]);
   const [open, setOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<RoleWithPermissionsDto | null>(null);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<{
     id: string;
     name: string;
@@ -54,7 +56,8 @@ const RolesManagement = () => {
       setRoles(fetchedRoles);
     } catch (error) {
       console.error('Error loading roles:', error);
-      // TODO: Add error notification
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -218,6 +221,11 @@ const RolesManagement = () => {
         </Button>
       </Box>
 
+      {loading ? (
+        <Box display="flex" justifyContent="center" py={4}>
+          <CircularProgress />
+        </Box>
+      ) : (
       <TableContainer component={Paper} sx={{ mb: 4 }}>
         <Table>
           <TableHead>
@@ -259,6 +267,7 @@ const RolesManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      )}
 
       <RoleDialog
         open={open}

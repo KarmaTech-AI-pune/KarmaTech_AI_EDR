@@ -47,7 +47,7 @@ describe('opportunityApi', () => {
         expect(data.stage).toBe(1);
         expect(data.status).toBe(1);
         expect(data.likelyStartDate).toBe('2023-01-01');
-        return [200, { id: 1, bidManagerId: 'user-1', stage: 1, status: 1 }];
+        return [200, { id: 1, bidManagerId: 'user-1', stage: 'A', status: 'Bid Submitted' }];
       });
 
       const result = await opportunityApi.create(mockData);

@@ -8,6 +8,7 @@ import {
   IconButton,
   Drawer,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import { useTenantContext } from '../hooks/useTenantContext';
 import { authApi } from '../services/authApi';
@@ -22,6 +23,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DnsIcon from '@mui/icons-material/Dns'; // New icon for migrations
 import ExtensionIcon from '@mui/icons-material/Extension'; // Icon for features
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'; // Icon for release management
 
 import UsersManagement from '../components/adminpanel/UsersManagement';
 import RolesManagement from '../components/adminpanel/RolesManagement';
@@ -33,6 +35,7 @@ import SystemSettings from '../components/adminpanel/SystemSettings';
 import GeneralSettings from '../features/generalSettings/pages/GeneralSettings';
 import MigrationManagement from '../pages/MigrationManagement'; // Import the new component
 import FeaturesManagement from '../pages/FeaturesManagement'; // Import Features Management
+import ReleaseManagement from '../components/adminpanel/ReleaseManagement'; // Import Release Management
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
@@ -43,7 +46,8 @@ const AdminPanel: React.FC = () => {
   const { isSuperAdmin } = useTenantContext();
   const [hasSystemAdminPermission, setHasSystemAdminPermission] = useState(false);
   const [hasTenantAdminPermission, setHasTenantAdminPermission] = useState(false);
-  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'features' | 'settings'>('settings');
+  const [isLoadingPermissions, setIsLoadingPermissions] = useState(true);
+  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'features' | 'release' | 'settings'>('settings');
 
 
   useEffect(() => {
@@ -74,13 +78,15 @@ const AdminPanel: React.FC = () => {
         }
       } catch (error) {
         console.error('Error checking permissions:', error);
+      } finally {
+        setIsLoadingPermissions(false);
       }
     };
     checkPermissions();
   }, [isSuperAdmin]);
 
   interface MenuItem {
-    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'features' | 'settings';
+    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'features' | 'release' | 'settings';
     text: string;
     icon: JSX.Element;
     requiresSystemAdmin?: boolean;
@@ -95,6 +101,7 @@ const AdminPanel: React.FC = () => {
     { id: 'features', text: 'Features Management', icon: <ExtensionIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
     { id: 'billing', text: 'Billing Management', icon: <ReceiptIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
     { id: 'migrations', text: 'Migration Management', icon: <DnsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false }, // New migration item
+    { id: 'release', text: 'Release Management', icon: <RocketLaunchIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false }, // New release item
     // Tenant Admin menu items
     { id: 'users', text: 'Users Management', icon: <PeopleIcon />, requiresTenantAdmin: true },
     { id: 'roles', text: 'Roles Management', icon: <SecurityIcon />, requiresTenantAdmin: true },
@@ -165,6 +172,8 @@ const AdminPanel: React.FC = () => {
         return <SystemSettings />;
       case 'migrations':
         return <MigrationManagement />;
+      case 'release':
+        return <ReleaseManagement />;
       default:
         return null;
     }
@@ -203,10 +212,15 @@ const AdminPanel: React.FC = () => {
           </IconButton>
         </Box>
         <List sx={{ width: '100%', p: 2 }}>
-          {visibleMenuItems.map((item) => (
+          {isLoadingPermissions ? (
+            <Box display="flex" justifyContent="center" py={3}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            visibleMenuItems.map((item) => (
             <ListItemButton
               key={item.id}
-              onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'generalSettings' | 'features' | 'migrations' | 'settings')}
+              onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'generalSettings' | 'features' | 'migrations' | 'release' | 'settings')}
               selected={selectedSection === item.id}
               sx={{
                 minHeight: 48,
@@ -240,7 +254,8 @@ const AdminPanel: React.FC = () => {
                 />
               )}
             </ListItemButton>
-          ))}
+          ))
+          )}
         </List>
       </Drawer>
 

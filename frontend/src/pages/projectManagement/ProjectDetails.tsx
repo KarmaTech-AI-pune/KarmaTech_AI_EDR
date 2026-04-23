@@ -10,8 +10,10 @@ import { useProject } from '../../context/ProjectContext';
 import { Project, OpportunityTracking } from '../../models';
 import { getUserById } from '../../services/userApi';
 import { projectApi } from '../../services/projectApi';
+import { projectManagementAppContext } from '../../App';
 import { SideMenu } from '../../components/layout/SideMenu';
 import { Outlet, useOutletContext } from 'react-router-dom';
+import { useContext } from 'react';
 
 const NAVBAR_HEIGHT = '64px';
 
@@ -27,6 +29,7 @@ export const ProjectDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [managerNames, setManagerNames] = useState<{ [key: string]: string }>({});
   const [project, setProject] = useState<Project | null>(null);
+  const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -36,6 +39,10 @@ export const ProjectDetails: React.FC = () => {
           const projectData = await projectApi.getById(projectId);
           if (projectData) {
             setProject(projectData as Project);
+            // Sync with global context if missing (e.g. after refresh)
+            if (context && !context.selectedProject && context.setSelectedProject) {
+              context.setSelectedProject(projectData as Project);
+            }
           } else {
             setError('Project not found');
           }
@@ -51,7 +58,7 @@ export const ProjectDetails: React.FC = () => {
     };
 
     fetchProjectData();
-  }, [projectId]);
+  }, [projectId, context]);
 
   // Fetch manager data when the project data is loaded
   useEffect(() => {

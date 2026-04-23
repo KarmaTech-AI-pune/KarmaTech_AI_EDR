@@ -103,13 +103,26 @@ const MetricCard: React.FC<MetricCardProps> = ({
       }}
     >
       <CardContent sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box sx={{ flex: 1 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start',
+          gap: 1.5
+        }}>
+          <Box sx={{ 
+            flex: 1,
+            minWidth: 0,
+            pr: 0.5
+          }}>
             <Typography 
               variant="body2" 
               color="text.secondary" 
               fontWeight="medium"
-              sx={{ mb: 1 }}
+              sx={{ 
+                mb: 1,
+                lineHeight: 1.3,
+                wordBreak: 'break-word'
+              }}
             >
               {title}
             </Typography>
@@ -149,6 +162,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
               color: getIconColor(),
               width: 56,
               height: 56,
+              flexShrink: 0
             }}
           >
             {getIcon()}

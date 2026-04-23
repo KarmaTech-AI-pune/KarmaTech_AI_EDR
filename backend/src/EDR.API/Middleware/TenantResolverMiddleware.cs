@@ -7,6 +7,9 @@ using EDR.Domain.Services;
 using System.Collections.Generic;
 using System.Linq;
 using EDR.Repositories.Interfaces;
+using EDR.Domain.Entities;
+using System.Text.Json;
+using System;
 
 namespace EDR.API.Middleware
 {
@@ -63,23 +66,27 @@ namespace EDR.API.Middleware
                     _logger.LogInformation("Found tenant identifier: {TenantIdentifier} using {StrategyType}", 
                         tenantIdentifier, strategy.GetType().Name);
 
-                    var tenantId = await tenantService.GetTenantId(tenantIdentifier);
-                    if (!tenantId.HasValue)
+                    var tenant = await tenantService.GetTenantByIdentifierAsync(tenantIdentifier);
+                    if (tenant == null)
                     {
                         _logger.LogWarning("No tenant found for identifier: {TenantIdentifier}", tenantIdentifier);
                         continue;
                     }
 
+                    // Defer tenant status and subscription/trial validity check to TenantMiddleware
+                    // which runs after authentication and can handle bypasses for SuperAdmins.
+
                     _logger.LogInformation("Resolved tenant ID: {TenantId} for identifier: {TenantIdentifier}", 
-                        tenantId.Value, tenantIdentifier);
+                        tenant.Id, tenantIdentifier);
 
                     // Set tenant info in context
-                    context.Items["TenantId"] = tenantId.Value;
-                    _logger.LogDebug("Set TenantId in HttpContext.Items: {TenantId}", tenantId.Value);
+                    context.Items["TenantId"] = tenant.Id;
+                    context.Items["Tenant"] = tenant;
+                    _logger.LogDebug("Set TenantId in HttpContext.Items: {TenantId}", tenant.Id);
 
                     // Set up current tenant service
-                    await currentTenantService.SetTenant(tenantId.Value);
-                    _logger.LogInformation("Successfully configured tenant: {TenantId}", tenantId.Value);
+                    await currentTenantService.SetTenant(tenant.Id);
+                    _logger.LogInformation("Successfully configured tenant: {TenantId}", tenant.Id);
                     
                     break;
                 }
@@ -110,6 +117,21 @@ namespace EDR.API.Middleware
             }
 
             return isAuthEndpoint;
+        }
+
+        private async Task HandleBlockedTenantResponse(HttpContext context, string message, string errorCode)
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/json";
+            
+            var response = new 
+            { 
+                success = false, 
+                message = message, 
+                errorCode = errorCode 
+            };
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }
     }
 

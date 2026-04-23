@@ -72,6 +72,9 @@ namespace EDR.Application.Extensions
             services.AddScoped<IProjectClosureRepository, ProjectClosureRepository>();
             services.AddScoped<ITenantRepository, TenantRepository>();
             services.AddScoped<IProgramRepository, ProgramRepository>();
+            services.AddScoped<IProjectDashboardRepository, ProjectDashboardRepository>();
+            services.AddScoped<IProgramDashboardRepository, ProgramDashboardRepository>();
+            services.AddScoped<IDashboardRepository, DashboardRepository>();
 
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
 
@@ -88,8 +91,7 @@ namespace EDR.Application.Extensions
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
-           
-            
+            // services.AddScoped<IDashboardService, DashboardService>();
 
 
 
@@ -113,6 +115,7 @@ namespace EDR.Application.Extensions
             
             // Feature Authorization Service
             services.AddScoped<IFeatureAuthorizationService, FeatureAuthorizationService>();
+            services.AddScoped<IPdfInvoiceGenerator, PdfInvoiceGenerator>();
 
             return services;
         }

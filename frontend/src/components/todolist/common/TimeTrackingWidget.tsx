@@ -30,7 +30,6 @@ interface TimeTrackingWidgetProps {
     onLogWork: (timeSpent: number, remainingEstimate: number, description: string, modalType: 'employee' | 'reporter') => void;
     recentLogs?: WorkLogEntry[];
     status?: string;
-    storyPoints?: number;
     employeeLoggedHours?: number;
 }
 
@@ -43,7 +42,6 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
     onLogWork,
     recentLogs,
     status,
-    storyPoints,
     employeeLoggedHours = 0,
 }) => {
     const [logWorkModalType, setLogWorkModalType] = useState<'employee' | 'reporter' | null>(null);
@@ -67,7 +65,6 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
     const handleLogWork = () => {
         const timeSpentVal = parseFloat(logTimeSpent);
         const remainingVal = logWorkModalType === 'employee' ? remainingEstimate : parseFloat(logRemainingEstimate);
-
         if (!isNaN(timeSpentVal)) {
             if (logWorkModalType) {
                 onLogWork(timeSpentVal, remainingVal, logDescription, logWorkModalType);
@@ -103,7 +100,11 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                 <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2 }}>
                     Employee Work Log
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary" display="block">Estimated Hours</Typography>
+                        <Typography variant="body2" fontWeight="bold">{originalEstimate}h</Typography>
+                    </Box>
                     <Box sx={{ textAlign: 'right' }}>
                         <Typography variant="caption" color="text.secondary" display="block">Remaining Hours</Typography>
                         <Typography variant="body2" fontWeight="bold">{remainingEstimate}h</Typography>
@@ -259,7 +260,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                         </Grid>
                                         <Grid item xs={12}>
                                             <TextField
-                                                label="Commite"
+                                                label="Comment"
                                                 multiline
                                                 rows={2}
                                                 placeholder="Briefly describe what you worked on..."
@@ -273,7 +274,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                         {recentLogs && recentLogs.length > 0 && (
                                             <Grid item xs={12}>
                                                 <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ display: 'block', mb: 1, mt: 1 }}>
-                                                    Previous Commite
+                                                    Previous Comment
                                                 </Typography>
                                                 <Box sx={{
                                                     maxHeight: 150,
@@ -335,19 +336,21 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                             sx={{ bgcolor: 'action.hover' }}
                                         />
                                     </Grid>
+
                                     <Grid item xs={12} sm={4}>
                                         <TextField
-                                            label="Assigne Story Point"
-                                            value={storyPoints || 0}
+                                            label="Estimated Employee Work"
+                                            value={originalEstimate}
                                             fullWidth
                                             size="small"
                                             InputProps={{ readOnly: true }}
                                             sx={{ bgcolor: 'action.hover' }}
                                         />
                                     </Grid>
+
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            label="Actual work time spent (hours)"
+                                            label="Approved Hours"
                                             type="number"
                                             value={logTimeSpent}
                                             onChange={(e) => {
@@ -368,6 +371,17 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                             inputProps={{ min: 0, step: 0.5 }}
                                         />
                                     </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Total Approved Hours"
+                                            type="number"
+                                            value={timeSpent + (parseFloat(logTimeSpent as string) || 0)}
+                                            fullWidth
+                                            size="small"
+                                            InputProps={{ readOnly: true }}
+                                            sx={{ bgcolor: 'action.hover' }}
+                                        />
+                                    </Grid>
                                     <Grid item xs={12} sm={8}>
                                         <TextField
                                             label="Task Name"
@@ -380,7 +394,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                     </Grid>
                                     <Grid item xs={12} sm={4}>
                                         <TextField
-                                            label="Remaining Estimate (hours)"
+                                            label="Remaining Hours"
                                             type="number"
                                             value={logRemainingEstimate}
                                             onChange={(e) => setLogRemainingEstimate(e.target.value)}
@@ -392,7 +406,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                     </Grid>
                                     <Grid item xs={12}>
                                         <TextField
-                                            label="Commite"
+                                            label="Comments"
                                             multiline
                                             rows={2}
                                             placeholder="Update message..."
@@ -406,7 +420,7 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
                                     {recentLogs && recentLogs.length > 0 && (
                                         <Grid item xs={12}>
                                             <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ display: 'block', mb: 1, mt: 1 }}>
-                                                Previous Commite
+                                                Previous Comment
                                             </Typography>
                                             <Box sx={{
                                                 maxHeight: 150,

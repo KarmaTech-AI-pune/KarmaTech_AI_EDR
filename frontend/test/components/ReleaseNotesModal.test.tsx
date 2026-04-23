@@ -478,7 +478,7 @@ describe('ReleaseNotesModal Component', () => {
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
       await waitFor(() => {
-        expect(screen.getByText(/no history available/i)).toBeInTheDocument();
+        expect(screen.getByText(/Select a version/i)).toBeInTheDocument();
       });
     });
   });

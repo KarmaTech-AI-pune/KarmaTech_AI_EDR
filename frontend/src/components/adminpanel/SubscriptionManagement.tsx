@@ -192,7 +192,7 @@ const SubscriptionManagement = () => {
 
   const calculateMonthlyRevenue = () => {
     return (plans || []).reduce((sum, plan) => {
-      const subscribers = plan.tenants?.length || 0;
+      const subscribers = plan.tenants? plan.tenants : 0;
       return sum + (plan.monthlyPrice * subscribers);
     }, 0);
   };
@@ -246,7 +246,7 @@ const SubscriptionManagement = () => {
                 Total Subscribers
               </Typography>
               <Typography variant="h4">
-                {(plans || []).reduce((sum, plan) => sum + (plan.tenants?.length || 0), 0)}
+                {(plans || []).reduce((sum, plan) => sum + (plan.tenants || 0), 0)}
               </Typography>
             </CardContent>
           </Card>
@@ -317,7 +317,7 @@ const SubscriptionManagement = () => {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Typography variant="h6">{plan.tenants?.length || 0}</Typography>
+                  <Typography variant="h6">{plan.tenants || 0}</Typography>
                   <Typography variant="caption" color="textSecondary">
                     subscribers
                   </Typography>

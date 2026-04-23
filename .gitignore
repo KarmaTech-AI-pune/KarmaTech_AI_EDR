@@ -1,4 +1,4 @@
-﻿.DS_STORE
+.DS_STORE
 node_modules
 scripts/flow/*/.flowconfig
 .flowconfig
@@ -325,3 +325,7 @@ backend/EDR.Domain.Tests/test-results/backend-Unit.trx
 backend/EDR.API.Tests/test-results/backend-Integration.trx
 backend/EDR.API.Tests/test-results/backend-Regression.trx
 backend/EDR.API.Tests/test-results/backend-Unit.trx
+Presales/
+KarmaTech_UseCases.docx
+Prospecting agent output.jpeg
+RFP for Ujjain Municipal Corp.pdf

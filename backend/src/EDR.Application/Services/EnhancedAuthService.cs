@@ -1,12 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using EDR.Application.Dtos;
 using EDR.Application.Services.IContract;
+using EDR.Domain;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
-using EDR.Repositories.Interfaces;using System.Collections.Generic;
+using EDR.Domain.Services;
+using EDR.Repositories.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.AccessControl;
 using System.Security.Claims;
@@ -22,6 +25,8 @@ namespace EDR.Application.Services
         private readonly IPermissionRepository _permissionRepository;
         private readonly ITenantService _tenantService;
         private readonly TenantDbContext _tenantDbContext;
+        private readonly ILogger<EnhancedAuthService> _logger;
+        private readonly ITenantConnectionResolver _connectionResolver;
 
         public EnhancedAuthService(
             IConfiguration configuration,
@@ -29,7 +34,9 @@ namespace EDR.Application.Services
             RoleManager<Role> roleManager,
             IPermissionRepository permissionRepository,
             ITenantService tenantService,
-            TenantDbContext tenantDbContext)
+            TenantDbContext tenantDbContext,
+            ILogger<EnhancedAuthService> logger,
+            ITenantConnectionResolver connectionResolver)
         {
             _configuration = configuration;
             _userManager = userManager;
@@ -37,106 +44,127 @@ namespace EDR.Application.Services
             _permissionRepository = permissionRepository;
             _tenantService = tenantService;
             _tenantDbContext = tenantDbContext;
+            _logger = logger;
+            _connectionResolver = connectionResolver;
         }
 
-        public async Task<(bool success, User user, string token)> ValidateUserAsync(string email, string password)
+        public async Task<AuthResult> ValidateUserAsync(string email, string password)
         {
             try
             {
-                var user = await _userManager.FindByEmailAsync(email);
+                var user = await _userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.NormalizedEmail == email.ToUpper());
                 if (user == null)
                 {
-                    return (false, null, null);
+                    _logger.LogWarning("Login failed: User with email {Email} not found.", email);
+                    return AuthResult.Failed(AuthResultType.InvalidCredentials, "Invalid credentials");
                 }
 
-                var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
-                if (!isValidPassword)
+                // Global inactivity check
+                if (!user.IsActive)
                 {
-                    return (false, null, null);
+                    _logger.LogWarning("Login failed: User {Email} is globally inactive.", email);
+                    return AuthResult.Failed(AuthResultType.UserInactive, "Your account is inactive. Please contact your administrator.");
                 }
 
-                // Check if user is a super admin (has SYSTEM_ADMIN permission)
                 var isSuperAdmin = await IsSuperAdminAsync(user);
-                
+                var currentTenantId = await GetCurrentTenantIdAsync();
+
+                // 1. Super Admin logic - bypasses tenant-specific blocks
                 if (isSuperAdmin)
                 {
-                    // Super admin can access without tenant context
-                    var token = await GenerateJwtTokenAsync(user, null, true, null);
-                    return (true, user, token);
-                }
-                else
-                {
-                    // Regular user needs tenant context
-                    var currentTenantId = await GetCurrentTenantIdAsync();
-                    TenantUser tenantUser = null;
-
-                    // Fallback: Check user's tenant associations
-                    var userTenants = await _tenantService.GetTenantUsersByUserIdAsync(user.Id);
-
-                    if (!currentTenantId.HasValue)
+                    var validPwd = await _userManager.CheckPasswordAsync(user, password);
+                    if (!validPwd)
                     {
-                        // Try to find a default tenant for the user
-                        if (userTenants != null && userTenants.Any(t => t.IsActive))
-                        {
-                            tenantUser = userTenants.FirstOrDefault(t => t.IsActive);
-                            currentTenantId = tenantUser?.TenantId;
-                        }
-                        else if (user.TenantId > 0)
-                        {
-                             // Fallback to User table TenantId
-                             currentTenantId = user.TenantId;
-                        }
+                        return AuthResult.Failed(AuthResultType.InvalidCredentials, "Invalid credentials");
+                    }
+                    var token = await GenerateJwtTokenAsync(user, null, true, currentTenantId);
+                    return AuthResult.Succeeded(user, token);
+                }
+
+                // 2. Regular User logic - check tenant context
+                var userTenants = await _tenantService.GetTenantUsersByUserIdAsync(user.Id);
+
+                // Default to user's primary tenant if no context is found
+                if (!currentTenantId.HasValue || currentTenantId <= 1)
+                {
+                    if (user.TenantId > 1) 
+                    {
+                        currentTenantId = user.TenantId;
+                    }
+                    else if (userTenants != null && userTenants.Any())
+                    {
+                        currentTenantId = userTenants.First().TenantId;
                     }
                     else
                     {
-                        // Verify user belongs to the requested tenant
-                        tenantUser = userTenants?.FirstOrDefault(t => t.TenantId == currentTenantId.Value && t.IsActive);
+                        currentTenantId = 1; // System default
                     }
-
-                    if (!currentTenantId.HasValue)
-                    {
-                        return (false, null, null); // No tenant context resolved
-                    }
-
-                    if (tenantUser == null)
-                    {
-                        // Implicit access if TenantId matches User.TenantId but no TenantUser record exists
-                        // Or fail? For now, we allow it if we have a valid TenantId from User table
-                        tenantUser = new TenantUser
-                        {
-                             UserId = user.Id,
-                             TenantId = currentTenantId.Value,
-                             Role = TenantUserRole.User,
-                             IsActive = true
-                        };
-                    }
-
-                    var token = await GenerateJwtTokenAsync(user, tenantUser.Role, false, currentTenantId);
-                    return (true, user, token);
                 }
+
+                // Check Tenant Status (Blocked/Inactive)
+                var tenant = await _tenantService.GetTenantByIdentifierAsync(currentTenantId.Value.ToString());
+                if (tenant != null && tenant.IsBlocked)
+                {
+                    return AuthResult.Failed(AuthResultType.TenantInactive, tenant.BlockReason ?? "This workspace is currently blocked.");
+                }
+
+                // Check User-Tenant Mapping Activity
+                var mapping = userTenants?.FirstOrDefault(t => t.TenantId == currentTenantId.Value);
+                bool isActive = false;
+                bool hasMapping = false;
+                TenantUserRole? tenantRole = null;
+
+                if (mapping != null)
+                {
+                    hasMapping = true;
+                    isActive = mapping.IsActive;
+                    tenantRole = mapping.Role;
+                }
+                else if (user.TenantId == currentTenantId.Value)
+                {
+                    // If no explicit mapping exists, fallback to User record if it's their primary tenant
+                    hasMapping = true;
+                    isActive = user.IsActive;
+                    tenantRole = TenantUserRole.User;
+                }
+
+                if (!hasMapping)
+                {
+                    _logger.LogWarning("User {UserId} attempted login to tenant {TenantId} without access.", user.Id, currentTenantId);
+                    return AuthResult.Failed(AuthResultType.NoTenantMapping, "You do not have access to this workspace.");
+                }
+
+                if (!isActive)
+                {
+                    _logger.LogWarning("User {UserId} is inactive for tenant {TenantId}. Login blocked.", user.Id, currentTenantId);
+                    return AuthResult.Failed(AuthResultType.UserInactive, "Your account is inactive for this specific tenant. Please contact your administrator.");
+                }
+
+                // Validate password
+                var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
+                if (!isValidPassword)
+                {
+                    _logger.LogWarning("Login failed: Invalid password for user {Email}.", email);
+                    return AuthResult.Failed(AuthResultType.InvalidCredentials, "Invalid credentials");
+                }
+
+                // Success
+                var finalToken = await GenerateJwtTokenAsync(user, tenantRole, false, currentTenantId);
+                return AuthResult.Succeeded(user, finalToken);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return (false, null, null);
+                _logger.LogError(ex, "Error validating user {Email}", email);
+                return AuthResult.Failed(AuthResultType.Error, "An internal error occurred during login.");
             }
         }
 
-        private async Task<bool> IsSuperAdminAsync(User user)
+
+        public async Task<bool> IsSuperAdminAsync(User user)
         {
+            if (user == null) return false;
             var roles = await _userManager.GetRolesAsync(user);
-            foreach (var role in roles)
-            {
-                var roleEntity = await _roleManager.FindByNameAsync(role);
-                if (roleEntity != null)
-                {
-                    var permissions = await _permissionRepository.GetPermissionsByRoleIdAsync(roleEntity.Id);
-                    if (permissions.Any(p => p.Name == "SYSTEM_ADMIN"))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            return roles.Any(r => r.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase));
         }
 
         private async Task<int?> GetCurrentTenantIdAsync()
@@ -155,6 +183,7 @@ namespace EDR.Application.Services
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Name, user.UserName)
@@ -164,7 +193,7 @@ namespace EDR.Application.Services
             {
                 claims.Add(new Claim("IsSuperAdmin", "true"));
                 claims.Add(new Claim("UserType", "SuperAdmin"));
-                claims.Add(new Claim("TenantId", "0")); // Super admin has no specific tenant
+                claims.Add(new Claim("TenantId", "1")); // System admin defaults to main tenant (ID 1)
                 
                 // Super admin has access to ALL features
                 // Get all active features from database
@@ -251,6 +280,7 @@ namespace EDR.Application.Services
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Name, user.UserName)
@@ -362,8 +392,15 @@ namespace EDR.Application.Services
                 .ThenInclude(spf => spf.Feature)
                 .FirstOrDefaultAsync(t => t.Id == tenantId);
 
+            // If it's the main tenant (Tenant 1) and no subscription is found, 
+            // or if any tenant has no subscription, default to all active features.
             if (tenant?.SubscriptionPlan == null)
-                return new List<string>();
+            {
+                return await _tenantDbContext.Features
+                    .Where(f => f.IsActive)
+                    .Select(f => f.Name)
+                    .ToListAsync();
+            }
 
             return tenant.SubscriptionPlan.SubscriptionPlanFeatures
                 .Where(spf => spf.Feature.IsActive) // Only globally active features

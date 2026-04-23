@@ -127,7 +127,7 @@ const SendApprovalBox: React.FC<SendApprovalBoxProps> = ({
       }
 
       // Create payload based on status and decision
-      let payload = {
+      const payload = {
         statusId: 0,
         Action: '',
         comments: comments,

@@ -36,9 +36,12 @@ export const BDSideMenu: React.FC = () => {
   const navigate = useNavigate();
   const { opportunity, goNoGoDecisionStatus, goNoGoVersionNumber } = useBusinessDevelopment();
 
-  const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
-    ? opportunity?.currentHistory.some((history) => history.statusId === 6)
-    : opportunity?.currentHistory?.statusId === 6;
+  const currentStatusId = Array.isArray(opportunity?.currentHistory)
+    ? opportunity?.currentHistory[0]?.statusId
+    : (opportunity?.currentHistory as any)?.statusId;
+
+  const isOpportunityApproved = currentStatusId === 6;
+
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -179,7 +182,7 @@ export const BDSideMenu: React.FC = () => {
                           },
                         }}
                         onClick={() => handleNavigation(item.path)}
-                        disabled={item.disabled}
+                        disabled={(item as any).disabled}
                       >
                       <ListItemIcon>{item.icon}</ListItemIcon>
                       <ListItemText

@@ -26,7 +26,7 @@ import { TimeTrackingWidget } from "../common/TimeTrackingWidget";
 import { projectApi } from '../../../services/projectApi';
 import { getUserById } from '../../../services/userApi';
 import { useProject } from '../../../context/ProjectContext';
-import { updateIssueTimeAPI } from "../../../data/todolistData";
+
 
 interface IssueDetailModalProps {
   showIssueDetail: Issue | null;
@@ -38,7 +38,7 @@ interface IssueDetailModalProps {
   onCreateSubtask: (parentIssueId: string, subtaskData: NewSubtaskFormState) => void;
   onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
   onDeleteSubtask: (subtaskId: string) => void;
-  onAddComment: (issueId: string, commentText: string) => void;
+  onAddComment: (issueId: string, commentText: string, workedSP?: number) => void;
   onUpdateComment: (issueId: string, commentId: string, text: string) => void;
   onDeleteComment: (issueId: string, commentId: string) => void;
   onAddSubtaskComment: (subtaskId: string, commentText: string) => void;
@@ -168,8 +168,21 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   ];
 
   const handleStatusChange = (newStatus: Issue["status"]) => {
-    onUpdateIssue(showIssueDetail.id, { status: newStatus });
-    setShowIssueDetail((prev: Issue | null) => prev ? { ...prev, status: newStatus } : null);
+    const oldStatus = showIssueDetail.status;
+    const isTransitioningToDone = newStatus === 'Done' && oldStatus !== 'Done';
+
+    if (isTransitioningToDone) {
+      const updatedFields: Partial<Issue> = {
+        status: newStatus,
+        actualHours: showIssueDetail.estimatedHours || 0,
+        remainingHours: 0,
+      };
+      onUpdateIssue(showIssueDetail.id, updatedFields);
+      setShowIssueDetail((prev: Issue | null) => prev ? { ...prev, ...updatedFields } : null);
+    } else {
+      onUpdateIssue(showIssueDetail.id, { status: newStatus });
+      setShowIssueDetail((prev: Issue | null) => prev ? { ...prev, status: newStatus } : null);
+    }
   };
 
   const handleAddComment = () => {
@@ -185,7 +198,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         ...prev,
         comments: [...prev.comments, newComment]
       } : null);
-      onAddComment(showIssueDetail.id, newCommentText);
+      onAddComment(showIssueDetail.id, newCommentText, 0);
       setNewCommentText("");
     }
   };
@@ -289,56 +302,77 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   const handleLogWork = async (timeSpent: number, remainingEstimate: number, description: string, modalType?: 'employee' | 'reporter') => {
     if (showIssueDetail) {
-      // If modalType is reporter, timeSpent is treated as the TOTAL actual hours (actual work time spend).
-      // If modalType is employee, timeSpent is added to existing total.
-      const newActual = modalType === 'reporter' ? timeSpent : (showIssueDetail.actualHours || 0) + timeSpent;
+      if (modalType === 'reporter') {
+        const newActual = (showIssueDetail.actualHours || 0) + timeSpent;
 
-      // Optimistic update
-      const updatedIssue = {
-        ...showIssueDetail,
-        actualHours: newActual,
-        remainingHours: remainingEstimate
-      };
+        // Optimistic update
+        const updatedIssue = {
+          ...showIssueDetail,
+          actualHours: newActual,
+          remainingHours: remainingEstimate
+        };
 
-      const reporterDisplayName = projectManager?.name && projectManager.name !== 'Unknown'
-        ? projectManager.name
-        : showIssueDetail.reporter?.name || 'Unknown';
+        const reporterDisplayName = projectManager?.name && projectManager.name !== 'Unknown'
+          ? projectManager.name
+          : showIssueDetail.reporter?.name || 'Unknown';
 
-      const logActionText = modalType === 'reporter'
-        ? `Commite by (${reporterDisplayName})`
-        : `logged ${timeSpent}h`;
+        const logActionText = `Comment by (${reporterDisplayName}) approved ${timeSpent}h`;
+        const workLogComment = description.trim()
+          ? `${logActionText}: ${description}`
+          : logActionText;
 
-      const workLogComment = description.trim()
-        ? `${logActionText}: ${description}`
-        : logActionText;
+        const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
 
-      // Comments always represent the assignee's work — use assignee as author regardless of who is submitting
-      const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+        const newComment: Comment = {
+          id: `comment-${Date.now()}`,
+          author: author,
+          text: workLogComment,
+          createdDate: new Date().toISOString().split("T")[0],
+          hoursLogged: 0,
+          description: description
+        };
+        updatedIssue.comments = [...updatedIssue.comments, newComment];
+        onAddComment(showIssueDetail.id, workLogComment);
 
-      const newComment: Comment = {
-        id: `comment-${Date.now()}`,
-        author: author,
-        text: workLogComment,
-        createdDate: new Date().toISOString().split("T")[0]
-      };
-      updatedIssue.comments = [...updatedIssue.comments, newComment];
-      onAddComment(showIssueDetail.id, workLogComment);
+        setShowIssueDetail(updatedIssue);
+        // Update the issue in the main list as well
+        handleUpdateIssueAndState(showIssueDetail.id, {
+          actualHours: newActual,
+          remainingHours: remainingEstimate
+        });
+      } else {
+        // Employee flow: Only history/comment is updated
+        const logActionText = `logged ${timeSpent}h`;
 
-      setShowIssueDetail(updatedIssue);
-      // Update the issue in the main list as well
-      handleUpdateIssueAndState(showIssueDetail.id, {
-        actualHours: newActual,
-        remainingHours: remainingEstimate
-      });
+        const workLogComment = description.trim()
+          ? `${logActionText}: ${description}`
+          : logActionText;
 
-      // Call the dedicated API for time tracking
-      await updateIssueTimeAPI(updatedIssue);
+        const author = showIssueDetail.assignee || { id: 'unknown', name: 'Unassigned', avatar: 'UA' };
+
+        const newComment: Comment = {
+          id: `comment-${Date.now()}`,
+          author: author,
+          text: workLogComment,
+          createdDate: new Date().toISOString().split("T")[0],
+          hoursLogged: timeSpent,
+          description: description
+        };
+
+        const updatedIssue = {
+          ...showIssueDetail,
+          comments: [...showIssueDetail.comments, newComment]
+        };
+
+        onAddComment(showIssueDetail.id, workLogComment, 0);
+        setShowIssueDetail(updatedIssue);
+      }
     }
   };
 
   const recentWorkLogs = showIssueDetail?.comments
     ? showIssueDetail.comments
-      .filter((c: Comment) => (c.hoursLogged && c.hoursLogged > 0) || c.text?.toLowerCase().includes('commite by'))
+      .filter((c: Comment) => (c.hoursLogged && c.hoursLogged > 0) || c.text?.toLowerCase().includes('comment by'))
       .map((c: Comment) => ({
         date: c.createdDate,
         employeeName: c.author?.name || 'Unknown',
@@ -448,7 +482,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           {/* Subtask Management */}
           <SubtaskList
             issue={showIssueDetail}
-            teamMembers={teamMembers}
             onUpdateIssue={handleUpdateIssueAndState}
             onCreateSubtask={onCreateSubtask}
             onUpdateSubtask={handleUpdateSubtask}
@@ -601,7 +634,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             {/* Time Tracking Widget */}
             <TimeTrackingWidget
               status={showIssueDetail.status}
-              storyPoints={showIssueDetail.storyPoints}
               taskName={showIssueDetail.summary}
               reporterName={projectManager?.name || showIssueDetail.reporter?.name}
               originalEstimate={showIssueDetail.estimatedHours || 0}

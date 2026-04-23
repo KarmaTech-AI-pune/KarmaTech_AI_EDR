@@ -39,159 +39,178 @@ const COLLAPSED_DRAWER_WIDTH = 65;
 const NAVBAR_HEIGHT = '64px';
 
 const formSections = [
-    {
-      id: 'wbs',
-      title: 'PMD2. Work Breakdown Structure',
-      icon: <TaskIcon />,
-      path: 'forms/wbs',
-      subItems: [
-        {
-          id: 'manpowerForm',
-          title: 'Manpower Form',
-          icon: <EngineeringIcon />,
-          path: 'forms/wbs/manpower'
-        },
-        {
-          id: 'odcForm',
-          title: 'ODC Form',
-          icon: <ReceiptLongIcon />,
-          path: 'forms/wbs/odc'
-        },
-        {
-          id: 'todolist',
-          title: 'Sprint Planning',
-          icon: <ChecklistRtlIcon />,
-          path: 'forms/wbs/todo-list'
-        },
-        {
-          id: 'cashflow',
-          title: 'Cashflow',
-          icon: <PaymentsIcon />,
-          path: 'forms/cashflow'
-        }
-      ]
-    },
-    {
-      id: 'jobStart',
-      title: 'PMD1. Job Start Form',
-      icon: <AssignmentIcon />,
-      path: 'forms/job-start'
-    },
-    {
-      id: 'inputRegister',
-      title: 'PMD3. Input Register',
-      icon: <DescriptionIcon />,
-      path: 'forms/input-register'
-    },
-    {
-      id: 'correspondence',
-      title: 'PMD4. Correspondence Inward-Outward',
-      icon: <EmailIcon />,
-      path: 'forms/correspondence'
-    },
-    {
-      id: 'review',
-      title: 'PMD5. Check and Review Form',
-      icon: <CheckCircleIcon />,
-      path: 'forms/check&review'
-    },
-    {
-      id: 'changeControl',
-      title: 'PMD6. Change Control Register',
-      icon: <ChangeCircleIcon />,
-      path: 'forms/change-control'
-    },
-    {
-      id: 'progressReview',
-      title: 'PMD7. Monthly Progress Review',
-      icon: <AssessmentIcon />,
-      path: 'forms/progress-review'
-    },
-    {
-      id: 'closure',
-      title: 'PMD8. Project Closure',
-      icon: <TaskIcon />,
-      path: 'forms/closure'
-    },
-    {
-      id: 'monthlyReports',
-      title: 'Monthly Reports',
-      icon: <AssessmentIcon />,
-      path: 'forms/monthly-reports'
-    },
-  ];
+  {
+    id: 'wbs',
+    title: 'PMD2. Work Breakdown Structure',
+    icon: <TaskIcon />,
+    path: 'forms/wbs',
+    subItems: [
+      {
+        id: 'manpowerForm',
+        title: 'Manpower Form',
+        icon: <EngineeringIcon />,
+        path: 'forms/wbs/manpower'
+      },
+      {
+        id: 'odcForm',
+        title: 'ODC Form',
+        icon: <ReceiptLongIcon />,
+        path: 'forms/wbs/odc'
+      },
+      {
+        id: 'productBacklog',
+        title: 'Product Backlog',
+        icon: <ArticleIcon />,
+        path: 'forms/wbs/product-backlog'
+      },
+      {
+        id: 'todolist',
+        title: 'Sprint Planning',
+        icon: <ChecklistRtlIcon />,
+        path: 'forms/wbs/todo-list'
+      },
+      {
+        id: 'cashflow',
+        title: 'Cashflow',
+        icon: <PaymentsIcon />,
+        path: 'forms/cashflow'
+      }
+    ]
+  },
+  {
+    id: 'jobStart',
+    title: 'PMD1. Job Start Form',
+    icon: <AssignmentIcon />,
+    path: 'forms/job-start'
+  },
+  {
+    id: 'inputRegister',
+    title: 'PMD3. Input Register',
+    icon: <DescriptionIcon />,
+    path: 'forms/input-register'
+  },
+  {
+    id: 'correspondence',
+    title: 'PMD4. Correspondence Inward-Outward',
+    icon: <EmailIcon />,
+    path: 'forms/correspondence'
+  },
+  {
+    id: 'review',
+    title: 'PMD5. Check and Review Form',
+    icon: <CheckCircleIcon />,
+    path: 'forms/check&review'
+  },
+  {
+    id: 'changeControl',
+    title: 'PMD6. Change Control Register',
+    icon: <ChangeCircleIcon />,
+    path: 'forms/change-control'
+  },
+  {
+    id: 'progressReview',
+    title: 'PMD7. Monthly Progress Review',
+    icon: <AssessmentIcon />,
+    path: 'forms/progress-review'
+  },
+  {
+    id: 'closure',
+    title: 'PMD8. Project Closure',
+    icon: <TaskIcon />,
+    path: 'forms/closure'
+  },
+  {
+    id: 'monthlyReports',
+    title: 'Monthly Reports',
+    icon: <AssessmentIcon />,
+    path: 'forms/monthly-reports'
+  },
+];
 
   const menuSections = [
     {
       id: 'overview',
       title: 'Overview',
       icon: <HomeIcon />,
-      path: 'overview'
+      path: '/program-management/projects/project/overview'
+    },
+    {
+      id: 'dashboard',
+      title: 'Dashboard',
+      icon: <AssessmentIcon />,
+      path: '/program-management/projects/project/dashboard'
     },
     {
       id: 'forms',
       title: 'Forms',
       icon: <ArticleIcon />,
-      path: 'forms',
-      subItems: formSections,
+      path: '/program-management/projects/project/forms',
+      subItems: formSections.map(section => ({
+        ...section,
+        path: `/program-management/projects/project/${section.path}`,
+        subItems: section.subItems?.map(sub => ({
+          ...sub,
+          path: `/program-management/projects/project/${sub.path}`
+        }))
+      })),
     },
     {
       id: 'documents',
       title: 'Documents',
       icon: <FolderIcon />,
-      path: 'documents'
+      path: '/program-management/projects/project/documents'
     },
     {
       id: 'timeline',
       title: 'Timeline',
       icon: <TimelineIcon />,
-      path: 'timeline'
+      path: '/program-management/projects/project/timeline'
     },
     {
       id: 'budgetHistory',
       title: 'Budget History',
       icon: <AccountBalanceIcon />,
-      path: 'budget-history'
+      path: '/program-management/projects/project/budget-history'
     },
     {
       id: 'migrationManagement',
       title: 'Migration Management',
       icon: <DnsIcon />,
-      path: 'admin/migrations' // Path to the new migration page
+      path: '/admin/migrations'
     },
   ];
 
 
 export const SideMenu: React.FC = () => {
-    const location = useLocation();
-    const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
-    const [formsOpen, setFormsOpen] = useState(location.pathname.includes('/forms'));
-    const [expandedForm, setExpandedForm] = useState<string | null>(null);
+  const location = useLocation();
+  const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
+  const [formsOpen, setFormsOpen] = useState(location.pathname.includes('/forms'));
+  const [expandedForm, setExpandedForm] = useState<string | null>(null);
 
-    useEffect(() => {
-        setFormsOpen(location.pathname.includes('/forms'));
-    }, [location.pathname]);
+  useEffect(() => {
+    setFormsOpen(location.pathname.includes('/forms'));
+  }, [location.pathname]);
 
-    const toggleDrawer = () => {
-        setIsDrawerExpanded(!isDrawerExpanded);
-        if (!isDrawerExpanded) {
-          setFormsOpen(false);
-        }
-      };
+  const toggleDrawer = () => {
+    setIsDrawerExpanded(!isDrawerExpanded);
+    if (!isDrawerExpanded) {
+      setFormsOpen(false);
+    }
+  };
 
-      const handleFormClick = (formId: string) => {
-        const form = formSections.find(f => f.id === formId);
-    
-        if (form?.subItems) {
-          setExpandedForm(expandedForm === formId ? null : formId);
-        }
-      };
+  const handleFormClick = (formId: string) => {
+    const form = formSections.find(f => f.id === formId);
 
-      const handleSectionClick = (sectionId: string) => {
-        if (sectionId === 'forms') {
-            setFormsOpen(!formsOpen);
-        }
-      }
+    if (form?.subItems) {
+      setExpandedForm(expandedForm === formId ? null : formId);
+    }
+  };
+
+  const handleSectionClick = (sectionId: string) => {
+    if (sectionId === 'forms') {
+      setFormsOpen(!formsOpen);
+    }
+  }
 
   return (
     <Drawer

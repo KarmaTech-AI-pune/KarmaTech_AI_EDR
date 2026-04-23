@@ -9,7 +9,6 @@ import {
   Typography,
   Container,
   Chip,
-  Alert
 } from '@mui/material';
 import { format } from 'date-fns';
 import { BidVersionHistory as BidVersionHistoryType, BidPreparationStatus } from '../../dummyapi/bidVersionHistoryApi';
@@ -65,9 +64,9 @@ const BidVersionHistory: React.FC<BidVersionHistoryProps> = ({ versionHistory })
             </TableBody>
           </Table>
         ) : (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Typography sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
             No Data Found
-          </Alert>
+          </Typography>
         )}
       </Paper>
     </Container>

@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace EDR.Application.DTOs.Dashboard
+namespace EDR.Application.Dtos.Dashboard
 {
     public class PendingFormDto
     {

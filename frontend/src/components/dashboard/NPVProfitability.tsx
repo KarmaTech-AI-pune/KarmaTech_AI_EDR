@@ -13,9 +13,10 @@ import { NpvProfitabilityDto } from '../../services/dashboardService';
 
 interface NPVProfitabilityProps {
   data: NpvProfitabilityDto | null;
+  currencyCode?: string;
 }
 
-const NPVProfitability: React.FC<NPVProfitabilityProps> = ({ data }) => {
+const NPVProfitability: React.FC<NPVProfitabilityProps> = ({ data, currencyCode }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -69,10 +70,25 @@ const NPVProfitability: React.FC<NPVProfitabilityProps> = ({ data }) => {
                 color="success.main"
                 sx={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }}
               >
-                {formatCurrency(data.currentNpv)}
+                {formatCurrency(data.currentNpv, currencyCode || data.currencyCode)}
               </Typography>
             </Box>
             <TrendingUp sx={{ fontSize: isMobile ? 32 : 40, color: theme.palette.success.main }} />
+          </Box>
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+            <Box sx={{ flex: 1, p: 1.5, backgroundColor: 'rgba(25, 118, 210, 0.04)', borderRadius: 1 }}>
+              <Typography variant="caption" color="text.secondary">Expected Revenue</Typography>
+              <Typography variant="body1" fontWeight="bold">
+                {formatCurrency(data.expectedRevenue, currencyCode || data.currencyCode)}
+              </Typography>
+            </Box>
+            <Box sx={{ flex: 1, p: 1.5, backgroundColor: 'rgba(46, 125, 50, 0.04)', borderRadius: 1 }}>
+              <Typography variant="caption" color="text.secondary">Actual Revenue</Typography>
+              <Typography variant="body1" fontWeight="bold">
+                {formatCurrency(data.actualRevenue, currencyCode || data.currencyCode)}
+              </Typography>
+            </Box>
           </Box>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 1 : 1.5 }}>

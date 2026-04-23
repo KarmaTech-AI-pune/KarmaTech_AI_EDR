@@ -40,8 +40,14 @@ namespace EDR.Domain.Entities
         public string? AcceptanceCriteria { get; set; }
         public string? TaskDescription { get; set; }
 
+        public int BacklogVersion { get; set; } = 1;
+
+        public bool IsCarryoverApplied { get; set; } = false;
+
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedOn { get; set; }
+
+        public virtual ICollection<SprintTask> SprintTasks { get; set; } = new List<SprintTask>();
     }
 }
 

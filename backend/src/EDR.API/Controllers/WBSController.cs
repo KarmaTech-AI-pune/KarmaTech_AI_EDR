@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EDR.Application.Dtos;
@@ -90,15 +90,9 @@ namespace EDR.API.Controllers
                     return BadRequest("WBS master data cannot be null.");
                 }
 
-                if (wbsMaster.WorkBreakdownStructures == null || !wbsMaster.WorkBreakdownStructures.Any())
-                {
-                    _logger.LogWarning("SetWBS: WorkBreakdownStructures array is null or empty");
-                    return BadRequest("WorkBreakdownStructures array cannot be null or empty.");
-                }
-
                 _logger.LogInformation("SetWBS: Processing {Count} WBS groups with {TaskCount} total tasks",
-                    wbsMaster.WorkBreakdownStructures.Count,
-                    wbsMaster.WorkBreakdownStructures.Sum(w => w.Tasks?.Count ?? 0));
+                    wbsMaster.WorkBreakdownStructures?.Count ?? 0,
+                    wbsMaster.WorkBreakdownStructures?.Sum(w => w.Tasks?.Count ?? 0) ?? 0);
 
                 var command = new SetWBSCommand(projectId, wbsMaster);
                 var savedData = await _mediator.Send(command);
@@ -123,8 +117,9 @@ namespace EDR.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in SetWBS for ProjectId: {ProjectId}", projectId);
+                var detail = ex.InnerException?.Message ?? ex.Message;
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "An error occurred while saving WBS data.", error = ex.Message });
+                    new { message = "An error occurred while saving WBS data.", error = detail });
             }
         }
 
@@ -140,15 +135,43 @@ namespace EDR.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<WBSMasterDto>> AddTask(int projectId, [FromBody] WBSMasterDto wbsMaster)
         {
-            if (wbsMaster == null)
+            try
             {
-                return BadRequest("WBS master data cannot be null.");
+                if (wbsMaster == null)
+                {
+                    _logger.LogWarning("AddTask: WBS master data is null for ProjectId: {ProjectId}", projectId);
+                    return BadRequest("WBS master data cannot be null.");
+                }
+
+                if (wbsMaster.WorkBreakdownStructures == null || !wbsMaster.WorkBreakdownStructures.Any())
+                {
+                    _logger.LogWarning("AddTask: WorkBreakdownStructures array is null or empty for ProjectId: {ProjectId}", projectId);
+                    return BadRequest("WorkBreakdownStructures array cannot be null or empty.");
+                }
+
+                if (!wbsMaster.WorkBreakdownStructures.Any(w => w.Tasks != null && w.Tasks.Any()))
+                {
+                    _logger.LogWarning("AddTask: No tasks found in any WorkBreakdownStructure group for ProjectId: {ProjectId}", projectId);
+                    return BadRequest("At least one task must be provided.");
+                }
+
+                var command = new AddWBSTaskCommand(projectId, wbsMaster);
+                var result = await _mediator.Send(command);
+
+                if (result == null)
+                {
+                    _logger.LogError("AddTask: Failed to add WBS tasks for ProjectId: {ProjectId}", projectId);
+                    return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Tasks were not added successfully." });
+                }
+
+                return StatusCode(StatusCodes.Status201Created, result);
             }
-
-            var command = new AddWBSTaskCommand(projectId, wbsMaster);
-            var result = await _mediator.Send(command);
-
-            return StatusCode(StatusCodes.Status201Created, result);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding WBS tasks for ProjectId: {ProjectId}", projectId);
+                var message = ex.InnerException?.Message ?? ex.Message;
+                return BadRequest(new { message = message });
+            }
         }
 
         /// <summary>

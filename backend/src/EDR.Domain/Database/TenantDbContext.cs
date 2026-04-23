@@ -16,10 +16,22 @@ namespace EDR.Domain.Database
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
         public DbSet<Feature> Features { get; set; }
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
+        public DbSet<TenantInvoice> TenantInvoices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure TenantInvoice entity
+            modelBuilder.Entity<TenantInvoice>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Amount).HasPrecision(18, 2);
+                entity.HasOne(i => i.Tenant)
+                    .WithMany()
+                    .HasForeignKey(i => i.TenantId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
             // Configure Tenant entity
             modelBuilder.Entity<Tenant>(entity =>
@@ -31,8 +43,8 @@ namespace EDR.Domain.Database
                 entity.Property(e => e.CompanyName).HasMaxLength(255);
                 entity.Property(e => e.ContactEmail).HasMaxLength(255);
                 entity.Property(e => e.ContactPhone).HasMaxLength(255);
-                entity.Property(e => e.StripeCustomerId).HasMaxLength(255);
-                entity.Property(e => e.StripeSubscriptionId).HasMaxLength(255);
+                entity.Property(e => e.RazorpayCustomerId).HasMaxLength(255);
+                entity.Property(e => e.RazorpaySubscriptionId).HasMaxLength(255);
             });
 
             // Configure TenantUser entity

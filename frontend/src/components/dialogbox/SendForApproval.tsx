@@ -11,7 +11,9 @@ import {
   MenuItem,
   SelectChangeEvent,
   FormHelperText,
-  Backdrop
+  Backdrop,
+  CircularProgress,
+  Box,
 } from '@mui/material';
 import { getUsersByRole, getUserById } from '../../services/userApi'
 import { opportunityApi } from '../../services/opportunityApi';
@@ -38,6 +40,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   const [approvers, setApprovers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [director, setDirector] = useState<string | null>(null);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     const checkDirector = async() =>{
@@ -47,10 +50,10 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
         setApprovers(regionalDirectors);
 
         if(opportunityId){
-          let res =  await opportunityApi.getById(opportunityId);
+          const res =  await opportunityApi.getById(opportunityId);
           if(res.approvalManagerId)
           {
-            let directorUser = await getUserById(res.approvalManagerId)
+            const directorUser = await getUserById(res.approvalManagerId)
             if(directorUser)
             {
               setDirector(directorUser.name)
@@ -66,6 +69,8 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       } catch (err: any) {
         setError(err.message || 'Failed to load data');
         console.error('Error in checkDirector:', err);
+      } finally {
+        setLoadingData(false);
       }
     }
     checkDirector();
@@ -170,6 +175,11 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
     >
       <DialogTitle>Send for Approval</DialogTitle>
       <DialogContent onClick={stopEventPropagation}>
+        {loadingData ? (
+          <Box display="flex" justifyContent="center" py={3}>
+            <CircularProgress size={28} />
+          </Box>
+        ) : (
         <FormControl 
           fullWidth 
           margin="normal"
@@ -207,6 +217,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
           )}
           {error && <FormHelperText>{error}</FormHelperText>}
         </FormControl>
+        )}
       </DialogContent>
       <DialogActions onClick={stopEventPropagation}>
         <Button onClick={handleCancel} color="inherit">

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -11,11 +12,12 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import { ProjectManagementProjectList } from '../components/project/ProjectManagementProjectList.tsx';
 import { ProjectInitializationDialog } from '../components/project/ProjectInitializationDialog.tsx';
 import { Pagination } from '../components/Pagination';
 import { projectApi } from '../services/projectApi';
-import { programApi } from '../services/api/programApi';
+import { programApi } from '../services/programApi';
 import { UserWithRole } from '../types';
 import { Project } from '../models';
 import { PermissionType } from '../models';
@@ -26,6 +28,7 @@ import { useProject } from '../context/ProjectContext';
 import { Program } from '../types/program';
 
 export const ProjectManagement: React.FC = () => {
+  const navigate = useNavigate();
   const { programId } = useProject();
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canViewProjects, setCanViewProjects] = useState(false);
@@ -66,11 +69,11 @@ export const ProjectManagement: React.FC = () => {
       }
 
       // If programId is missing, do not fetch projects
-      if (!programId) {
+      if (!programId || programId === 'null' || programId === 'undefined') {
         setProjects([]);
-      setError(undefined);
+        setError(undefined);
         return;
-    }
+      }
 
       // Check user permissions before fetching projects
       if (!currentUser.roleDetails) {
@@ -94,7 +97,6 @@ export const ProjectManagement: React.FC = () => {
       setProjects(response);
       setError(undefined);
     } catch (err: any) {
-      console.error('Error fetching projects:', err);
       setError(err.message || 'Failed to fetch projects');
     }
   };
@@ -150,10 +152,10 @@ export const ProjectManagement: React.FC = () => {
   const handleProjectCreated = async (data: ProjectFormData) => {
     try {
       // Ensure programId is set if we're in program context
-      const projectDataWithProgram = programId 
+      const projectDataWithProgram = programId
         ? { ...data, programId: parseInt(programId) }
         : data;
-      
+
       await projectApi.createProject(projectDataWithProgram);
       await fetchProjects();
       setSuccessMessage('Project created successfully');
@@ -170,9 +172,7 @@ export const ProjectManagement: React.FC = () => {
 
   const handleProjectDeleted = async (projectId: string) => {
     try {
-      console.log(`Attempting to delete project with ID: ${projectId}`);
       await projectApi.delete(projectId);
-      console.log('Delete API call successful');
       setSuccessMessage('Project deleted successfully');
       // Refresh the project list after successful deletion
       await fetchProjects();
@@ -194,42 +194,45 @@ export const ProjectManagement: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const roleFilteredProjects = projects.filter((project: Project) => {
-    if (!currentUser) return false;
-
-    // If user has admin permissions, show all projects
-    if (currentUser.roleDetails?.permissions.includes(PermissionType.SYSTEM_ADMIN) ||
-        currentUser.roleDetails?.permissions.includes(PermissionType.Tenant_ADMIN)) {
-      return true;
+  // Calculate filtered projects only if there's no error and data is valid
+  const roleFilteredProjects = useMemo(() => {
+    if (!Array.isArray(projects)) {
+      return [];
     }
 
-    // Check all roles the user has
-    console.log('Filtering project:', project.name);
-    console.log('Project details:', {
-      regionalManagerId: project.regionalManagerId,
-      seniorProjectManagerId: project.seniorProjectManagerId,
-      projectManagerId: project.projectManagerId
-    });
-    console.log('Current user ID:', currentUser.id);
-    console.log('Current user roles:', currentUser.roles);
+    if (!currentUser) {
+      return [];
+    }
 
-    return currentUser.roles.some(role => {
-      console.log('Checking role:', role.name);
-      switch (role.name) {
-        case 'Regional Manager':
-          return true;
-        case 'Regional Director':
-          return true;
-        case 'Senior Project Manager':
-          return project.seniorProjectManagerId === currentUser.id;
-        case 'Project Manager':
-          return project.projectManagerId === currentUser.id;
-        default:
-          console.log('Unknown role:', role.name);
-          return false;
+    return projects.filter((project: Project) => {
+      // If user has admin permissions, show all projects
+      if (currentUser.roleDetails?.permissions.includes(PermissionType.SYSTEM_ADMIN) ||
+        currentUser.roleDetails?.permissions.includes(PermissionType.Tenant_ADMIN)) {
+        return true;
       }
+
+      const isMatch = currentUser.roles.some(role => {
+        const roleName = role.name?.trim().toLowerCase();
+
+        switch (roleName) {
+          case 'regional manager':
+          case 'regional director':
+            const regionalMatch = project.regionalManagerId?.toLowerCase() === currentUser.id?.toLowerCase();
+            return regionalMatch;
+          case 'senior project manager':
+            const spmMatch = project.seniorProjectManagerId?.toLowerCase() === currentUser.id?.toLowerCase();
+            return spmMatch;
+          case 'project manager':
+            const pmMatch = project.projectManagerId?.toLowerCase() === currentUser.id?.toLowerCase();
+            return pmMatch;
+          default:
+            return false;
+        }
+      });
+
+      return isMatch;
     });
-  });
+  }, [projects, currentUser]);
 
   // Then apply search filtering
   const searchFilteredProjects = roleFilteredProjects.filter((project: Project) => {
@@ -291,21 +294,44 @@ export const ProjectManagement: React.FC = () => {
             )} */}
           </Box>
 
-          {canCreateProject && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddCircleOutlineIcon />}
-              onClick={handleCreateProject}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                px: 3
-              }}
-            >
-              Initialize Project
-            </Button>
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {programId && (
+              <Button
+                variant="outlined"
+                startIcon={<AssessmentIcon />}
+                onClick={() => navigate('/program-management/dashboard')}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  px: 3,
+                  borderColor: '#ff9800',
+                  color: '#ff9800',
+                  '&:hover': {
+                    borderColor: '#f57c00',
+                    backgroundColor: 'rgba(255, 152, 0, 0.04)'
+                  }
+                }}
+              >
+                Program Dashboard
+              </Button>
+            )}
+
+            {canCreateProject && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddCircleOutlineIcon />}
+                onClick={handleCreateProject}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  px: 3
+                }}
+              >
+                Initialize Project
+              </Button>
+            )}
+          </Box>
         </Box>
 
         <ProjectInitializationDialog

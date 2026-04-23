@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using EDR.Application.CQRS.SprintTasks.Commands;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
@@ -42,6 +42,9 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
                 return Unit.Value; // Or throw NotFoundException
             }
 
+            // Save old status to detect transition to Done
+            string? oldStatus = existingSubtask.Subtaskstatus;
+
             // Update properties from DTO to entity - using null-coalescing to preserve existing data if DTO field is null
             existingSubtask.Subtaskkey = sprintSubtaskDto.Subtaskkey ?? existingSubtask.Subtaskkey;
             existingSubtask.Subtasktitle = sprintSubtaskDto.Subtasktitle ?? existingSubtask.Subtasktitle;
@@ -61,9 +64,28 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
             existingSubtask.TenantId = _context.TenantId ?? 0;
             existingSubtask.DisplayOrder = sprintSubtaskDto.DisplayOrder ?? existingSubtask.DisplayOrder;
             existingSubtask.EstimatedHours = sprintSubtaskDto.EstimatedHours ?? existingSubtask.EstimatedHours;
-            existingSubtask.ActualHours = sprintSubtaskDto.ActualHours ?? existingSubtask.ActualHours;
+            
+            // Detect transition to Done
+            bool isStatusChangedToDone = existingSubtask.Subtaskstatus != null && 
+                                         existingSubtask.Subtaskstatus.Equals("Done", StringComparison.OrdinalIgnoreCase) && 
+                                         (oldStatus == null || !oldStatus.Equals("Done", StringComparison.OrdinalIgnoreCase));
+
+            if (isStatusChangedToDone)
+            {
+                existingSubtask.ActualHours = existingSubtask.EstimatedHours;
+                existingSubtask.CompletedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                existingSubtask.ActualHours = sprintSubtaskDto.ActualHours ?? existingSubtask.ActualHours;
+            }
+            
             existingSubtask.StartedAt = sprintSubtaskDto.StartedAt ?? existingSubtask.StartedAt;
-            existingSubtask.CompletedAt = sprintSubtaskDto.CompletedAt ?? existingSubtask.CompletedAt;
+            // CompletedAt is already set if transitioned to Done, otherwise use DTO value
+            if (!isStatusChangedToDone)
+            {
+                existingSubtask.CompletedAt = sprintSubtaskDto.CompletedAt ?? existingSubtask.CompletedAt;
+            }
             // Taskid is part of the composite key and should not be changed here.
 
             var changesSaved = await _context.SaveChangesAsync(cancellationToken);

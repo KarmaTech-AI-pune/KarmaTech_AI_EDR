@@ -95,7 +95,8 @@ public class TenantMigrationSqlService : ITenantMigrationService
             {
                 "01_PermissionsSQL.sql",
                 "04_PMWorkFlowSQL.Sql",
-                "05_OpportunityStatusesSQL.Sql"
+                "05_OpportunityStatusesSQL.Sql",
+                "BDScoring_SQL.sql"
             };
 
             await using var connection = new SqlConnection(connectionString);
@@ -137,8 +138,8 @@ public class TenantMigrationSqlService : ITenantMigrationService
                     catch (SqlException ex)
                     {
                         // Log error but continue with next batch
-                        _logger.LogError(ex, "Error executing batch from {ScriptName}: {ErrorMessage}",
-                            scriptFileName, ex.Message);
+                        _logger.LogError(ex, "Error executing batch from {ScriptName} at line {LineNumber}: {ErrorMessage}",
+                            scriptFileName,ex.LineNumber, ex.Message);
 
                         // For certain errors, we might want to continue (e.g., object already exists)
                         if (ex.Number != 2714 &&
@@ -310,7 +311,8 @@ public class TenantMigrationSqlService : ITenantMigrationService
                 "01_DropIndexSQL.Sql",
                 "03_PMWorkFlowSQL.Sql",
                 "04_OpportunityStatusesSQL.Sql",
-                "05_Setup_userSQL.Sql"
+                "05_Setup_userSQL.Sql",
+                "BDScoring_SQL.sql"
             };
 
             using var connection = new SqlConnection(connectionString);
@@ -409,7 +411,8 @@ public class TenantMigrationSqlService : ITenantMigrationService
                 "01_DropIndexSQL.Sql",
                 "04_PMWorkFlowSQL.Sql",
                 "05_OpportunityStatusesSQL.Sql",
-                "03_Setup_userSQL.Sql"
+                "03_Setup_userSQL.Sql",
+                "BDScoring_SQL.sql"
             };
 
             await using var connection = new SqlConnection(connectionString);

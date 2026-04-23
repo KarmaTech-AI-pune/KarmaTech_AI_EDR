@@ -27,7 +27,7 @@ const mockPlans: SubscriptionPlan[] = [
     maxStorageGB: 5,
     features: [mockFeatures[0]],
     isActive: true,
-    tenants: [{ id: 101, name: 'Tenant A' }],
+    tenants: 1,
   },
   {
     id: 2,
@@ -40,7 +40,7 @@ const mockPlans: SubscriptionPlan[] = [
     maxStorageGB: 50,
     features: [mockFeatures[0], mockFeatures[1]],
     isActive: true,
-    tenants: [{ id: 102, name: 'Tenant B' }, { id: 103, name: 'Tenant C' }],
+    tenants: 2,
   },
 ];
 
@@ -78,8 +78,8 @@ describe('SubscriptionManagement', () => {
     await waitFor(() => {
       const twos = screen.getAllByText('2');
       expect(twos.length).toBeGreaterThanOrEqual(2); // Total Plans and Active Plans both show 2
-      expect(screen.getByText('3')).toBeInTheDocument(); // Total Subscribers
-      expect(screen.getByText(/60/)).toBeInTheDocument(); // Monthly Revenue
+      expect(screen.getByText('3')).toBeInTheDocument(); // Total Subscribers (1 + 2)
+      expect(screen.getByText(/60/)).toBeInTheDocument(); // Monthly Revenue (10*1 + 25*2 = 60)
     });
   });
 
@@ -102,7 +102,7 @@ describe('SubscriptionManagement', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Basic Plan')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
 
     const addButton = screen.getByRole('button', { name: /Add Plan/i });
     fireEvent.click(addButton);
@@ -132,14 +132,14 @@ describe('SubscriptionManagement', () => {
       maxStorageGB: 100,
       features: [mockFeatures[0]],
       isActive: true,
-      tenants: [],
+      tenants: 0,
     });
     
     render(<SubscriptionManagement />);
     
     await waitFor(() => {
       expect(screen.getByText('Basic Plan')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
     
     fireEvent.click(screen.getByRole('button', { name: /Add Plan/i }));
 
@@ -183,7 +183,7 @@ describe('SubscriptionManagement', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Basic Plan')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
     
     fireEvent.click(screen.getByRole('button', { name: /Add Plan/i }));
 

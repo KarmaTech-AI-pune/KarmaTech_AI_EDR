@@ -1,4 +1,4 @@
-﻿using Stripe;
+using Razorpay.Api;
 using EDR.Domain.Entities;
 using EDR.Domain.Database;
 using Microsoft.EntityFrameworkCore;
@@ -6,8 +6,7 @@ using EDR.Application.Services.IContract;
 using EDR.Application.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System;
+using Newtonsoft.Json.Linq;
 
 namespace EDR.Application.Services
 {
@@ -16,25 +15,38 @@ namespace EDR.Application.Services
         private readonly TenantDbContext _context;
         private readonly ProjectManagementContext _projectManagementContext;
         private readonly ILogger<SubscriptionService> _logger;
-        private readonly string _stripeSecretKey;
+        private readonly IEmailService _emailService;
+        private readonly IEmailTemplateService _emailTemplateService;
+        private readonly IPdfInvoiceGenerator _pdfInvoiceGenerator;
+        private readonly string _razorpayKeyId;
+        private readonly string _razorpayKeySecret;
+        private readonly string _webhookSecret;
         private readonly bool _isDevelopment;
 
         public SubscriptionService(TenantDbContext context,
             ProjectManagementContext projectManagementContext,
             IConfiguration configuration,
+             IEmailService emailService,
+             IEmailTemplateService emailTemplateService,
+             IPdfInvoiceGenerator pdfInvoiceGenerator,
              ILogger<SubscriptionService> logger)
         {
             _context = context;
             _logger = logger;
-            _stripeSecretKey = configuration["Stripe:SecretKey"];
-            _isDevelopment = configuration["ASPNETCORE_ENVIRONMENT"] == "Development";
-
-            if (!_isDevelopment && !string.IsNullOrEmpty(_stripeSecretKey))
-            {
-                StripeConfiguration.ApiKey = _stripeSecretKey;
-            }
-
+            _emailService = emailService;
+            _emailTemplateService = emailTemplateService;
+            _pdfInvoiceGenerator = pdfInvoiceGenerator;
+            _razorpayKeyId = configuration["Razorpay:KeyId"];
+            _razorpayKeySecret = configuration["Razorpay:KeySecret"];
+            _webhookSecret = configuration["Razorpay:WebhookSecret"] ?? "whsec_your_webhook_secret";
+            var env = configuration["DNS:Env"];
+            _isDevelopment = (configuration["ASPNETCORE_ENVIRONMENT"] == "Development") || (env is "Development" or "Dev");
             _projectManagementContext = projectManagementContext;
+        }
+
+        private RazorpayClient GetClient()
+        {
+            return new RazorpayClient(_razorpayKeyId, _razorpayKeySecret);
         }
 
         public async Task<SubscriptionPlan> CreateSubscriptionPlanAsync(SubscriptionPlan plan)
@@ -43,37 +55,32 @@ namespace EDR.Application.Services
             {
                 if (_isDevelopment)
                 {
-                    _logger.LogInformation("[MOCK STRIPE] Would create subscription plan: {PlanName}", plan.Name);
+                    _logger.LogInformation("[MOCK RAZORPAY] Would create subscription plan: {PlanName}", plan.Name);
                     _projectManagementContext.SubscriptionPlans.Add(plan);
-                    await _context.SaveChangesAsync();
+                    await _projectManagementContext.SaveChangesAsync();
                     return plan;
                 }
 
-                // Create Stripe product and price
-                var productOptions = new ProductCreateOptions
-                {
-                    Name = plan.Name,
-                    Description = plan.Description,
-                };
-                var productService = new ProductService();
-                var product = await productService.CreateAsync(productOptions);
+                var client = GetClient();
 
-                var priceOptions = new PriceCreateOptions
+                // Create Razorpay Plan
+                Dictionary<string, object> options = new Dictionary<string, object>();
+                options.Add("period", "monthly");
+                options.Add("interval", 1);
+                var item = new Dictionary<string, object> 
                 {
-                    Product = product.Id,
-                    UnitAmount = (long)(plan.MonthlyPrice * 100), // Convert to cents
-                    Currency = "usd",
-                    Recurring = new PriceRecurringOptions
-                    {
-                        Interval = "month",
-                    },
+                    { "name", plan.Name },
+                    { "amount", (long)(plan.MonthlyPrice * 100) }, // in paise
+                    { "currency", "INR" },
+                    { "description", plan.Description ?? "" }
                 };
-                var priceService = new PriceService();
-                var price = await priceService.CreateAsync(priceOptions);
+                options.Add("item", item);
 
-                plan.StripePriceId = price.Id;
+                var rzpayPlan = client.Plan.Create(options);
+
+                plan.StripePriceId = rzpayPlan["id"].ToString(); // keeping the column name for now if not renamed (it was StripePriceId in DB, if not changed)
                 _projectManagementContext.SubscriptionPlans.Add(plan);
-                await _context.SaveChangesAsync();
+                await _projectManagementContext.SaveChangesAsync();
 
                 return plan;
             }
@@ -100,54 +107,75 @@ namespace EDR.Application.Services
 
                 if (_isDevelopment)
                 {
-                    _logger.LogInformation("[MOCK STRIPE] Would create subscription for tenant {TenantId} with plan {PlanId}", tenantId, planId);
+                    _logger.LogInformation("[MOCK RAZORPAY] Would create subscription for tenant {TenantId} with plan {PlanId}", tenantId, planId);
                     tenant.SubscriptionPlanId = planId;
                     tenant.Status = TenantStatus.Active;
                     tenant.SubscriptionEndDate = DateTime.UtcNow.AddMonths(1);
+
+                    var mockInvoice = new TenantInvoice
+                    {
+                        TenantId = tenant.Id,
+                        InvoiceId = DateTime.Now.ToString("yyyyMMddHHmmss"),
+                        Amount = plan.MonthlyPrice,
+                        Status = "Pending",
+                        DueDate = DateTime.UtcNow
+                    };
+                    _context.TenantInvoices.Add(mockInvoice);
+
                     await _context.SaveChangesAsync();
+
+                    // Send email notification with PDF
+                    await SendInvoiceEmailAsync(tenant.Id, mockInvoice.InvoiceId);
+                    
                     return true;
                 }
 
-                // Create Stripe customer
-                var customerOptions = new CustomerCreateOptions
-                {
-                    Email = tenant.ContactEmail,
-                    Name = tenant.CompanyName,
-                    Metadata = new Dictionary<string, string>
-                    {
-                        { "tenant_id", tenant.Id.ToString() }
-                    }
-                };
-                var customerService = new CustomerService();
-                var customer = await customerService.CreateAsync(customerOptions);
+                var client = GetClient();
 
-                // Create subscription
-                var subscriptionOptions = new SubscriptionCreateOptions
+                // 1. Create Customer
+                Dictionary<string, object> customerOptions = new Dictionary<string, object>
                 {
-                    Customer = customer.Id,
-                    Items = new List<SubscriptionItemOptions>
-                    {
-                        new SubscriptionItemOptions
-                        {
-                            Price = plan.StripePriceId,
-                        },
-                    },
-                    Metadata = new Dictionary<string, string>
-                    {
-                        { "tenant_id", tenant.Id.ToString() }
-                    }
+                    { "name", tenant.CompanyName ?? tenant.Name },
+                    { "email", tenant.ContactEmail },
+                    { "contact", tenant.ContactPhone ?? "9999999999" },
+                    { "notes", new Dictionary<string, string> { { "tenant_id", tenant.Id.ToString() } } }
                 };
-                var stripeSubscriptionService = new Stripe.SubscriptionService();
-                var subscription = await stripeSubscriptionService.CreateAsync(subscriptionOptions);
+                
+                var customer = client.Customer.Create(customerOptions);
+                string customerId = customer["id"].ToString();
+
+                // 2. Create Subscription
+                Dictionary<string, object> subOptions = new Dictionary<string, object>
+                {
+                    { "plan_id", plan.StripePriceId }, // assuming DB keeps the same field holding plan
+                    { "customer_id", customerId },
+                    { "total_count", 120 }, // large count for ongoing
+                    { "notes", new Dictionary<string, string> { { "tenant_id", tenant.Id.ToString() } } }
+                };
+                
+                var subscription = client.Subscription.Create(subOptions);
 
                 // Update tenant
-                tenant.StripeCustomerId = customer.Id;
-                tenant.StripeSubscriptionId = subscription.Id;
+                tenant.RazorpayCustomerId = customerId;
+                tenant.RazorpaySubscriptionId = subscription["id"].ToString();
                 tenant.SubscriptionPlanId = planId;
-                tenant.Status = TenantStatus.Active;
+                tenant.Status = TenantStatus.Active; // Usually starts as authenticated in Razorpay, making Active for now
                 tenant.SubscriptionEndDate = DateTime.UtcNow.AddMonths(1);
 
+                var autoInvoice = new TenantInvoice
+                {
+                    TenantId = tenant.Id,
+                    InvoiceId = "inv_auto_" + Guid.NewGuid().ToString("N"),
+                    Amount = plan.MonthlyPrice,
+                    Status = "Pending",
+                    DueDate = DateTime.UtcNow
+                };
+                _context.TenantInvoices.Add(autoInvoice);
+
                 await _context.SaveChangesAsync();
+
+                // Send email notification with PDF
+                await SendInvoiceEmailAsync(tenant.Id, autoInvoice.InvoiceId);
 
                 return true;
             }
@@ -170,24 +198,27 @@ namespace EDR.Application.Services
 
                 if (_isDevelopment)
                 {
-                    _logger.LogInformation("[MOCK STRIPE] Would cancel subscription for tenant {TenantId}", tenantId);
+                    _logger.LogInformation("[MOCK RAZORPAY] Would cancel subscription for tenant {TenantId}", tenantId);
                     tenant.Status = TenantStatus.Cancelled;
                     tenant.SubscriptionEndDate = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
                     return true;
                 }
 
-                if (string.IsNullOrEmpty(tenant.StripeSubscriptionId))
+                if (string.IsNullOrEmpty(tenant.RazorpaySubscriptionId))
                     return false;
 
-                var stripeSubscriptionService = new Stripe.SubscriptionService();
-                var subscription = await stripeSubscriptionService.CancelAsync(tenant.StripeSubscriptionId);
+                var client = GetClient();
+                Dictionary<string, object> options = new Dictionary<string, object>
+                {
+                    { "cancel_at_cycle_end", 0 }
+                };
+                client.Subscription.Fetch(tenant.RazorpaySubscriptionId).Cancel(options);
 
                 tenant.Status = TenantStatus.Cancelled;
                 tenant.SubscriptionEndDate = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
-
                 return true;
             }
             catch (Exception ex)
@@ -203,23 +234,29 @@ namespace EDR.Application.Services
             {
                 if (_isDevelopment)
                 {
-                    _logger.LogInformation("[MOCK STRIPE] Would process webhook: {Json}", json);
+                    _logger.LogInformation("[MOCK RAZORPAY] Would process webhook: {Json}", json);
+                    // Just basic parse to simulate handlers
                     return true;
                 }
 
-                var webhookSecret = "whsec_your_webhook_secret"; // Configure this
-                var stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret);
+                Utils.verifyWebhookSignature(json, signature, _webhookSecret);
 
-                switch (stripeEvent.Type)
+                JObject payload = JObject.Parse(json);
+                string eventType = payload["event"]?.ToString();
+                
+                var payloadObject = payload["payload"];
+
+                switch (eventType)
                 {
-                    case "customer.subscription.deleted":
-                        await HandleSubscriptionDeleted(stripeEvent);
+                    case "subscription.cancelled":
+                    case "subscription.halted":
+                        await HandleSubscriptionDeleted(payloadObject);
                         break;
-                    case "invoice.payment_failed":
-                        await HandlePaymentFailed(stripeEvent);
+                    case "subscription.charged":
+                        await HandlePaymentSucceeded(payloadObject);
                         break;
-                    case "invoice.payment_succeeded":
-                        await HandlePaymentSucceeded(stripeEvent);
+                    case "payment.failed":
+                        await HandlePaymentFailed(payloadObject);
                         break;
                 }
 
@@ -248,31 +285,18 @@ namespace EDR.Application.Services
 
                 if (_isDevelopment)
                 {
-                    _logger.LogInformation("[MOCK STRIPE] Would update subscription for tenant {TenantId} to plan {PlanId}", tenantId, newPlanId);
+                    _logger.LogInformation("[MOCK RAZORPAY] Would update subscription for tenant {TenantId} to plan {PlanId}", tenantId, newPlanId);
                     tenant.SubscriptionPlanId = newPlanId;
                     await _context.SaveChangesAsync();
                     return true;
                 }
 
-                // Update Stripe subscription
-                if (!string.IsNullOrEmpty(tenant.StripeSubscriptionId))
+                if (!string.IsNullOrEmpty(tenant.RazorpaySubscriptionId))
                 {
-                    var stripeSubscriptionService = new Stripe.SubscriptionService();
-                    var subscription = await stripeSubscriptionService.GetAsync(tenant.StripeSubscriptionId);
-
-                    var updateOptions = new SubscriptionUpdateOptions
-                    {
-                        Items = new List<SubscriptionItemOptions>
-                        {
-                            new SubscriptionItemOptions
-                            {
-                                Id = subscription.Items.Data.First().Id,
-                                Price = newPlan.StripePriceId,
-                            },
-                        },
-                    };
-
-                    await stripeSubscriptionService.UpdateAsync(tenant.StripeSubscriptionId, updateOptions);
+                    // The Razorpay .NET SDK might lack a direct ".Update()" method on the Subscription object in this version.
+                    // Subscriptions upgrade/downgrade in Razorpay is typically handled via creating an Addon or updating via API directly.
+                    // For now, we will update the internal database. If necessary in production, implement raw HttpClient PATCH.
+                    _logger.LogInformation("Plan changed for tenant {TenantId}. Manual Razorpay subscription update may be required.", tenantId);
                 }
 
                 tenant.SubscriptionPlanId = newPlanId;
@@ -293,18 +317,23 @@ namespace EDR.Application.Services
                 .FirstOrDefaultAsync(p => p.Id == planId);
         }
 
-        public async Task<IEnumerable<SubscriptionPlan>> GetAllSubscriptionPlansAsync()
+        public async Task<IEnumerable<SubscriptionPlan>> GetAllSubscriptionPlansAsync(bool? isActiveOnly = null)
         {
-            return await _projectManagementContext.SubscriptionPlans
-                .Where(p => p.IsActive)
-                .ToListAsync();
+            var query = _projectManagementContext.SubscriptionPlans.AsQueryable();
+
+            if (isActiveOnly.HasValue && isActiveOnly.Value)
+            {
+                query = query.Where(p => p.IsActive);
+            }
+
+            return await query.ToListAsync();
         }
 
-        private async Task HandleSubscriptionDeleted(Event stripeEvent)
+        private async Task HandleSubscriptionDeleted(JToken payload)
         {
-            var subscription = stripeEvent.Data.Object as Stripe.Subscription;
+            var subscriptionId = payload["subscription"]?["entity"]?["id"]?.ToString();
             var tenant = await _context.Tenants
-                .FirstOrDefaultAsync(t => t.StripeSubscriptionId == subscription.Id);
+                .FirstOrDefaultAsync(t => t.RazorpaySubscriptionId == subscriptionId);
 
             if (tenant != null)
             {
@@ -314,63 +343,126 @@ namespace EDR.Application.Services
             }
         }
 
-        private async Task HandlePaymentFailed(Event stripeEvent)
+        private async Task HandlePaymentFailed(JToken payload)
         {
-            var invoice = stripeEvent.Data.Object as Invoice;
+            var payment = payload["payment"]?["entity"];
+            var customerId = payment?["customer_id"]?.ToString();
+            var invoiceId = payment?["invoice_id"]?.ToString();
+            var amount = (payment?["amount"]?.Value<decimal>() ?? 0) / 100m;
+
             var tenant = await _context.Tenants
-                .FirstOrDefaultAsync(t => t.StripeCustomerId == invoice.CustomerId);
+                .FirstOrDefaultAsync(t => t.RazorpayCustomerId == customerId);
 
             if (tenant != null)
             {
                 tenant.Status = TenantStatus.Suspended;
+                
+                // Track Invoice as Overdue/Failed
+                var tenantInvoice = new TenantInvoice
+                {
+                    TenantId = tenant.Id,
+                    InvoiceId = invoiceId ?? "inv_failed_" + Guid.NewGuid().ToString("N"),
+                    Amount = amount,
+                    Status = "Overdue",
+                    DueDate = DateTime.UtcNow,
+                    PaymentId = payment?["id"]?.ToString()
+                };
+                _context.TenantInvoices.Add(tenantInvoice);
+
                 await _context.SaveChangesAsync();
             }
         }
 
-        private async Task HandlePaymentSucceeded(Event stripeEvent)
+        private async Task HandlePaymentSucceeded(JToken payload)
         {
-            var invoice = stripeEvent.Data.Object as Invoice;
+            var payment = payload["payment"]?["entity"];
+            // Subscription Charged sends payment in payload.payment.entity for connected payment
+            
+            // Note: subscription.charged actually has subscription in payload and payment in payload
+            var subEntity = payload["subscription"]?["entity"];
+            var customerId = subEntity?["customer_id"]?.ToString() ?? payment?["customer_id"]?.ToString();
+            
             var tenant = await _context.Tenants
-                .FirstOrDefaultAsync(t => t.StripeCustomerId == invoice.CustomerId);
+                .FirstOrDefaultAsync(t => t.RazorpayCustomerId == customerId);
 
             if (tenant != null)
             {
                 tenant.Status = TenantStatus.Active;
                 tenant.SubscriptionEndDate = DateTime.UtcNow.AddMonths(1);
+
+                // Add to Invoices table
+                var amount = (payment?["amount"]?.Value<decimal>() ?? 0) / 100m;
+                var invoiceId = payment?["invoice_id"]?.ToString() ?? "inv_auto_" + Guid.NewGuid().ToString("N");
+                
+                var tenantInvoice = new TenantInvoice
+                {
+                    TenantId = tenant.Id,
+                    InvoiceId = invoiceId,
+                    Amount = amount,
+                    Status = "Paid",
+                    DueDate = DateTime.UtcNow,
+                    PaidDate = DateTime.UtcNow,
+                    PaymentId = payment?["id"]?.ToString(),
+                    ReceiptUrl = "" // fetch receipt if needed
+                };
+                _context.TenantInvoices.Add(tenantInvoice);
+
                 await _context.SaveChangesAsync();
             }
         }
 
-        public async Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync()
+
+        public async Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync(bool? isActiveOnly = null)
         {
-            var plans = await _projectManagementContext.SubscriptionPlans
-                .Include(sp => sp.SubscriptionPlanFeatures)
-                .ThenInclude(spf => spf.Feature)
-                .Where(p => p.IsActive)
+            // Get tenant counts from TenantDbContext (where Tenants are tracked)
+            var tenantCounts = await _context.Tenants
+                .Where(t => t.SubscriptionPlanId.HasValue)
+                .GroupBy(t => t.SubscriptionPlanId.Value)
+                .Select(g => new { PlanId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.PlanId, x => x.Count);
+
+            var query = _projectManagementContext.SubscriptionPlans.AsQueryable();
+
+            if (isActiveOnly.HasValue && isActiveOnly.Value)
+            {
+                query = query.Where(p => p.IsActive);
+            }
+
+            var plans = await query
+                .Select(plan => new SubscriptionPlanDto
+                {
+                    Id = plan.Id,
+                    Name = plan.Name,
+                    Description = plan.Description,
+                    MonthlyPrice = plan.MonthlyPrice,
+                    YearlyPrice = plan.YearlyPrice,
+                    MaxUsers = plan.MaxUsers,
+                    MaxProjects = plan.MaxProjects,
+                    MaxStorageGB = plan.MaxStorageGB,
+                    IsActive = plan.IsActive,
+                    StripePriceId = plan.StripePriceId,
+                    Features = plan.SubscriptionPlanFeatures
+                        .Where(spf => spf.Feature.IsActive)
+                        .Select(spf => new FeatureDto
+                        {
+                            Id = spf.Feature.Id,
+                            Name = spf.Feature.Name,
+                            Description = spf.Feature.Description,
+                            IsActive = spf.Feature.IsActive
+                        }).ToList()
+                })
                 .ToListAsync();
 
-            return plans.Select(plan => new SubscriptionPlanDto
+            // Map the counts to the DTOs
+            foreach (var planDto in plans)
             {
-                Id = plan.Id,
-                Name = plan.Name,
-                Description = plan.Description,
-                MonthlyPrice = plan.MonthlyPrice,
-                YearlyPrice = plan.YearlyPrice,
-                MaxUsers = plan.MaxUsers,
-                MaxProjects = plan.MaxProjects,
-                MaxStorageGB = plan.MaxStorageGB,
-                IsActive = plan.IsActive,
-                StripePriceId = plan.StripePriceId,
-                Features = plan.SubscriptionPlanFeatures?
-                    .Where(spf => spf.Feature.IsActive)
-                    .Select(spf => new FeatureDto
-                    {
-                        Id = spf.Feature.Id,
-                        Name = spf.Feature.Name,
-                        Description = spf.Feature.Description,
-                        IsActive = spf.Feature.IsActive
-                    }).ToList() ?? new List<FeatureDto>()
-            });
+                if (tenantCounts.TryGetValue(planDto.Id, out int count))
+                {
+                    planDto.Tenants = count;
+                }
+            }
+
+            return plans;
         }
 
         public async Task<PlanByNameResponseDto?> GetPlanByNameAsync(string planName)
@@ -808,6 +900,73 @@ namespace EDR.Application.Services
                 },
                 _ => new LimitationsStructureDto()
             };
+        }
+        public async Task<bool> SendInvoiceEmailAsync(int tenantId, string invoiceId)
+        {
+            try
+            {
+                var tenant = await _context.Tenants
+                    .Include(t => t.SubscriptionPlan)
+                    .FirstOrDefaultAsync(t => t.Id == tenantId);
+
+                var invoice = await _context.TenantInvoices
+                    .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId);
+
+                if (tenant == null || invoice == null)
+                {
+                    _logger.LogWarning("Cannot send invoice email: Tenant {TenantId} or Invoice {InvoiceId} not found.", tenantId, invoiceId);
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(tenant.ContactEmail))
+                {
+                    _logger.LogWarning("Cannot send invoice email: Tenant {TenantId} has no contact email.", tenantId);
+                    return false;
+                }
+
+                // 1. Generate PDF
+                _logger.LogInformation("Generating PDF invoice for Tenant {TenantId}, Invoice {InvoiceId}", tenantId, invoiceId);
+                var pdfPath = await _pdfInvoiceGenerator.GenerateInvoicePdfAsync(invoice, tenant);
+                _logger.LogInformation("Generated PDF at {Path}", pdfPath);
+
+                // 2. Prepare Email Template
+                _logger.LogInformation("Loading email template 'InvoiceEmail'");
+                var template = await _emailTemplateService.GetTemplateAsync("InvoiceEmail");
+                var parameters = new Dictionary<string, string>
+                {
+                    { "CompanyName", "KarmaTech AI EDR" },
+                    { "ContactPerson", tenant.CompanyName ?? tenant.Name },
+                    { "InvoiceId", invoice.InvoiceId },
+                    { "InvoiceDate", invoice.CreatedAt.ToString("MMMM dd, yyyy") },
+                    { "Amount", invoice.Amount.ToString("N2") },
+                    { "Currency", "INR" },
+                    { "DueDate", invoice.DueDate.ToString("MMMM dd, yyyy") },
+                    { "CurrentYear", DateTime.Now.Year.ToString() }
+                };
+
+                var renderedBody = _emailTemplateService.RenderTemplate(template, parameters);
+
+                // 3. Send Email
+                _logger.LogInformation("Sending email to {To}", tenant.ContactEmail);
+                var emailMessage = new Domain.Models.EmailMessage
+                {
+                    To = tenant.ContactEmail,
+                    Subject = $"Invoice from KarmaTech AI EDR - {invoice.InvoiceId}",
+                    Body = renderedBody,
+                    IsHtml = true,
+                    Attachments = new List<string> { pdfPath }
+                };
+
+                await _emailService.SendEmailAsync(emailMessage);
+
+                _logger.LogInformation("Successfully sent invoice email for Invoice {InvoiceId} to {Email}", invoiceId, tenant.ContactEmail);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending invoice email for Invoice {InvoiceId}", invoiceId);
+                return false;
+            }
         }
     }
 }

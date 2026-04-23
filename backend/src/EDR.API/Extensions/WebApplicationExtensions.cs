@@ -46,6 +46,7 @@ public static class WebApplicationExtensions
         });
 
         app.UseResponseCompression();
+        app.UseResponseCaching();
 
         app.UseMiddleware<TenantResolverMiddleware>();
 
@@ -55,17 +56,9 @@ public static class WebApplicationExtensions
 
         app.UseMiddleware<TenantMiddleware>();
 
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
-
-            db.Database.Migrate();
-
-            SeedExtensions.InitializeDatabaseAsync(app).Wait();
-        }
-
         app.MapControllers();
-
+        
+        app.MapHealthChecks("/health");
 
         return app;
     }

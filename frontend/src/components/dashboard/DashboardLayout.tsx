@@ -25,8 +25,7 @@ import {
   
 } from "../../data/types/dashboard";
 import {
-  aiSuggestions,
-  taskItems,
+  aiSuggestions
 } from "../../data/mockData/approvals";
 
 // Service
@@ -41,7 +40,8 @@ import {
   MonthlyCashflowDto,
   RegionalPortfolioDto,
   NpvProfitabilityDto,
-  MilestoneBillingDto
+  MilestoneBillingDto,
+  TaskPriorityItemDto
 } from "../../services/dashboardService";
 
 const DashboardLayout: React.FC = () => {
@@ -67,6 +67,7 @@ const DashboardLayout: React.FC = () => {
   const [regionalPortfolio, setRegionalPortfolio] = useState<RegionalPortfolioDto[]>([]);
   const [npvProfitability, setNpvProfitability] = useState<NpvProfitabilityDto | null>(null);
   const [milestoneBilling, setMilestoneBilling] = useState<MilestoneBillingDto[]>([]);
+  const [taskPriorityMatrix, setTaskPriorityMatrix] = useState<TaskPriorityItemDto[]>([]);
 
   // Fetch data
   useEffect(() => {
@@ -83,7 +84,8 @@ const DashboardLayout: React.FC = () => {
           cashflowData,
           regionalData,
           npvData,
-          milestoneData
+          milestoneData,
+          taskPriorityMatrixData
         ] = await Promise.all([
           dashboardService.getPendingForms(),
           dashboardService.getTotalRevenueExpected(),
@@ -94,7 +96,8 @@ const DashboardLayout: React.FC = () => {
           dashboardService.getMonthlyCashflow(),
           dashboardService.getRegionalPortfolio(),
           dashboardService.getNpvProfitability(),
-          dashboardService.getMilestoneBilling()
+          dashboardService.getMilestoneBilling(),
+          dashboardService.getTaskPriorityMatrix()
         ]);
 
         setPendingForms(pendingFormsData);
@@ -107,6 +110,7 @@ const DashboardLayout: React.FC = () => {
         setRegionalPortfolio(regionalData);
         setNpvProfitability(npvData);
         setMilestoneBilling(milestoneData);
+        setTaskPriorityMatrix(taskPriorityMatrixData);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         setError("Failed to load dashboard data. Please try again later.");
@@ -137,11 +141,19 @@ const DashboardLayout: React.FC = () => {
   const financialMetrics: FinancialMetrics = {
     totalRevenue: totalRevenueExpected?.totalRevenue || 0,
     totalRevenueActual: totalRevenueActual?.totalRevenue || 0,
+    currency: totalRevenueActual?.currency || totalRevenueExpected?.currency || 'USD',
     totalRevenueChange: 0, // Not in DTO
     totalRevenueChangeType: (totalRevenueExpected?.changeType?.toLowerCase() as any) || 'neutral',
-    profitMargin: profitMargin?.profitMargin || 0,
-    profitMarginChange: 0, // Not in DTO
-    profitMarginChangeType: (profitMargin?.changeType?.toLowerCase() as any) || 'neutral',
+    expectedProfitMargin: {
+      value: profitMargin?.expectedProfitMargin || 0,
+      change: parseFloat(profitMargin?.expectedChangeDescription?.split('%')[0] ?? '0') || 0,
+      changeType: (profitMargin?.expectedChangeType?.toLowerCase() as any) || 'neutral'
+    },
+    actualProfitMargin: {
+      value: profitMargin?.actualProfitMargin || 0,
+      change: parseFloat(profitMargin?.actualChangeDescription?.split('%')[0] ?? '0') || 0,
+      changeType: (profitMargin?.actualChangeType?.toLowerCase() as any) || 'neutral'
+    },
     revenueAtRisk: revenueAtRisk?.revenueAtRisk || 0,
     revenueAtRiskChange: 0, // Not in DTO
     revenueAtRiskChangeType: (revenueAtRisk?.changeType?.toLowerCase() as any) || 'neutral',
@@ -153,14 +165,15 @@ const DashboardLayout: React.FC = () => {
   const mappedProjects: Project[] = projectsAtRisk?.projects?.map(p => ({
     id: p.projectId.toString(),
     name: p.projectName,
-    severity: p.priority === 'High' ? 'P3' : 'P5', // Simple mapping
+    severity: (p.priority as any) || 'P5',
     status: 'falling_behind', // Default or map from p.Status
     delay: p.delayDays,
     region: p.region,
     budget: p.budgetTotal,
     spent: p.budgetSpent,
     timeline: `${p.budgetPercentage}%`,
-    issues: p.issues
+    issues: p.issues,
+    programName: p.programName || 'General'
   })) || [];
 
   const mappedCashflow: CashflowData[] = monthlyCashflow.map(c => ({
@@ -177,7 +190,11 @@ const DashboardLayout: React.FC = () => {
     q3: r.q3,
     q4: r.q4,
     revenue: r.revenue,
-    profit: r.profit
+    profit: r.profit,
+    projectDetails: (r.projectDetails || []).map(pd => ({
+      projectName: pd.projectName,
+      programName: pd.programName
+    }))
   }));
 
   const mappedPendingApprovals: PendingApproval[] = pendingForms?.pendingForms?.map(f => ({
@@ -235,7 +252,7 @@ const DashboardLayout: React.FC = () => {
         <MetricsGrid metrics={financialMetrics} />
 
         {/* Main Dashboard Grid */}
-        <Grid spacing={3}>
+        <Grid container spacing={3}>
           {/* Left Column - Priority Projects */}
           <Grid item xs={12} lg={4}>
             <PriorityProjectsPanel
@@ -260,7 +277,15 @@ const DashboardLayout: React.FC = () => {
 
               {/* NPV & Profitability */}
               <Grid item xs={12} md={6}>
-                <NPVProfitability data={npvProfitability} />
+                <NPVProfitability 
+                  data={npvProfitability ? {
+                    ...npvProfitability,
+                    expectedRevenue: totalRevenueExpected?.totalRevenue || 0,
+                    actualRevenue: totalRevenueActual?.totalRevenue || 0,
+                    currencyCode: totalRevenueActual?.currency || totalRevenueExpected?.currency || 'USD'
+                  } : null} 
+                  currencyCode={totalRevenueActual?.currency || totalRevenueExpected?.currency || 'USD'}
+                />
               </Grid>
             </Grid>
           </Grid>
@@ -283,7 +308,7 @@ const DashboardLayout: React.FC = () => {
 
           {/* Task Priority Matrix */}
           <Grid item xs={12} md={6}>
-            <TaskPriorityMatrix tasks={taskItems} />
+            <TaskPriorityMatrix tasks={taskPriorityMatrix} />
           </Grid>
         </Grid>
 

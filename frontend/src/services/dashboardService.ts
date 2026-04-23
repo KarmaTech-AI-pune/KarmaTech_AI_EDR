@@ -17,20 +17,48 @@ export interface PendingFormsResponseDto {
     pendingForms: PendingFormDto[];
 }
 
+export interface TaskPriorityItemDto {
+    id: number;
+    title: string;
+    project: string;
+    assignee: string;
+    category: 'urgent_important' | 'important_not_urgent' | 'urgent_not_important' | 'neither';
+}
+
 export interface TotalRevenueExpectedDto {
     totalRevenue: number;
+    currency?: string;
     changeDescription: string;
     changeType: string;
 }
 
 export interface TotalRevenueActualDto {
     totalRevenue: number;
+    currency?: string;
+    changeDescription: string;
+    changeType: string;
+}
+
+export interface ProjectExpectedProfitMarginDto {
+    expectedProfitMargin: number;
+    changeDescription: string;
+    changeType: string;
+}
+
+export interface ProjectActualProfitMarginDto {
+    actualProfitMargin: number;
     changeDescription: string;
     changeType: string;
 }
 
 export interface ProfitMarginDto {
     profitMargin: number;
+    expectedProfitMargin: number;
+    expectedChangeDescription: string;
+    expectedChangeType: string;
+    actualProfitMargin: number;
+    actualChangeDescription: string;
+    actualChangeType: string;
     changeDescription: string;
     changeType: string;
 }
@@ -53,6 +81,7 @@ export interface ProjectAtRiskDto {
     budgetPercentage: number;
     issues: string[];
     manager: string;
+    programName: string;
 }
 
 export interface ProjectsAtRiskResponseDto {
@@ -67,6 +96,11 @@ export interface MonthlyCashflowDto {
     variance: number;
 }
 
+export interface RegionalProjectDetailDto {
+    projectName: string;
+    programName: string;
+}
+
 export interface RegionalPortfolioDto {
     region: string;
     q1: number;
@@ -75,10 +109,14 @@ export interface RegionalPortfolioDto {
     q4: number;
     revenue: number;
     profit: number;
+    projectDetails: RegionalProjectDetailDto[];
 }
 
 export interface NpvProfitabilityDto {
     currentNpv: number;
+    expectedRevenue: number;
+    actualRevenue: number;
+    currencyCode?: string;
     highProfitProjectsCount: number;
     mediumProfitProjectsCount: number;
     lowProfitProjectsCount: number;
@@ -93,6 +131,29 @@ export interface MilestoneBillingDto {
     status: string;
     daysDelayed: number;
     penalty: number;
+}
+
+export interface ProjectDashboardDto {
+    projectId: number;
+    projectName: string;
+    currency?: string;
+    totalRevenueExpected: number;
+    revenueChangeDescription: string;
+    revenueChangeType: 'positive' | 'negative' | 'neutral';
+    totalRevenueActual: number;
+    expectedProfitMargin: ProjectExpectedProfitMarginDto;
+    actualProfitMargin: ProjectActualProfitMarginDto;
+    currentNpv: number;
+    whatIfAnalysis: string;
+    budgetTotal: number;
+    budgetSpent: number;
+    budgetPercentage: number;
+    pendingForms: PendingFormDto[];
+    milestones: MilestoneBillingDto[];
+    monthlyCashflow: MonthlyCashflowDto[];
+    projectsAtRisk: ProjectAtRiskDto[];
+    regionalPortfolio: RegionalPortfolioDto[];
+    taskPriorityMatrix: TaskPriorityItemDto[];
 }
 
 // Service object
@@ -144,6 +205,21 @@ export const dashboardService = {
 
     getMilestoneBilling: async (): Promise<MilestoneBillingDto[]> => {
         const response = await axiosInstance.get<MilestoneBillingDto[]>('api/Dashboard/milestone-billing');
+        return response.data;
+    },
+
+    getProjectDashboard: async (projectId: number): Promise<ProjectDashboardDto> => {
+        const response = await axiosInstance.get<ProjectDashboardDto>(`api/ProjectDashboard/project/${projectId}`);
+        return response.data;
+    },
+
+    getTaskPriorityMatrix: async (): Promise<TaskPriorityItemDto[]> => {
+        const response = await axiosInstance.get<TaskPriorityItemDto[]>('api/Dashboard/task-priority-matrix');
+        return response.data;
+    },
+
+    getProgramDashboard: async (programId: number): Promise<any> => {
+        const response = await axiosInstance.get<any>(`api/ProgramDashboard/program/${programId}`);
         return response.data;
     }
 };
