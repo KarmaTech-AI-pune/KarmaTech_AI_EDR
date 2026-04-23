@@ -4,6 +4,7 @@ import {
   Paper,
   Typography,
 } from '@mui/material';
+import LockIcon from '@mui/icons-material/Lock';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { OpportunityTracking } from '../../models';
 import { OpportunityForm } from '../../components/forms/OpportunityForm';
@@ -21,7 +22,15 @@ type ContextType = {
 export const BFormRenderer: React.FC = () => {
   const { opportunity, handleOpportunityUpdate } = useOutletContext<ContextType>();
   const { formId } = useParams<{ formId: string }>();
-  const { setGoNoGoDecisionStatus, setGoNoGoVersionNumber } = useBusinessDevelopment();
+  const { setGoNoGoDecisionStatus, setGoNoGoVersionNumber, goNoGoDecisionStatus, goNoGoVersionNumber } = useBusinessDevelopment();
+
+  const currentStatusId = Array.isArray(opportunity?.currentHistory)
+    ? opportunity?.currentHistory[0]?.statusId
+    : (opportunity?.currentHistory as any)?.statusId;
+
+  const isOpportunityApproved = currentStatusId === 6;
+  const isBidPreparationUnlocked =
+    isOpportunityApproved && goNoGoDecisionStatus === 'GO' && goNoGoVersionNumber === 3;
 
   const handleFormSubmit = async (data: OpportunityTracking) => {
     try {
@@ -66,6 +75,30 @@ export const BFormRenderer: React.FC = () => {
         />
       );
     case 'bid-preparation':
+      if (!isBidPreparationUnlocked) {
+        return (
+          <Box
+            sx={{
+              p: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 300,
+              gap: 2,
+            }}
+          >
+            <LockIcon sx={{ fontSize: 64, color: 'text.disabled' }} />
+            <Typography variant="h6" color="text.secondary">
+              Bid Preparation Locked
+            </Typography>
+            <Typography variant="body2" color="text.disabled" textAlign="center">
+              Bid Preparation is only available after the Opportunity Tracking is approved
+              and the Go/No-Go Decision receives an RD-approved "GO" outcome.
+            </Typography>
+          </Box>
+        );
+      }
       return (
         <Box sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom>Bid Preparation Form</Typography>
