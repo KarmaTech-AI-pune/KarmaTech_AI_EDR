@@ -1,15 +1,8 @@
 name: Deploy Multi-Tenant Backend to AWS ECS
-#editing
+#editing again
 on:
   push:
-    branches: [ Saas/dev ]
-    paths:
-      - 'backend/**'
-      - 'Dockerfile.backend-only'
-      - 'aws-ecs-task-definition-backend.json'
-      - '.github/workflows/deploy-multitenant-backend.yml'
-  pull_request:
-    branches: [ Saas/dev ]
+    branches: [ master ]
     paths:
       - 'backend/**'
       - 'Dockerfile.backend-only'
@@ -23,17 +16,17 @@ on:
         default: 'development'
         type: choice
         options:
-        - development
-        - staging
-        - production
+          - development
+          - staging
+          - production
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY_BACKEND: njs-multitenant-backend
-  ECS_CLUSTER_NAME: njs-multitenant-backend-cluster
-  ECS_SERVICE_NAME: njs-multitenant-backend-service
-  ECS_TASK_DEFINITION_NAME: njs-multitenant-backend-task
-  ALB_TARGET_GROUP: njs-backend-tg
+  ECR_REPOSITORY_BACKEND: edr-multitenant-backend
+  ECS_CLUSTER_NAME: edr-multitenant-backend-cluster
+  ECS_SERVICE_NAME: edr-multitenant-backend-service
+  ECS_TASK_DEFINITION_NAME: edr-multitenant-backend-task
+  ALB_TARGET_GROUP: edr-backend-tg
   IMAGE_TAG: ${{ github.sha }}
   IMAGE_TAG_LATEST: latest
 
@@ -66,16 +59,11 @@ jobs:
           ECR_REPOSITORY: ${{ env.ECR_REPOSITORY_BACKEND }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |
-          # Build a docker container and push it to ECR
           docker build -f Dockerfile.backend-only -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
-          # Push image
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
           echo "image-uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
       - name: Image URI
         id: image-uri
         run: echo "uri=${{ steps.build-image.outputs.image-uri }}" >> $GITHUB_OUTPUT
@@ -85,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     environment: ${{ github.event.inputs.environment || 'development' }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -100,13 +88,11 @@ jobs:
       - name: Get Existing RDS Endpoint
         id: get-rds-endpoint
         run: |
-          RDS_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier njs-database --query 'DBInstances[0].Endpoint.Address' --output text 2>/dev/null || echo "localhost")
+          RDS_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier edr-database --query 'DBInstances[0].Endpoint.Address' --output text 2>/dev/null || echo "localhost")
           echo "endpoint=$RDS_ENDPOINT" >> $GITHUB_OUTPUT
-
       - name: Create CloudWatch Log Group
         run: |
-          aws logs create-log-group --log-group-name /ecs/njs-multitenant-backend --region ${{ env.AWS_REGION }} || echo "Log group already exists"
-
+          aws logs create-log-group --log-group-name /ecs/edr-multitenant-backend --region ${{ env.AWS_REGION }} || echo "Log group already exists"
       - name: Create ECS Task Definition
         id: task-def
         run: |
@@ -118,9 +104,10 @@ jobs:
             "cpu": "512",
             "memory": "1024",
             "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole",
+            "taskRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole",
             "containerDefinitions": [
               {
-                "name": "njs-multitenant-backend",
+                "name": "edr-multitenant-backend",
                 "image": "${{ needs.build-and-push.outputs.image-uri }}",
                 "portMappings": [
                   {
@@ -139,13 +126,14 @@ jobs:
                   },
                   {
                     "name": "ConnectionStrings__AppDbConnection",
-                    "value": "Server=njs-database.cxe40c86capb.us-east-1.rds.amazonaws.com;Database=KarmaTechAI_EDR_SAAS;User Id=admin;Password=NJS-Backend-2025!;TrustServerCertificate=true;MultipleActiveResultSets=true;"
+                    "value": "Host=edr-database.c6p022mwyjgz.us-east-1.rds.amazonaws.com;Port=5432;Database=KarmaTechAI_EDR_SAAS;Username=postgres;Password=Admin1234;SSL Mode=Require;Trust Server Certificate=true;"
+
                   }
                 ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
                   "options": {
-                    "awslogs-group": "/ecs/njs-multitenant-backend",
+                    "awslogs-group": "/ecs/edr-multitenant-backend",
                     "awslogs-region": "${{ env.AWS_REGION }}",
                     "awslogs-stream-prefix": "ecs"
                   }
@@ -155,17 +143,15 @@ jobs:
             ]
           }
           EOF
-
       - name: Register ECS Task Definition
         id: register-task-definition
         run: |
-          aws ecs register-task-definition --cli-input-json file://task-definition.json
+          TASK_DEF=$(cat task-definition.json)
+          aws ecs register-task-definition --cli-input-json "$TASK_DEF"
           TASK_DEF_ARN=$(aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION_NAME }} --query 'taskDefinition.taskDefinitionArn' --output text)
           echo "task_def_arn=$TASK_DEF_ARN" >> $GITHUB_OUTPUT
-
       - name: Create ECS Cluster (if not exists)
         run: |
-          # Check if cluster exists
           if aws ecs describe-clusters --clusters ${{ env.ECS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }} --query 'clusters[0].status' --output text 2>/dev/null | grep -q "ACTIVE"; then
             echo "ECS cluster '${{ env.ECS_CLUSTER_NAME }}' already exists and is active"
           else
@@ -173,21 +159,17 @@ jobs:
             aws ecs create-cluster --cluster-name ${{ env.ECS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
             echo "ECS cluster '${{ env.ECS_CLUSTER_NAME }}' created successfully"
           fi
-
       - name: Get Subnet IDs
         id: get-subnets
         run: |
           echo "subnet-ids=${{ secrets.SUBNET_IDS }}" >> $GITHUB_OUTPUT
-
       - name: Get ALB Target Group ARN
         id: get-target-group
         run: |
           TARGET_GROUP_ARN=$(aws elbv2 describe-target-groups --names ${{ env.ALB_TARGET_GROUP }} --query 'TargetGroups[0].TargetGroupArn' --output text --region ${{ env.AWS_REGION }})
           echo "target-group-arn=$TARGET_GROUP_ARN" >> $GITHUB_OUTPUT
-
       - name: Create ECS Service (if not exists)
         run: |
-          # Check if service exists
           if ! aws ecs describe-services --cluster ${{ env.ECS_CLUSTER_NAME }} --services ${{ env.ECS_SERVICE_NAME }} --query 'services[0].status' --output text 2>/dev/null | grep -q "ACTIVE"; then
             echo "Creating ECS service..."
             aws ecs create-service \
@@ -196,41 +178,39 @@ jobs:
               --task-definition ${{ env.ECS_TASK_DEFINITION_NAME }} \
               --desired-count 1 \
               --launch-type FARGATE \
+              --deployment-configuration "deploymentCircuitBreaker={enable=true,rollback=true},maximumPercent=200,minimumHealthyPercent=100" \
               --network-configuration "awsvpcConfiguration={subnets=[${{ steps.get-subnets.outputs.subnet-ids }}],securityGroups=[${{ secrets.NJS_API_ECS_SG }}],assignPublicIp=ENABLED}" \
-              --load-balancers "targetGroupArn=${{ steps.get-target-group.outputs.target-group-arn }},containerName=njs-multitenant-backend,containerPort=8080" \
+              --load-balancers "targetGroupArn=${{ steps.get-target-group.outputs.target-group-arn }},containerName=edr-multitenant-backend,containerPort=8080" \
               --health-check-grace-period-seconds 300 \
               --region ${{ env.AWS_REGION }}
           else
             echo "ECS service already exists, updating..."
           fi
-
       - name: Update ECS Service
         run: |
           aws ecs update-service \
             --cluster ${{ env.ECS_CLUSTER_NAME }} \
             --service ${{ env.ECS_SERVICE_NAME }} \
-            --task-definition ${{ env.ECS_TASK_DEFINITION_NAME }} \
+            --task-definition ${{ steps.register-task-definition.outputs.task_def_arn }} \
+            --desired-count 1 \
+            --deployment-configuration "deploymentCircuitBreaker={enable=true,rollback=true},maximumPercent=200,minimumHealthyPercent=100" \
             --region ${{ env.AWS_REGION }}
-
       - name: Wait for service to stabilize
         run: |
           aws ecs wait services-stable \
             --cluster ${{ env.ECS_CLUSTER_NAME }} \
             --services ${{ env.ECS_SERVICE_NAME }} \
             --region ${{ env.AWS_REGION }}
-
       - name: Get ALB DNS Name
         id: get-alb-dns
         run: |
-          ALB_DNS=$(aws elbv2 describe-load-balancers --names njs-multitenant-alb --query 'LoadBalancers[0].DNSName' --output text --region ${{ env.AWS_REGION }})
+          ALB_DNS=$(aws elbv2 describe-load-balancers --names edr-multitenant-alb --query 'LoadBalancers[0].DNSName' --output text --region ${{ env.AWS_REGION }})
           echo "alb-dns=$ALB_DNS" >> $GITHUB_OUTPUT
-
       - name: Test API Health Check
         run: |
           echo "Testing API health check..."
-          sleep 30  # Wait for service to be fully ready
+          sleep 30
           curl -f http://${{ steps.get-alb-dns.outputs.alb-dns }}/health || echo "Health check failed, but deployment completed"
-
   deployment-summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
@@ -260,8 +240,8 @@ jobs:
           echo "### 🔗 Test Your API" >> $GITHUB_STEP_SUMMARY
           echo "Once deployed, test your API endpoints:" >> $GITHUB_STEP_SUMMARY
           echo "- **Health Check**: \`curl http://YOUR_ALB_DNS/health\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Swagger UI**: \`http://YOUR_ALB_DNS/swagger\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **API Base**: \`http://YOUR_ALB_DNS/api\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Swagger UI**: \`curl http://YOUR_ALB_DNS/swagger\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **API Base**: \`curl http://YOUR_ALB_DNS/api\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. Test your API endpoints" >> $GITHUB_STEP_SUMMARY

@@ -36,12 +36,16 @@ public static class WebApplicationExtensions
         app.UseSwagger();
 
         app.UseSwaggerUI(options =>
-
         {
             var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
-
-            options.SwaggerEndpoint($"{pathBase}/swagger/{swaggerSettings.Version}/swagger.json",
-                $"{swaggerSettings.Title}");
+            
+            // Fix: Handle null or empty pathBase
+            var swaggerPath = string.IsNullOrEmpty(pathBase) 
+                ? $"/swagger/{swaggerSettings.Version}/swagger.json"
+                : $"{pathBase}/swagger/{swaggerSettings.Version}/swagger.json";
+            
+            options.SwaggerEndpoint(swaggerPath, $"{swaggerSettings.Title}");
+            options.RoutePrefix = "swagger"; // Explicitly set route prefix
         });
 
         app.UseResponseCompression();

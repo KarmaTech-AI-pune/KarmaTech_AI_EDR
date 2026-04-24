@@ -1,0 +1,63 @@
+# ===============================
+# Build Stage
+# ===============================
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+WORKDIR /src
+
+# Copy VERSION file to the root (/src/VERSION)
+# EDR.API.csproj is at backend/src/EDR.API/
+# ../../../VERSION from there points specifically to /src/VERSION
+COPY VERSION ./VERSION
+RUN cat ./VERSION
+
+# Copy project files first (for better layer caching)
+COPY backend/src/EDR.API/EDR.API.csproj backend/src/EDR.API/
+COPY backend/src/EDR.Application/EDR.Application.csproj backend/src/EDR.Application/
+COPY backend/src/EDR.Domain/EDR.Domain.csproj backend/src/EDR.Domain/
+COPY backend/EDR.Infrastructure/EDR.Infrastructure.csproj backend/EDR.Infrastructure/
+COPY backend/EDR.Repositories/EDR.Repositories.csproj backend/EDR.Repositories/
+
+# Restore with normal verbosity to see exact evaluation errors
+RUN dotnet restore backend/src/EDR.API/EDR.API.csproj -v n
+
+# Copy full source code
+COPY backend/ backend/
+
+# (Optional) Debug check - can remove later
+RUN ls -R /src/backend
+
+# Publish with normal verbosity
+RUN dotnet publish backend/src/EDR.API/EDR.API.csproj \
+    -c Release \
+    -o /app/publish \
+    -v n
+
+# ===============================
+# Runtime Stage
+# ===============================
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+WORKDIR /app
+
+# Install required packages
+RUN apt-get update && apt-get install -y curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy published output
+COPY --from=build /app/publish .
+
+# Expose port
+EXPOSE 8080
+
+# Environment variables
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Development
+
+# Create non-root user
+RUN adduser --disabled-password --gecos '' appuser \
+    && chown -R appuser /app
+
+USER appuser
+
+ENTRYPOINT ["dotnet", "EDR.API.dll"]

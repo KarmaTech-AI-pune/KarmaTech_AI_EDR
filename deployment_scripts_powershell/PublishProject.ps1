@@ -4,10 +4,17 @@
 # -------------------------------
 # CONFIGURATION
 # -------------------------------
-$frontendPath = ".\frontend"     # React app folder
-$backendPath  = "C:\project\KarmaTech_AI_EDR\backend\src\NJSAPI"  # Main .NET project folder
-$publishPath  = "C:\project\KarmaTech_AI_EDR\backend\src\NJSAPI\bin\Release\net8.0\publish"       # Publish output folder
-$envName      = "Production"      # Environment: Development/Production
+$scriptDir    = $PSScriptRoot
+if (-not $scriptDir) { $scriptDir = Get-Location } # Fallback for some environments
+
+$frontendPath = Join-Path $scriptDir "..\frontend"
+$backendPath  = Join-Path $scriptDir "..\backend\src\EDR.API"
+$publishPath  = Join-Path $backendPath "bin\Release\net8.0\publish"
+$envName      = "Production"
+
+Write-Host "Frontend Path: $frontendPath"
+Write-Host "Backend Path:  $backendPath"
+Write-Host "Publish Path:  $publishPath"
 
 # -------------------------------
 # CHECK IF LAST COMMAND SUCCEEDED
@@ -26,8 +33,17 @@ Write-Host "🚀 Building React frontend..."
 Set-Location $frontendPath
 
 Write-Host "Installing npm dependencies..."
-npm install
-Check-LastCommand
+try {
+    npm install --legacy-peer-deps
+    if (!$?) { throw "npm install failed" }
+} catch {
+    Write-Host "⚠️ npm install failed. Attempting to clean node_modules and retry..."
+    if (Test-Path "node_modules") {
+        Remove-Item -Recurse -Force "node_modules" -ErrorAction SilentlyContinue
+    }
+    npm install --legacy-peer-deps
+    Check-LastCommand
+}
 
 Write-Host "Running production build..."
 npm run build
