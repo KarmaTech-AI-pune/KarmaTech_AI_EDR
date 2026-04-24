@@ -1,1 +1,1 @@
-# Karmatech_AI_EDR
+# KarmaTech_AI_EDR
